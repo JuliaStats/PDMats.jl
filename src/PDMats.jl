@@ -355,10 +355,10 @@ add_scal(a::Matrix{Float64}, b::AbstractPDMat, c::Float64) = add_scal!(copy(a), 
 
 + (a::PDiagMat, b::PDMat) = PDMat(add_diag(b.mat, a.diag))
 + (a::PDiagMat, b::PDiagMat) = PDiagMat(a.diag + b.diag)
-+ (a::PDiagMat, b::ScalMat) = PDiagMat(a.diag + b.value)
++ (a::PDiagMat, b::ScalMat) = PDiagMat(a.diag .+ b.value)
 
 + (a::ScalMat, b::PDMat) = PDMat(add_diag(b.mat, a.value))
-+ (a::ScalMat, b::PDiagMat) = PDiagMat(a.value + b.diag)
++ (a::ScalMat, b::PDiagMat) = PDiagMat(a.value .+ b.diag)
 + (a::ScalMat, b::ScalMat) = ScalMat(a.dim, a.value + b.value)
 
 add_scal(a::PDMat, b::AbstractPDMat, c::Float64) = PDMat(a.mat + full(b * c))
@@ -371,10 +371,10 @@ add_scal(a::PDMat, b::ScalMat, c::Float64) = PDMat(add_diag(a.mat, b.value * c))
 
 add_scal(a::PDiagMat, b::PDMat, c::Float64) = PDMat(add_diag!(b.mat * c, a.diag))
 add_scal(a::PDiagMat, b::PDiagMat, c::Float64) = PDiagMat(a.diag + b.diag * c)
-add_scal(a::PDiagMat, b::ScalMat, c::Float64) = PDiagMat(a.diag + b.value * c)
+add_scal(a::PDiagMat, b::ScalMat, c::Float64) = PDiagMat(a.diag .+ b.value * c)
 
 add_scal(a::ScalMat, b::PDMat, c::Float64) = PDMat(add_diag!(b.mat * c, a.value))
-add_scal(a::ScalMat, b::PDiagMat, c::Float64) = PDiagMat(a.value + b.diag * c)
+add_scal(a::ScalMat, b::PDiagMat, c::Float64) = PDiagMat(a.value .+ b.diag * c)
 add_scal(a::ScalMat, b::ScalMat, c::Float64) = ScalMat(a.dim, a.value + b.value * c)
 
 end # module
