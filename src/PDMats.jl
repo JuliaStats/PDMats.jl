@@ -13,6 +13,7 @@ export
 
 import Base.BLAS: nrm2, axpy!, gemv!, gemm, gemm!, trmv, trmv!, trmm, trmm!
 import Base.LAPACK: trtrs!
+import Base.LinAlg: Cholesky
 
 macro check_argdims(cond)
     quote
