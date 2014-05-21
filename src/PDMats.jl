@@ -1,6 +1,8 @@
 module PDMats
 
-using NumericExtensions
+using ArrayViews
+
+# using NumericExtensions
 
 import Base: +, *, \, /, ==
 import Base: full, logdet, inv, diag, diagm, add!
@@ -20,6 +22,109 @@ macro check_argdims(cond)
         ($(cond)) || error("Inconsistent argument dimensions.")
     end
 end
+
+#################################################
+#
+#   auxiliary functions
+#
+#################################################
+
+function sumsq{T}(a::AbstractArray{T})
+    s = zero(T)
+    for i = 1:length(a)
+        @inbounds s += abs2(a[i])
+    end
+    return s
+end
+
+function wsumsq(w::AbstractVector, a::AbstractVector)
+    @check_argdims(length(a) == length(w))
+    s = 0.
+    for i = 1:length(a)
+        @inbounds s += abs2(a[i]) * w[i]
+    end
+    return s
+end
+
+function mulcols!{T}(r::AbstractMatrix{T}, a::AbstractMatrix{T}, b::AbstractVector{T}) 
+    # multiple b to each column of a
+    m = size(a, 1)
+    n = size(a, 2)
+    @check_argdims(size(r) == (m, n) && length(b) == m)
+    for j = 1:n
+        aj = view(a, :, j)
+        rj = view(r, :, j)
+        for i = 1:m
+            @inbounds rj[i] = aj[i] * b[i]
+        end
+    end
+    r
+end
+
+mulcols!{T}(a::AbstractMatrix{T}, b::AbstractVector{T}) = mulcols!(a, a, b)
+mulcols{T}(a::AbstractMatrix{T}, b::AbstractVector{T}) = mulcols!(similar(a), a, b)
+
+function mulrows!{T}(r::AbstractMatrix{T}, a::AbstractMatrix{T}, b::AbstractVector{T}) 
+    # multiple b to each column of a
+    m = size(a, 1)
+    n = size(a, 2)
+    @check_argdims(size(r) == (m, n) && length(b) == n)
+    for j = 1:n
+        aj = view(a, :, j)
+        rj = view(r, :, j)
+        bj = b[j]
+        for i = 1:m
+            @inbounds rj[i] = aj[i] * bj
+        end
+    end
+    r
+end
+
+mulrows!{T}(a::AbstractMatrix{T}, b::AbstractVector{T}) = mulrows!(a, a, b)
+mulrows{T}(a::AbstractMatrix{T}, b::AbstractVector{T}) = mulrows!(similar(a), a, b)
+
+function mulsqrt(x::Vector, c::Vector) 
+    @check_argdims length(x) == length(c)
+    [x[i] * sqrt(c[i]) for i in 1 : length(x)]
+end
+
+function mulsqrt!(x::Vector, c::Vector)
+    @check_argdims length(x) == length(c)
+    for i in 1 : length(x)
+        x[i] .*= sqrt(c[i])
+    end
+    x
+end
+
+function add_diag!(a::Matrix, v::Number)
+    n = minimum(size(a))::Int
+    for i = 1:n
+        @inbounds a[i,i] += v
+    end
+    a
+end
+
+function add_diag!(a::Matrix, v::Vector)
+    n = minimum(size(a))::Int
+    @check_argdims length(v) == n
+    for i = 1:n
+        @inbounds a[i,i] += v[i]
+    end
+    a
+end
+
+function add_diag!(a::Matrix, v::Vector, c::Number)
+    n = minimum(size(a))::Int
+    @check_argdims length(v) == n
+    for i = 1:n
+        @inbounds a[i,i] += v[i] * c
+    end
+    a
+end
+
+add_diag(a::Matrix, v::Number) = add_diag!(copy(a), v)
+add_diag(a::Matrix, v::Vector) = add_diag!(copy(a), v)
+add_diag(a::Matrix, v::Vector, c::Number) = add_diag!(copy(a), v, c)
 
 #################################################
 #
@@ -78,8 +183,25 @@ unwhiten_winv(J::PDMat, x::VecOrMat{Float64}) = unwhiten_winv!(J, copy(x))
 quad(a::PDMat, x::Vector{Float64}) = dot(x, a.mat * x)
 invquad(a::PDMat, x::Vector{Float64}) = abs2(norm(whiten(a, x)))
     
-quad!(r::Array{Float64}, a::PDMat, x::Matrix{Float64}) = dot!(r, x, a.mat * x, 1)
-invquad!(r::Array{Float64}, a::PDMat, x::Matrix{Float64}) = sumsq!(fill!(r, 0.0), whiten(a, x), 1)
+function quad!(r::Array{Float64}, a::PDMat, x::Matrix{Float64}) # = dot!(r, x, a.mat * x, 1)
+    n = size(x,2)
+    @check_argdims(length(r) == n)
+    ax = a.mat * x
+    for j = 1:n
+        r[j] = dot(view(ax, :, j), view(x, :, j))
+    end
+    r
+end
+
+function invquad!(r::Array{Float64}, a::PDMat, x::Matrix{Float64}) # = sumsq!(fill!(r, 0.0), whiten(a, x), 1)
+    n = size(x, 2)
+    @check_argdims(length(r) == n)
+    wx = whiten(a, x)
+    for j = 1:n
+        r[j] = sumsq(view(wx, :, j))
+    end
+    return r
+end
 
 function X_A_Xt(a::PDMat, x::Matrix{Float64})
     @check_argdims dim(a) == size(x, 2)
@@ -138,35 +260,22 @@ diag(a::PDiagMat) = copy(a.diag)
 * (a::PDiagMat, c::Float64) = PDiagMat(a.diag * c)
 * (a::PDiagMat, x::Vector{Float64}) = a.diag .* x
 \ (a::PDiagMat, x::Vector{Float64}) = a.inv_diag .* x
-* (a::PDiagMat, x::Matrix{Float64}) = bmultiply(x, a.diag, 1)
-\ (a::PDiagMat, x::Matrix{Float64}) = bmultiply(x, a.inv_diag, 1)
+* (a::PDiagMat, x::Matrix{Float64}) = mulcols(x, a.diag)
+\ (a::PDiagMat, x::Matrix{Float64}) = mulcols(x, a.inv_diag)
 
 # whiten and unwhiten 
 
-function _mul_sqrt(x::Vector, c::Vector) 
-    @check_argdims length(x) == length(c)
-    [x[i] * sqrt(c[i]) for i in 1 : length(x)]
-end
+whiten(a::PDiagMat, x::Vector{Float64}) = mulsqrt(x, a.inv_diag)
+whiten(a::PDiagMat, x::Matrix{Float64}) = mulcols(x, sqrt(a.inv_diag))
 
-function _mul_sqrt!(x::Vector, c::Vector)
-    @check_argdims length(x) == length(c)
-    for i in 1 : length(x)
-        x[i] .*= sqrt(c[i])
-    end
-    x
-end
+whiten!(a::PDiagMat, x::Vector{Float64}) = mulsqrt!(x, a.inv_diag)
+whiten!(a::PDiagMat, x::Matrix{Float64}) = mulcols!(x, sqrt(a.inv_diag))
 
-whiten(a::PDiagMat, x::Vector{Float64}) = _mul_sqrt(x, a.inv_diag)
-whiten(a::PDiagMat, x::Matrix{Float64}) = bmultiply(x, sqrt(a.inv_diag), 1)
+unwhiten(a::PDiagMat, x::Vector{Float64}) = mulsqrt(x, a.diag)
+unwhiten(a::PDiagMat, x::Matrix{Float64}) = mulcols(x, sqrt(a.diag))
 
-whiten!(a::PDiagMat, x::Vector{Float64}) = _mul_sqrt!(x, a.inv_diag)
-whiten!(a::PDiagMat, x::Matrix{Float64}) = bmultiply!(x, sqrt(a.inv_diag), 1)
-
-unwhiten(a::PDiagMat, x::Vector{Float64}) = _mul_sqrt(x, a.diag)
-unwhiten(a::PDiagMat, x::Matrix{Float64}) = bmultiply(x, sqrt(a.diag), 1)
-
-unwhiten!(a::PDiagMat, x::Vector{Float64}) = _mul_sqrt!(x, a.diag)
-unwhiten!(a::PDiagMat, x::Matrix{Float64}) = bmultiply!(x, sqrt(a.diag), 1)
+unwhiten!(a::PDiagMat, x::Vector{Float64}) = mulsqrt!(x, a.diag)
+unwhiten!(a::PDiagMat, x::Matrix{Float64}) = mulcols!(x, sqrt(a.diag))
 
 unwhiten_winv!(J::PDiagMat, z::VecOrMat{Float64}) = whiten!(J, z)
 unwhiten_winv(J::PDiagMat, z::VecOrMat{Float64}) = whiten(J, z)
@@ -180,22 +289,22 @@ quad!(r::Array{Float64}, a::PDiagMat, x::Matrix{Float64}) = gemv!('T', 1., x .* 
 invquad!(r::Array{Float64}, a::PDiagMat, x::Matrix{Float64}) = gemv!('T', 1., x .* x, a.inv_diag, 0., r)
 
 function X_A_Xt(a::PDiagMat, x::Matrix{Float64}) 
-    z = bmultiply(x, sqrt(a.diag), 2)
+    z = mulrows(x, sqrt(a.diag))
     gemm('N', 'T', 1.0, z, z)
 end
 
 function Xt_A_X(a::PDiagMat, x::Matrix{Float64})
-    z = bmultiply(x, sqrt(a.diag), 1)
+    z = mulcols(x, sqrt(a.diag))
     gemm('T', 'N', 1.0, z, z)
 end
 
 function X_invA_Xt(a::PDiagMat, x::Matrix{Float64})
-    z = bmultiply(x, sqrt(a.inv_diag), 2)
+    z = mulrows(x, sqrt(a.inv_diag))
     gemm('N', 'T', 1.0, z, z)
 end
 
 function Xt_invA_X(a::PDiagMat, x::Matrix{Float64})
-    z = bmultiply(x, sqrt(a.inv_diag), 1)
+    z = mulcols(x, sqrt(a.inv_diag))
     gemm('T', 'N', 1.0, z, z)
 end
 
@@ -237,17 +346,25 @@ end
 
 function whiten!(a::ScalMat, x::VecOrMat{Float64})
     @check_argdims dim(a) == size(x, 1)
-    multiply!(x, sqrt(a.inv_value))
+    sv = sqrt(a.inv_value)
+    for i = 1:length(x)
+        @inbounds x[i] *= sv
+    end
+    x
 end
 
 function unwhiten(a::ScalMat, x::VecOrMat{Float64})
-    @check_argdims dim(a) == size(x, 1)    
-    x * sqrt(a.value)  
+    @check_argdims dim(a) == size(x, 1)
+    x * sqrt(a.value)
 end
 
 function unwhiten!(a::ScalMat, x::VecOrMat{Float64})
     @check_argdims dim(a) == size(x, 1)
-    multiply!(x, sqrt(a.value))
+    sv = sqrt(a.value)
+    for i = 1:length(x)
+        @inbounds x[i] *= sv
+    end
+    x
 end
 
 unwhiten_winv!(J::ScalMat,  z::VecOrMat{Float64}) = whiten!(J, z)
@@ -266,13 +383,23 @@ function invquad(a::ScalMat, x::Vector{Float64})
 end
 
 function quad!(r::AbstractArray{Float64}, a::ScalMat, x::Matrix{Float64})
-    @check_argdims dim(a) == size(x, 1)
-    multiply!(sumsq!(fill!(r, 0.0), x, 1), a.value)
+    m = size(x, 1)
+    n = size(x, 2)
+    @check_argdims dim(a) == m && length(r) == n
+    for j = 1:n
+        r[j] = sumsq(view(x, :, j)) * a.value
+    end
+    r
 end
 
 function invquad!(r::AbstractArray{Float64}, a::ScalMat, x::Matrix{Float64})
-    @check_argdims dim(a) == size(x, 1)
-    multiply!(sumsq!(fill!(r, 0.0), x, 1), a.inv_value)
+    m = size(x, 1)
+    n = size(x, 2)
+    @check_argdims dim(a) == m && length(r) == n
+    for j = 1:n
+        r[j] = sumsq(view(x, :, j)) * a.inv_value
+    end
+    r
 end
 
 function X_A_Xt(a::ScalMat, x::Matrix{Float64})
@@ -334,7 +461,15 @@ end
 
 + (a::Matrix{Float64}, b::AbstractPDMat) = b + a
 
-add!(a::Matrix{Float64}, b::PDMat) = add!(a, b.mat)
+function add!(a::Matrix{Float64}, b::PDMat)
+    bm = b.mat
+    @check_argdims size(a) == size(bm)
+    for i = 1:length(a)
+        @inbounds a[i] += bm[i]
+    end
+    a
+end
+
 add!(a::Matrix{Float64}, b::PDiagMat) = add_diag!(a, b.diag)
 add!(a::Matrix{Float64}, b::ScalMat) = add_diag!(a, b.value)
 
