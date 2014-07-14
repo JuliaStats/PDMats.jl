@@ -1,7 +1,7 @@
 # PDMats.jl
 
 Uniform interface for positive definite matrices of various structures. 
-[![Build Status](https://travis-ci.org/lindahua/PDMats.jl.png?branch=master)](https://travis-ci.org/lindahua/PDMats.jl)
+[![Build Status](https://travis-ci.org/JuliaStats/PDMats.jl.png?branch=master)](https://travis-ci.org/JuliaStats/PDMats.jl)
 
 --------------
 
