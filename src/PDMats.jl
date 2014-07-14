@@ -6,13 +6,12 @@ using ArrayViews
 
 import Base: +, *, \, /, ==
 import Base: full, logdet, inv, diag, diagm
-import NumericExtensions: add!
 
 export
     AbstractPDMat, PDMat, PDiagMat, ScalMat, 
     dim, full, whiten, whiten!, unwhiten, unwhiten!, add_scal!, add_scal,
     quad, quad!, invquad, invquad!, X_A_Xt, Xt_A_X, X_invA_Xt, Xt_invA_X,
-    unwhiten_winv!, unwhiten_winv, add!
+    unwhiten_winv!, unwhiten_winv
 
 import Base.BLAS: nrm2, axpy!, gemv!, gemm, gemm!, trmv, trmv!, trmm, trmm!
 import Base.LAPACK: trtrs!

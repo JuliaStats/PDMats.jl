@@ -2,6 +2,8 @@
 using PDMats
 using Base.Test
 
+import PDMats: add!
+
 # Auxiliary tools for testing
 
 safe_quad(a::AbstractPDMat, x::Vector) = dot(x, full(a) * x)
