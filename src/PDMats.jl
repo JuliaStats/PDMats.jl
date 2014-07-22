@@ -15,7 +15,7 @@ export
 
 import Base.BLAS: nrm2, axpy!, gemv!, gemm, gemm!, trmv, trmv!, trmm, trmm!
 import Base.LAPACK: trtrs!
-import Base.LinAlg: Cholesky
+import Base.LinAlg: A_ldiv_B!, A_mul_B!, A_mul_Bc!, Ac_ldiv_B!, A_rdiv_B!, A_rdiv_Bc!, Cholesky
 
 macro check_argdims(cond)
     quote
@@ -139,14 +139,17 @@ immutable PDMat <: AbstractPDMat
     mat::Matrix{Float64}    
     chol::Cholesky{Float64}    
     
-    function PDMat(mat::Matrix{Float64})
-        d = size(mat, 1)
-        if !(d >= 1 && size(mat, 2) == d)
-            throw(ArgumentError("mat must be a square matrix."))
-        end
-        new(d, mat, cholfact(mat))
-    end
 end
+
+function PDMat(mat::Matrix{Float64})
+    d = size(mat, 1)
+    if !(d >= 1 && size(mat, 2) == d)
+        throw(ArgumentError("mat must be a square matrix."))
+    end
+    PDMat(d, mat, cholfact(mat))
+end
+PDMat(fac::Cholesky) = PDMat(size(fac,1), full(fac), fac)
+PDMat(mat::Symmetric{Float64}) = PDMat(full(mat))
 
 # basics
 
@@ -162,21 +165,22 @@ diag(a::PDMat) = diag(a.mat)
 
 # whiten and unwhiten
 
-whiten!(a::PDMat, x::VecOrMat{Float64}) = (trtrs!('U', 'T', 'N', a.chol.UL, x); x)
+## for a.chol.uplo == 'U', a.chol[:U] does not copy.
+## Similarly a.chol[:L] does not copy when a.chol.uplo == 'L'
+function whiten!(a::PDMat, x::VecOrMat{Float64})
+    a.chol.uplo == 'U' ? Ac_ldiv_B!(a.chol[:U], x) : A_ldiv_B!(a.chol[:L], x)
+end
 whiten(a::PDMat, x::VecOrMat{Float64}) = whiten!(a, copy(x))
 
-unwhiten(a::PDMat, x::Vector{Float64}) = trmv('U', 'T', 'N', a.chol.UL, x)
-unwhiten!(a::PDMat, x::Vector{Float64}) = (trmv!('U', 'T', 'N', a.chol.UL, x); x)
-
-unwhiten(a::PDMat, x::Matrix{Float64}) = trmm('L', 'U', 'T', 'N', 1.0, a.chol.UL, x)
-unwhiten!(a::PDMat, x::Matrix{Float64}) = (trmm!('L', 'U', 'T', 'N', 1.0, a.chol.UL, x); x)
-
-function unwhiten_winv!(J::PDMat, x::VecOrMat{Float64})
-    trtrs!('U', 'N', 'N', J.chol.UL, x)
-    return x
+function unwhiten!(a::PDMat, x::VecOrMat{Float64})
+    a.chol.uplo == 'U' ? Ac_mul_B!(a.chol[:U],x) : A_mul_B!(a.chol[:L], x)
 end
+unwhiten(a::PDMat, x::VecOrMat{Float64}) = unwhiten!(a, copy(x))
 
-unwhiten_winv(J::PDMat, x::VecOrMat{Float64}) = unwhiten_winv!(J, copy(x))
+function unwhiten_winv!(a::PDMat, x::VecOrMat{Float64})
+    a.chol.uplo == 'U' ? A_mul_B!(a.chol[:U], x) : Ac_mul_B!(a.chol[:L], x)
+end
+unwhiten_winv(a::PDMat, x::VecOrMat{Float64}) = unwhiten_winv!(a, copy(x))
 
 # quadratic forms
 
@@ -204,28 +208,26 @@ function invquad!(r::Array{Float64}, a::PDMat, x::Matrix{Float64}) # = sumsq!(fi
 end
 
 function X_A_Xt(a::PDMat, x::Matrix{Float64})
-    @check_argdims dim(a) == size(x, 2)
-    z = trmm('R', 'U', 'T', 'N', 1.0, a.chol.UL, x)
+    z = copy(x) # dimension checks will be done in the A_mul_B*! methods
+    a.chol.uplo == 'U' ? A_mul_Bc!(z, a.chol[:U]) : A_mul_B!(z, a.chol[:L])
     gemm('N', 'T', 1.0, z, z)
 end
 
 function Xt_A_X(a::PDMat, x::Matrix{Float64})
-    @check_argdims dim(a) == size(x, 1)
-    z = trmm('L', 'U', 'N', 'N', 1.0, a.chol.UL, x)
+    z = copy(x)
+    a.chol.uplo == 'U' ? A_mul_B!(a.chol[:U], z) : Ac_mul_B!(a.chol[:L], z)
     gemm('T', 'N', 1.0, z, z)
 end
 
 function X_invA_Xt(a::PDMat, x::Matrix{Float64})
-    @check_argdims dim(a) == size(x, 2)
-    z = transpose(x)
-    trtrs!('U', 'T', 'N', a.chol.UL, z)
-    gemm('T', 'N', 1.0, z, z)
+    z = copy(x)
+    a.chol.uplo == 'U' ? A_rdiv_B!(z, a.chol[:U]) : A_rdiv_Bc!(z, a.chol[:L])
+    gemm('N','T', 1.0, z, z)
 end
 
 function Xt_invA_X(a::PDMat, x::Matrix{Float64})
-    @check_argdims dim(a) == size(x, 1)
     z = copy(x)
-    trtrs!('U', 'T', 'N', a.chol.UL, z)
+    a.chol.uplo == 'U' ? Ac_ldiv_B!(a.chol[:U], z) : A_ldiv_B!(a.chol[:L], z)
     gemm('T', 'N', 1.0, z, z)
 end
 
