@@ -18,12 +18,19 @@ C = [4. -2. -1.; -2. 5. -1.; -1. -1. 6.]
 # basics
 
 a = PDMat(C)
+al = PDMat(cholfact(C,:L))
 @test a.mat === C
+@test_approx_eq al.mat C
 @test dim(a) == 3
+@test dim(al) == 3
 @test full(a) == C
+@test_approx_eq full(al) C
 @test !is(full(a), C)
+@test !is(full(al), C)
 @test_approx_eq logdet(a) log(det(C))
+@test_approx_eq logdet(al) log(det(C))
 @test diag(a) == [4., 5., 6.]
+@test diag(al) == [4., 5., 6.]
 
 r = inv(a)
 @test isa(r, PDMat)
@@ -42,28 +49,40 @@ x1 = rand(3)
 
 @test_approx_eq a * x1 full(a) * x1
 @test_approx_eq a \ x1 full(a) \ x1
+@test_approx_eq al \ x1 full(al) \ x1
 @test_approx_eq a * x full(a) * x
 @test_approx_eq a \ x full(a) \ x
+@test_approx_eq al \ x full(al) \ x
 
 # whiten & unwhiten
 
 u = unwhiten(a, eye(3))
 @test_approx_eq u * u' full(a)
+ul = unwhiten(al, eye(3))
+@test_approx_eq u ul
 
 y = unwhiten(a, x)
 xc = copy(x)
 unwhiten!(a, xc)
 @test y == xc
 @test_approx_eq y transpose(chol(a.mat)) * x
+yl = unwhiten(al, x)
+unwhiten!(al, copy!(xc, x))
+@test_approx_eq yl y
+@test_approx_eq yl xc
 
 xr = whiten(a, y)
+xlr = whiten(al, y)
 yc = copy(y)
 whiten!(a, yc)
 @test yc == xr
 @test_approx_eq xr x
-
+whiten!(al, copy!(yc, y))
+@test_approx_eq yc xlr
 @test_approx_eq whiten(a, unwhiten(a, eye(3))) eye(3)
 @test_approx_eq unwhiten(a, whiten(a, eye(3))) eye(3)
+@test_approx_eq whiten(al, unwhiten(al, eye(3))) eye(3)
+@test_approx_eq unwhiten(al, whiten(al, eye(3))) eye(3)
 
 # quad & invquad
 
@@ -77,11 +96,14 @@ whiten!(a, yc)
 
 r = xt * full(a) * x
 @test_approx_eq Xt_A_X(a, x) r
+@test_approx_eq Xt_A_X(al, x) r
 @test_approx_eq X_A_Xt(a, xt) r
+@test_approx_eq X_A_Xt(al, xt) r
 r = xt * (full(a) \ x)
 @test_approx_eq Xt_invA_X(a, x) r
+@test_approx_eq Xt_invA_X(al, x) r
 @test_approx_eq X_invA_Xt(a, xt) r
-
+@test_approx_eq X_invA_Xt(al, xt) r
 
 ### PDiagMat ###
 
@@ -232,6 +254,7 @@ va = [1.5, 2.5, 2.0]
 C = [4. -2. -1.; -2. 5. -1.; -1. -1. 6.]
 
 pm = PDMat(copy(C))
+plm = PDMat(cholfact(C,:L))
 pd = PDiagMat(copy(va))
 ps = ScalMat(3, 2.0)
 
