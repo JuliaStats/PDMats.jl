@@ -1,3 +1,3 @@
 
 println("Running tests ...")
-include(joinpath("test", "pdmat.jl"))
+include("pdmat.jl")
