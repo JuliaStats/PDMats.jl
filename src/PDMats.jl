@@ -153,6 +153,8 @@ PDMat(mat::Symmetric{Float64}) = PDMat(full(mat))
 
 # basics
 
+Base.size(a::PDMat) = (a.dim,a.dim)
+Base.size(a::PDMat,i) = size(a.mat,i)
 dim(a::PDMat) = a.dim
 full(a::PDMat) = copy(a.mat)
 inv(a::PDMat) = PDMat(inv(a.chol))
@@ -160,27 +162,27 @@ logdet(a::PDMat) = logdet(a.chol)
 diag(a::PDMat) = diag(a.mat)
 
 * (a::PDMat, c::Float64) = PDMat(a.mat * c)
-* (a::PDMat, x::VecOrMat) = a.mat * x
-\ (a::PDMat, x::VecOrMat) = a.chol \ x
+* (a::PDMat, x::StridedVecOrMat) = a.mat * x
+\ (a::PDMat, x::StridedVecOrMat) = a.chol \ x
 
 # whiten and unwhiten
 
 ## for a.chol.uplo == 'U', a.chol[:U] does not copy.
 ## Similarly a.chol[:L] does not copy when a.chol.uplo == 'L'
-function whiten!(a::PDMat, x::VecOrMat{Float64})
+function whiten!(a::PDMat, x::StridedVecOrMat{Float64})
     a.chol.uplo == 'U' ? Ac_ldiv_B!(a.chol[:U], x) : A_ldiv_B!(a.chol[:L], x)
 end
-whiten(a::PDMat, x::VecOrMat{Float64}) = whiten!(a, copy(x))
+whiten(a::PDMat, x::StridedVecOrMat{Float64}) = whiten!(a, copy(x))
 
-function unwhiten!(a::PDMat, x::VecOrMat{Float64})
+function unwhiten!(a::PDMat, x::StridedVecOrMat{Float64})
     a.chol.uplo == 'U' ? Ac_mul_B!(a.chol[:U],x) : A_mul_B!(a.chol[:L], x)
 end
-unwhiten(a::PDMat, x::VecOrMat{Float64}) = unwhiten!(a, copy(x))
+unwhiten(a::PDMat, x::StridedVecOrMat{Float64}) = unwhiten!(a, copy(x))
 
-function unwhiten_winv!(a::PDMat, x::VecOrMat{Float64})
+function unwhiten_winv!(a::PDMat, x::StridedVecOrMat{Float64})
     a.chol.uplo == 'U' ? A_mul_B!(a.chol[:U], x) : Ac_mul_B!(a.chol[:L], x)
 end
-unwhiten_winv(a::PDMat, x::VecOrMat{Float64}) = unwhiten_winv!(a, copy(x))
+unwhiten_winv(a::PDMat, x::StridedVecOrMat{Float64}) = unwhiten_winv!(a, copy(x))
 
 # quadratic forms
 
@@ -279,8 +281,8 @@ unwhiten(a::PDiagMat, x::Matrix{Float64}) = mulcols(x, sqrt(a.diag))
 unwhiten!(a::PDiagMat, x::Vector{Float64}) = mulsqrt!(x, a.diag)
 unwhiten!(a::PDiagMat, x::Matrix{Float64}) = mulcols!(x, sqrt(a.diag))
 
-unwhiten_winv!(J::PDiagMat, z::VecOrMat{Float64}) = whiten!(J, z)
-unwhiten_winv(J::PDiagMat, z::VecOrMat{Float64}) = whiten(J, z)
+unwhiten_winv!(J::PDiagMat, z::StridedVecOrMat{Float64}) = whiten!(J, z)
+unwhiten_winv(J::PDiagMat, z::StridedVecOrMat{Float64}) = whiten(J, z)
 
 # quadratic forms
 
@@ -336,17 +338,17 @@ diag(a::ScalMat) = fill(a.value, a.dim)
 
 * (a::ScalMat, c::Float64) = ScalMat(a.dim, a.value * c)
 / (a::ScalMat, c::Float64) = ScalMat(a.dim, a.value / c)
-* (a::ScalMat, x::VecOrMat) = a.value * x
-\ (a::ScalMat, x::VecOrMat) = a.inv_value * x
+* (a::ScalMat, x::StridedVecOrMat) = a.value * x
+\ (a::ScalMat, x::StridedVecOrMat) = a.inv_value * x
 
 # whiten and unwhiten 
 
-function whiten(a::ScalMat, x::VecOrMat{Float64})
+function whiten(a::ScalMat, x::StridedVecOrMat{Float64})
     @check_argdims dim(a) == size(x, 1)
     x * sqrt(a.inv_value)
 end
 
-function whiten!(a::ScalMat, x::VecOrMat{Float64})
+function whiten!(a::ScalMat, x::StridedVecOrMat{Float64})
     @check_argdims dim(a) == size(x, 1)
     sv = sqrt(a.inv_value)
     for i = 1:length(x)
@@ -355,12 +357,12 @@ function whiten!(a::ScalMat, x::VecOrMat{Float64})
     x
 end
 
-function unwhiten(a::ScalMat, x::VecOrMat{Float64})
+function unwhiten(a::ScalMat, x::StridedVecOrMat{Float64})
     @check_argdims dim(a) == size(x, 1)
     x * sqrt(a.value)
 end
 
-function unwhiten!(a::ScalMat, x::VecOrMat{Float64})
+function unwhiten!(a::ScalMat, x::StridedVecOrMat{Float64})
     @check_argdims dim(a) == size(x, 1)
     sv = sqrt(a.value)
     for i = 1:length(x)
@@ -369,8 +371,8 @@ function unwhiten!(a::ScalMat, x::VecOrMat{Float64})
     x
 end
 
-unwhiten_winv!(J::ScalMat,  z::VecOrMat{Float64}) = whiten!(J, z)
-unwhiten_winv(J::ScalMat, z::VecOrMat{Float64}) = whiten(J, z)
+unwhiten_winv!(J::ScalMat,  z::StridedVecOrMat{Float64}) = whiten!(J, z)
+unwhiten_winv(J::ScalMat, z::StridedVecOrMat{Float64}) = whiten(J, z)
 
 # quadratic forms
 
