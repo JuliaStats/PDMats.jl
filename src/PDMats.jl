@@ -15,7 +15,7 @@ export
 
 import Base.BLAS: nrm2, axpy!, gemv!, gemm, gemm!, trmv, trmv!, trmm, trmm!
 import Base.LAPACK: trtrs!
-import Base.LinAlg: A_ldiv_B!, A_mul_B!, A_mul_Bc!, Ac_ldiv_B!, A_rdiv_B!, A_rdiv_Bc!, Cholesky
+import Base.LinAlg: A_ldiv_B!, A_mul_B!, A_mul_Bc!, A_rdiv_B!, A_rdiv_Bc!, Ac_ldiv_B!, Cholesky
 
 macro check_argdims(cond)
     quote
@@ -245,7 +245,7 @@ immutable PDiagMat <: AbstractPDMat
     diag::Vector{Float64}
     inv_diag::Vector{Float64}
     
-    PDiagMat(v::Vector{Float64}) = new(length(v), v, 1.0./v)    
+    PDiagMat(v::Vector{Float64}) = new(length(v), v, 1.0 ./ v)    
     
     function PDiagMat(v::Vector{Float64}, inv_v::Vector{Float64})
         @check_argdims length(v) == length(inv_v)
@@ -255,6 +255,8 @@ end
 
 # basics
 
+Base.size(a::PDiagMat) = (a.dim,a.dim)
+Base.size(a::PDiagMat,i) = (i < 1) ? error("dimension out of range") : (i < 3 ? a.dim : 1)
 dim(a::PDiagMat) = a.dim
 full(a::PDiagMat) = diagm(a.diag)
 inv(a::PDiagMat) = PDiagMat(a.inv_diag, a.diag)
