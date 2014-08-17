@@ -136,9 +136,8 @@ abstract AbstractPDMat
 
 immutable PDMat <: AbstractPDMat
     dim::Int
-    mat::Matrix{Float64}    
-    chol::Cholesky{Float64}    
-    
+    mat::Matrix{Float64}
+    chol::Cholesky{Float64}
 end
 
 function PDMat(mat::Matrix{Float64})
@@ -170,17 +169,20 @@ diag(a::PDMat) = diag(a.mat)
 ## for a.chol.uplo == 'U', a.chol[:U] does not copy.
 ## Similarly a.chol[:L] does not copy when a.chol.uplo == 'L'
 function whiten!(a::PDMat, x::StridedVecOrMat{Float64})
-    a.chol.uplo == 'U' ? Ac_ldiv_B!(a.chol[:U], x) : A_ldiv_B!(a.chol[:L], x)
+    cholfactor = a.chol[:UL]
+    istriu(cholfactor) ? Ac_ldiv_B!(cholfactor, x) : A_ldiv_B!(cholfactor, x)
 end
 whiten(a::PDMat, x::StridedVecOrMat{Float64}) = whiten!(a, copy(x))
 
 function unwhiten!(a::PDMat, x::StridedVecOrMat{Float64})
-    a.chol.uplo == 'U' ? Ac_mul_B!(a.chol[:U],x) : A_mul_B!(a.chol[:L], x)
+    cholfactor = a.chol[:UL]
+    istriu(cholfactor) ? Ac_mul_B!(cholfactor, x) : A_mul_B!(cholfactor, x)
 end
 unwhiten(a::PDMat, x::StridedVecOrMat{Float64}) = unwhiten!(a, copy(x))
 
 function unwhiten_winv!(a::PDMat, x::StridedVecOrMat{Float64})
-    a.chol.uplo == 'U' ? A_mul_B!(a.chol[:U], x) : Ac_mul_B!(a.chol[:L], x)
+    cholfactor = a.chol[:UL]
+    istriu(cholfactor) ? A_mul_B!(cholfactor, x) : Ac_mul_B!(cholfactor, x)
 end
 unwhiten_winv(a::PDMat, x::StridedVecOrMat{Float64}) = unwhiten_winv!(a, copy(x))
 
