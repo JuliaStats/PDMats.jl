@@ -68,7 +68,7 @@ Functions are defined to operate on positive definite matrices through a uniform
 
     Whitening transform.
 
-    If ``x`` satisfies a distributiion of covariance ``a``, then the covariance of ``whiten(a, x)`` is the identity matrix. 
+    If ``x`` satisfies a distribution of covariance ``a``, then the covariance of ``whiten(a, x)`` is the identity matrix. 
 
     **Note:** ``whiten`` and ``unwhiten`` are mutually inverse operations.
 
