@@ -213,25 +213,29 @@ end
 
 function X_A_Xt(a::PDMat, x::Matrix{Float64})
     z = copy(x) # dimension checks will be done in the A_mul_B*! methods
-    a.chol.uplo == 'U' ? A_mul_Bc!(z, a.chol[:U]) : A_mul_B!(z, a.chol[:L])
+    cf = a.chol[:UL]
+    istriu(cf) ? A_mul_Bc!(z, cf) : A_mul_B!(z, cf)
     gemm('N', 'T', 1.0, z, z)
 end
 
 function Xt_A_X(a::PDMat, x::Matrix{Float64})
     z = copy(x)
-    a.chol.uplo == 'U' ? A_mul_B!(a.chol[:U], z) : Ac_mul_B!(a.chol[:L], z)
+    cf = a.chol[:UL]
+    istriu(cf) ? A_mul_B!(cf, z) : Ac_mul_B!(cf, z)
     gemm('T', 'N', 1.0, z, z)
 end
 
 function X_invA_Xt(a::PDMat, x::Matrix{Float64})
     z = copy(x)
-    a.chol.uplo == 'U' ? A_rdiv_B!(z, a.chol[:U]) : A_rdiv_Bc!(z, a.chol[:L])
+    cf = a.chol[:UL]
+    istriu(cf) ? A_rdiv_B!(z, cf) : A_rdiv_Bc!(z, cf)
     gemm('N','T', 1.0, z, z)
 end
 
 function Xt_invA_X(a::PDMat, x::Matrix{Float64})
     z = copy(x)
-    a.chol.uplo == 'U' ? Ac_ldiv_B!(a.chol[:U], z) : A_ldiv_B!(a.chol[:L], z)
+    cf = a.chol[:UL]
+    istriu(cf) ? Ac_ldiv_B!(cf, z) : A_ldiv_B!(cf, z)
     gemm('T', 'N', 1.0, z, z)
 end
 
