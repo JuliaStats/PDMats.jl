@@ -37,12 +37,12 @@ unwhiten(a::AbstractPDMat, x::DenseVecOrMat{Float64}) = unwhiten!(similar(x), a,
 
 ## quad
 
-function quad(a::AbstractPDMat, x::Matrix{Float64})
+function quad(a::AbstractPDMat, x::DenseMatrix{Float64})
     @check_argdims dim(a) == size(x, 1)
     quad!(Array(Float64, size(x,2)), a, x)
 end
 
-function invquad(a::AbstractPDMat, x::Matrix{Float64})
+function invquad(a::AbstractPDMat, x::DenseMatrix{Float64})
     @check_argdims dim(a) == size(x, 1)
     invquad!(Array(Float64, size(x,2)), a, x)
 end
