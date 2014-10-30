@@ -225,12 +225,22 @@ function pdtest_whiten(C::AbstractPDMat, Cmat::Matrix, verbose::Int)
         @test_approx_eq whiten(C, Y[:,i]) Z[:,i]
     end
 
+    _pdt(verbose, "whiten!")
+    Z2 = copy(Y)
+    whiten!(C, Z2)
+    @test_approx_eq Z Z2
+
     _pdt(verbose, "unwhiten")
     X = unwhiten(C, Z)
     @test_approx_eq X * X' Cmat
     for i = 1:d
         @test_approx_eq unwhiten(C, Z[:,i]) X[:,i]
     end
+
+    _pdt(verbose, "unwhiten!")
+    X2 = copy(Z)
+    unwhiten!(C, X2)
+    @test_approx_eq X X2
 
     _pdt(verbose, "whiten-unwhiten")
     @test_approx_eq unwhiten(C, whiten(C, eye(d))) eye(d)
