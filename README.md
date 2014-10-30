@@ -14,15 +14,63 @@ Positive definite matrices are widely used in machine learning and probabilistic
 
 ## Positive definite matrix types
 
-This package defines an abstract type ``AbstractPDMat`` to capture positive definite matrices of various structures, as well as three concrete sub-types: ``PDMat``, ``PDiagMat``, ``ScalMat``, which can be constructed as follows
+This package defines an abstract type ``AbstractPDMat`` as the base type for positive definite matrices with different internal representations. 
 
-* ``PDMat``: representing a normal positive definite matrix in its full matrix form. **Construction:** ``PDMat(C)``.
+* ``PDMat``: full covariance matrix, defined as
 
-* ``PDiagMat``: representing a positive diagonal matrix. **Construction:** ``PDiagMat(v)``, where ``v`` is the vector of diagonal elements.
+```julia
+immutable PDMat <: AbstractPDMat
+    dim::Int                    # matrix dimension
+    mat::Matrix{Float64}        # input matrix
+    chol::Cholesky{Float64}     # Cholesky factorization of mat
+end
 
-* ``ScalMat(d, v)``: representing a scaling matrix of the form ``v * eye(d)``. **Construction:** ``ScalMat(d, v)``, where ``d`` is the matrix dimension (the size of the matrix is ``d x d``), and ``v`` is a scalar value.
+# Constructors
 
-**Notes:** Compact representation is used internally. For example, an instance of ``PDiagMat`` only contains a vector of diagonal elements instead of the full diagonal matrix, and ``ScalMat`` only contains a scalar value. While, for ``PDMat``, a Cholesky factorization is computed and contained in the instance for efficient computation.
+PDMat(mat, chol)    # with both the input matrix and a Cholesky factorization
+
+PDMat(mat)          # with the input matrix, of type Matrix or Symmetric
+                    # Remarks: the Cholesky factorization will be computed
+                      upon construction.
+
+PDMat(mat, uplo)    # with the input matrix, and an uplo argument (:U or :L)
+                      to specify the way Choleksy is done
+
+PDMat(chol)         # with the Cholesky factorization
+                    # Remarks: the full matrix will be computed upon 
+                      construction.
+```
+
+
+* ``PDiagMat``: diagonal matrix, defined as
+
+```julia
+immutable PDiagMat <: AbstractPDMat
+    dim::Int                    # matrix dimension
+    diag::Vector{Float64}       # the vector of diagonal elements
+    inv_diag::Vector{Float64}   # the element-wise inverse of diag
+end
+
+# Constructors
+
+PDiagMat(v)     # with the vector of diagonal elements
+                # inv_diag will be computed upon construction
+```
+
+
+* ``ScalMat``: uniform scaling matrix, as ``v * eye(d)``, defined as
+
+```julia
+immutable ScalMat <: AbstractPDMat
+    dim::Int                # matrix dimension
+    value::Float64          # diagonal value (shared by all diagonal elements)
+    inv_value::Float64      # inv(value)
+end
+
+# Constructors
+
+ScalMat(d, v)       # with dimension d and diagonal value v
+```
 
 
 ## Common interface
