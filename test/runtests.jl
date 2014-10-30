@@ -1,3 +1,12 @@
 
+
+
+tests = ["pdmtypes", "addition"]
 println("Running tests ...")
-include("pdmat.jl")
+
+for t in tests
+	println("* $t ")
+	include("$t.jl")
+end
+
+

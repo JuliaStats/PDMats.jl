@@ -14,128 +14,239 @@ Positive definite matrices are widely used in machine learning and probabilistic
 
 ## Positive definite matrix types
 
-This package defines an abstract type ``AbstractPDMat`` to capture positive definite matrices of various structures, as well as three concrete sub-types: ``PDMat``, ``PDiagMat``, ``ScalMat``, which can be constructed as follows
+This package defines an abstract type ``AbstractPDMat`` as the base type for positive definite matrices with different internal representations. 
 
-* ``PDMat``: representing a normal positive definite matrix in its full matrix form. **Construction:** ``PDMat(C)``.
+* ``PDMat``: full covariance matrix, defined as
 
-* ``PDiagMat``: representing a positive diagonal matrix. **Construction:** ``PDiagMat(v)``, where ``v`` is the vector of diagonal elements.
+```julia
+immutable PDMat <: AbstractPDMat
+    dim::Int                    # matrix dimension
+    mat::Matrix{Float64}        # input matrix
+    chol::Cholesky{Float64}     # Cholesky factorization of mat
+end
 
-* ``ScalMat(d, v)``: representing a scaling matrix of the form ``v * eye(d)``. **Construction:** ``ScalMat(d, v)``, where ``d`` is the matrix dimension (the size of the matrix is ``d x d``), and ``v`` is a scalar value.
+# Constructors
 
-**Notes:** Compact representation is used internally. For example, an instance of ``PDiagMat`` only contains a vector of diagonal elements instead of the full diagonal matrix, and ``ScalMat`` only contains a scalar value. While, for ``PDMat``, a Cholesky factorization is computed and contained in the instance for efficient computation.
+PDMat(mat, chol)    # with both the input matrix and a Cholesky factorization
+
+PDMat(mat)          # with the input matrix, of type Matrix or Symmetric
+                    # Remarks: the Cholesky factorization will be computed
+                    # upon construction.
+
+PDMat(mat, uplo)    # with the input matrix, and an uplo argument (:U or :L)
+                    # to specify the way Choleksy is done
+
+PDMat(chol)         # with the Cholesky factorization
+                    # Remarks: the full matrix will be computed upon 
+                    # construction.
+```
+
+
+* ``PDiagMat``: diagonal matrix, defined as
+
+```julia
+immutable PDiagMat <: AbstractPDMat
+    dim::Int                    # matrix dimension
+    diag::Vector{Float64}       # the vector of diagonal elements
+    inv_diag::Vector{Float64}   # the element-wise inverse of diag
+end
+
+# Constructors
+
+PDiagMat(v)     # with the vector of diagonal elements
+                # inv_diag will be computed upon construction
+```
+
+
+* ``ScalMat``: uniform scaling matrix, as ``v * eye(d)``, defined as
+
+```julia
+immutable ScalMat <: AbstractPDMat
+    dim::Int                # matrix dimension
+    value::Float64          # diagonal value (shared by all diagonal elements)
+    inv_value::Float64      # inv(value)
+end
+
+# Constructors
+
+ScalMat(d, v)       # with dimension d and diagonal value v
+```
 
 
 ## Common interface
 
-Functions are defined to operate on positive definite matrices through a uniform interface. In the description below, We let ``a`` be a positive definite matrix, *i.e* an instance of a subtype of ``AbstractPDMat``, ``x`` be a column vector or a matrix, and ``c`` be a positive scalar. 
+All subtypes of ``AbstractPDMat`` share the same API, *i.e.* with the same set of methods to operate on their instances. These methods are introduced below, where ``a`` is an instance of a subtype of ``AbstractPDMat`` to represent a positive definite matrix, ``x`` be a column vector or a matrix with ``size(x,1) == dim(a)``, and ``c`` be a positive real value.
 
-* **dim**(a)
+```julia
 
-   Return the dimension of the matrix. If it is a ``d x d`` matrix, this returns ``d``.
+dim(a)      # return the dimension of `a`. 
+            # Let `a` represent a d x d matrix, then `dim(a)` returns d.
 
-* **full**(a)
+size(a)     # return the size tuple of `a`, i.e. `(dim(a), dim(a))`.
 
-    Return a copy of the matrix in full form.
+size(a, i)  # return the i-th dimension of `a`.
 
-* **logdet**(a)
+ndims(a)    # the number of dimensions, which is always 2.
 
-    Return the log-determinant of the matrix.
+eltype(a)   # the element type, which is always `Float64`
 
-* **diag**(a)
+full(a)     # return a copy of the matrix in full form.
 
-    Return a vector of diangonal elements.
+diag(a)     # return a vector of diagonal elements.
 
-* a * x
+inv(a)      # inverse of `a`, of a proper subtype of `AbstractPDMat`.
+            # Note: when `a` is an instance of either `PDMat`, `PDiagMat`, 
+            # and `ScalMat`, `inv(a)` is of the same type of `a`. 
+            # This needs not be required for customized subtypes -- the 
+            # inverse does not always has the same pattern as `a`. 
 
-    Perform matrix-vector/matrix-matrix multiplication. 
+eigmax(a)   # maximum eigenvalue of `a`.
 
-* a \ x
+eigmin(a)   # minimum eigenvalue of `a`.
 
-    Solve linear equation, equivalent to ``inv(a) * x``, but implemented in a more efficient way.
+logdet(a)   # log-determinant of `a`, computed in a numerically stable way.
 
-* a * c, c * a
+a * x       # multiple `a` with `x` (forward transform)
 
-    Scalar product, multiply ``a`` with a scalar ``c``.
+a \ x       # multiply `inv(a)` with `x` (backward transform). 
+            # The internal implementation may not explicitly instantiate
+            # the inverse of `a`.
 
-* **unwhiten**(a, x)   
+a * c       # scale `a` by a positive scale `c`.
+            # The result is in general of the same type of `a`.
 
-    Unwhitening transform. 
+c * a       # equivalent to a * c.
 
-    If ``x`` satisfies the standard Gaussian distribution, then ``unwhiten(a, x)`` has a distribution 
-    of covariance ``a``.
+a + b       # add two positive definite matrices
 
-* **whiten**(a, x)
+pdadd(a, b, c)      # add `a` with `b * c`, where both `a` and `b` are 
+                    # instances of `AbstractPDMat`.
 
-    Whitening transform.
+pdadd(m, a)         # add `a` to a dense matrix `m` of the same size.
 
-    If ``x`` satisfies a distribution of covariance ``a``, then the covariance of ``whiten(a, x)`` is the identity matrix. 
+pdadd(m, a, c)      # add `a * c` to a dense matrix `m` of the same size.
 
-    **Note:** ``whiten`` and ``unwhiten`` are mutually inverse operations.
+pdadd!(m, a)        # add `a` to a dense matrix `m` of the same size inplace.
 
-* **unwhiten!**(a, x)
+pdadd!(m, a, c)     # add `a * c` to a dense matrix `m` of the same size,
+                    # inplace.
 
-    Inplace unwhitening, ``x`` will be updated.
+pdadd!(r, m, a)     # add `a` to a dense matrix `m` of the same size, and write
+                    # the result to `r`.
 
-* **whiten!**(a, x)
+pdadd!(r, m, a, c)  # add `a * c` to a dense matrix `m` of the same size, and 
+                    # write the result to `r`.
 
-    Inplace whitening, ``x`` will be updated.
+quad(a, x)          # compute x' * a * x when `x` is a vector.
+                    # perform such computation in a column-wise fashion, when
+                    # `x` is a matrix, and return a vector of length `n`,
+                    # where `n` is the number of columns in `x`.
 
-* **quad**(a, x)
+quad!(r, a, x)      # compute x' * a * x in a column-wise fashion, and write
+                    # the results to `r`.
 
-    Compute ``x' * a * x`` in an efficient way. Here, ``x`` can be a vector or a matrix.
+invquad(a, x)       # compute x' * inv(a) * x when `x` is a vector.
+                    # perform such computation in a column-wise fashion, when
+                    # `x` is a matrix, and return a vector of length `n`.
 
-    If ``x`` is a vector, it returns a scalar value.
-    If ``x`` is a matrix, is performs column-wise computation and returns a vector ``r``, 
-    such that ``r[i]`` is ``x[:,i]' * a * x[:,i]``.
+invquad!(r, a, x)   # compute x' * inv(a) * x in a column-wise fashion, and 
+                    # write the results to `r`.
 
-* **invquad**(a, x)
+X_A_Xt(a, x)        # compute `x * a * x'` for a matrix `x`.
 
-    Compute ``x' * inv(a) * x`` in an efficient way (without computing ``inv(a)``). 
-    Here, ``x`` can be a vector or a matrix (for column-wise computation).
+Xt_A_X(a, x)        # compute `x' * a * x` for a matrix `x`.
 
-* **quad!**(r, a, x)
+X_invA_Xt(a, x)     # compute `x * inv(a) * x'` for a matrix `x`.
 
-    Inplace column-wise computation of ``quad`` on a matrix ``x``.
+Xt_invA_X(a, x)     # compute `x' * inv(a) * x` for a matrix `x`.
 
-* **invquad!**(r, a, x)
+whiten(a, x)        # whitening transform. `x` can be a vector or a matrix.
+                    #
+                    # Note: If the covariance of `x` is `a`, then the 
+                    # covariance of the transformed result is an identity 
+                    # matrix.
 
-    Inplace column-wise computation of ``invquad`` on a matrix ``x``.
+whiten!(a, x)       # whitening transform inplace, directly updating `x`.
 
-* **X_A_Xt**(a, x)
+whiten!(r, a, x)    # write the transformed result to `r`.
 
-    Computes ``x * a * x'`` for matrix ``x``.
+unwhiten(a, x)      # inverse of whitening transform. `x` can be a vector or
+                    # a matrix.
+                    #
+                    # Note: If the covariance of `x` is an identity matrix, 
+                    # then the covariance of the transformed result is `a`.
+                    # Note: the un-whitening transform is useful for
+                    # generating Gaussian samples.
 
-* **Xt_A_X**(a, x)
+unwhiten!(a, x)     # un-whitening transform inplace, updating `x`.
 
-    Computes ``x' * a * x`` for matrix ``x``.
+unwhiten!(r, a, x)  # write the transformed result to `r`.
 
-* **X_invA_Xt**(a, x)
+test_pdmat(a, amat)     # test the correctness of implementation, given an 
+                        # instance of some sub-type of `AbstractPDMat`, and
+                        # a corresponding full matrix.
+                        #
+                        # Note: this function is provided for the developers
+                        # who want to define their own customized sub types.
+```
 
-    Computes ``x * inv(a) * x'`` for matrix ``x``.
 
-* **Xt_invA_X**(a, x)
+## Define Customized Subtypes
 
-    Computes ``x' * inv(a) * x`` for matrix ``x``.
+In some situation, it is useful to define a customized subtype of `AbstractPDMat` to capture positive definite matrices with special structures. For this purpose, one has to define a subset of methods (as listed below), and other methods will be automatically provided.
 
-* a1 + a2
+```julia
 
-    Add two positive definite matrices (promoted to a proper type).
+# Let `M` be the name of the subtype, then the following methods need
+# to be implemented for `M`:
 
-* a + x
+dim(a::M)       # return the dimension of `a`
 
-    Add a positive definite matrix and an ordinary square matrix (returns an ordinary matrix).
+full(a::M)      # return a copy of the matrix in full form, of type 
+                # ``Matrix{Float64}``.
 
-* **add!**(x, a)
+diag(a::M)      # return the vector of diagonal elements, of type
+                # ``Vector{Float64}``.
 
-    Add the positive definite matrix ``a`` to an ordinary matrix ``m`` (inplace).
+* (a::M, c::Float64)        # return a scaled version of `a`.
 
-* **add_scal!**(x, a, c)
+* (a::M, x::DenseVecOrMat)  # transform `x`, i.e. compute `a * x`.
 
-    Add ``a * c`` to an ordinary matrix ``x`` (inplace).
+\ (a::M, x::DenseVecOrMat)  # inverse transform `x`, i.e. compute `inv(a) * x`.
 
-* **add_scal**(a1, a2, c)
+inv(a::M)       # compute the inverse of `a`.
 
-    Return ``a1 + a2 * c`` (promoted to a proper type).
+logdet(a::M)    # compute the log-determinant of `a`.
 
-**Note:** Specialized version of each of these functions are implemented for each specific postive matrix types using the most efficient routine (depending on the corresponding structures.)
+eigmax(a::M)    # compute the maximum eigenvalue of `a`.
+
+eigmin(a::M)    # compute the minimum eigenvalue of `a`.
+
+whiten!(r::DenseVecOrMat, a::M, x::DenseVecOrMat)  # whitening transform,
+                                                   # write result to `r`.
+
+unwhiten!(r::DenseVecOrMat, a::M, x::DenseVecOrMat)  # un-whitening transform,
+                                                     # write result to `r`.
+
+quad(a::M, x::DenseVector)      # compute `x' * a * x`
+
+quad!(r::AbstractArray, a::M, x::DenseMatrix)   # compute `x' * a * x` in 
+                                                # a column-wise manner
+
+invquad(a::M, x::DenseVector)   # compute `x' * inv(a) * x`
+
+invquad!(r::AbstractArray, a::M, x::DenseMatrix) # compute `x' * inv(a) * x` 
+                                                 # in a column-wise manner
+
+X_A_Xt(a::M, x::DenseMatrix)        # compute `x * a * x'`
+
+Xt_A_X(a::M, x::DenseMatrix)        # compute `x' * a * x`
+
+X_invA_Xt(a::M, x::DenseMatrix)     # compute `x * inv(a) * x'`
+
+Xt_invA_X(a::M, x::DenseMatrix)     # compute `x' * inv(a) * x`
+```
+
+
+
 
