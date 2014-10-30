@@ -6,15 +6,16 @@ immutable PDMat <: AbstractPDMat
     chol::Cholesky{Float64}
 end
 
-function PDMat(mat::Matrix{Float64})
+function PDMat(mat::Matrix{Float64}, chol::Cholesky{Float64})
     d = size(mat, 1)
-    (d >= 1 && size(mat, 2) == d) ||
-        throw(ArgumentError("mat must be a square matrix."))
-    PDMat(d, mat, cholfact(mat))
+    size(chol, 1) == d ||
+        throw(DimensionMismatch("Dimensions of mat and chol are inconsistent."))
+    PDMat(d, mat, chol)
 end
-PDMat(fac::Cholesky) = PDMat(size(fac,1), full(fac), fac)
-PDMat(mat::Symmetric{Float64}) = PDMat(mat.S)
 
+PDMat(mat::Matrix{Float64}) = PDMat(mat, cholfact(mat))
+PDMat(mat::Symmetric{Float64}) = PDMat(mat.S)
+PDMat(fac::Cholesky) = PDMat(size(fac,1), full(fac), fac)
 
 ### Basics
 
