@@ -85,7 +85,7 @@ function invquad!(r::Array{Float64}, a::PDMat, x::Matrix{Float64}) # = sumsq!(fi
     @check_argdims(length(r) == n)
     wx = whiten(a, x)
     for j = 1:n
-        r[j] = sumsq(view(wx, :, j))
+        r[j] = sumabs2(view(wx, :, j))
     end
     return r
 end

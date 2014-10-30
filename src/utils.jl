@@ -43,15 +43,6 @@ function _adddiag!(a::Matrix, v::Vector, c::Real)
     return a
 end
 
-
-function sumsq{T}(a::AbstractArray{T})
-    s = zero(T)
-    for i = 1:length(a)
-        @inbounds s += abs2(a[i])
-    end
-    return s
-end
-
 function wsumsq(w::AbstractVector, a::AbstractVector)
     @check_argdims(length(a) == length(w))
     s = 0.
@@ -74,16 +65,4 @@ function mulsqrt!(x::Vector, c::Vector)
     x
 end
 
-function add_diag!(a::Matrix, v::Number)
-    n = minimum(size(a))::Int
-    for i = 1:n
-        @inbounds a[i,i] += v
-    end
-    a
-end
 
-
-
-add_diag(a::Matrix, v::Number) = add_diag!(copy(a), v)
-add_diag(a::Matrix, v::Vector) = add_diag!(copy(a), v)
-add_diag(a::Matrix, v::Vector, c::Number) = add_diag!(copy(a), v, c)

@@ -97,7 +97,7 @@ function quad!(r::AbstractArray{Float64}, a::ScalMat, x::Matrix{Float64})
     n = size(x, 2)
     @check_argdims dim(a) == m && length(r) == n
     for j = 1:n
-        r[j] = sumsq(view(x, :, j)) * a.value
+        r[j] = sumabs2(view(x, :, j)) * a.value
     end
     r
 end
@@ -107,7 +107,7 @@ function invquad!(r::AbstractArray{Float64}, a::ScalMat, x::Matrix{Float64})
     n = size(x, 2)
     @check_argdims dim(a) == m && length(r) == n
     for j = 1:n
-        r[j] = sumsq(view(x, :, j)) * a.inv_value
+        r[j] = sumabs2(view(x, :, j)) * a.inv_value
     end
     r
 end
