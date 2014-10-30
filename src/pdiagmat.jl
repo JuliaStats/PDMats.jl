@@ -20,6 +20,8 @@ full(a::PDiagMat) = diagm(a.diag)
 inv(a::PDiagMat) = PDiagMat(a.inv_diag, a.diag)
 logdet(a::PDiagMat) = sum(log(a.diag))
 diag(a::PDiagMat) = copy(a.diag)
+eigmax(a::PDiagMat) = maximum(a.diag)
+eigmin(a::PDiagMat) = minimum(a.diag)
 
 * (a::PDiagMat, c::Float64) = PDiagMat(a.diag * c)
 * (a::PDiagMat, x::Vector{Float64}) = a.diag .* x

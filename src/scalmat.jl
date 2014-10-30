@@ -16,6 +16,8 @@ full(a::ScalMat) = diagm(fill(a.value, a.dim))
 inv(a::ScalMat) = ScalMat(a.dim, a.inv_value, a.value)
 logdet(a::ScalMat) = a.dim * log(a.value)
 diag(a::ScalMat) = fill(a.value, a.dim)
+eigmax(a::ScalMat) = a.value
+eigmin(a::ScalMat) = a.value
 
 * (a::ScalMat, c::Float64) = ScalMat(a.dim, a.value * c)
 / (a::ScalMat, c::Float64) = ScalMat(a.dim, a.value / c)

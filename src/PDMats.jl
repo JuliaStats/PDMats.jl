@@ -3,7 +3,7 @@ module PDMats
     using ArrayViews
 
     import Base: +, *, \, /, ==
-    import Base: full, logdet, inv, diag, diagm
+    import Base: full, logdet, inv, diag, diagm, eigmax, eigmin
 
     export
         # Types
@@ -30,7 +30,8 @@ module PDMats
         X_invA_Xt, 
         Xt_invA_X,
         unwhiten_winv!, 
-        unwhiten_winv
+        unwhiten_winv,
+        test_pdmat
 
     import Base.BLAS: nrm2, axpy!, gemv!, gemm, gemm!, trmv, trmv!, trmm, trmm!
     import Base.LAPACK: trtrs!
@@ -51,5 +52,7 @@ module PDMats
 
     include("generics.jl")
     include("addition.jl")
+
+    include("testutils.jl")
 
 end # module

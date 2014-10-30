@@ -24,6 +24,9 @@ inv(a::PDMat) = PDMat(inv(a.chol))
 logdet(a::PDMat) = logdet(a.chol)
 diag(a::PDMat) = diag(a.mat)
 
+eigmax(a::PDMat) = eigmax(a.mat)
+eigmin(a::PDMat) = eigmin(a.mat)
+
 * (a::PDMat, c::Float64) = PDMat(a.mat * c)
 * (a::PDMat, x::StridedVecOrMat) = a.mat * x
 \ (a::PDMat, x::StridedVecOrMat) = a.chol \ x
