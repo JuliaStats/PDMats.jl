@@ -86,23 +86,23 @@ invquad!(r::AbstractArray, a::PDiagMat, x::Matrix{Float64}) = At_mul_B!(r, abs2(
 
 ### tri products
 
-function X_A_Xt(a::PDiagMat, x::Matrix{Float64}) 
+function X_A_Xt(a::PDiagMat, x::DenseMatrix{Float64}) 
     z = x .* reshape(sqrt(a.diag), 1, dim(a))
-    gemm('N', 'T', 1.0, z, z)
+    A_mul_Bt(z, z)
 end
 
-function Xt_A_X(a::PDiagMat, x::Matrix{Float64})
+function Xt_A_X(a::PDiagMat, x::DenseMatrix{Float64})
     z = x .* sqrt(a.diag)
-    gemm('T', 'N', 1.0, z, z)
+    At_mul_B(z, z)
 end
 
-function X_invA_Xt(a::PDiagMat, x::Matrix{Float64})
+function X_invA_Xt(a::PDiagMat, x::DenseMatrix{Float64})
     z = x .* reshape(sqrt(a.inv_diag), 1, dim(a))
-    gemm('N', 'T', 1.0, z, z)
+    A_mul_Bt(z, z)
 end
 
-function Xt_invA_X(a::PDiagMat, x::Matrix{Float64})
+function Xt_invA_X(a::PDiagMat, x::DenseMatrix{Float64})
     z = x .* sqrt(a.inv_diag)
-    gemm('T', 'N', 1.0, z, z)
+    At_mul_B(z, z)
 end
 

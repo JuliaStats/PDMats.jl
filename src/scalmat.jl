@@ -75,22 +75,22 @@ invquad!(r::AbstractArray{Float64}, a::ScalMat, x::Matrix{Float64}) = colwise_su
 
 ### tri products
 
-function X_A_Xt(a::ScalMat, x::Matrix{Float64})
+function X_A_Xt(a::ScalMat, x::DenseMatrix{Float64})
     @check_argdims dim(a) == size(x, 2)
     gemm('N', 'T', a.value, x, x)
 end
 
-function Xt_A_X(a::ScalMat, x::Matrix{Float64})
+function Xt_A_X(a::ScalMat, x::DenseMatrix{Float64})
     @check_argdims dim(a) == size(x, 1)
     gemm('T', 'N', a.value, x, x)
 end
 
-function X_invA_Xt(a::ScalMat, x::Matrix{Float64})
+function X_invA_Xt(a::ScalMat, x::DenseMatrix{Float64})
     @check_argdims dim(a) == size(x, 2)
     gemm('N', 'T', a.inv_value, x, x)
 end
 
-function Xt_invA_X(a::ScalMat, x::Matrix{Float64})
+function Xt_invA_X(a::ScalMat, x::DenseMatrix{Float64})
     @check_argdims dim(a) == size(x, 1)
     gemm('T', 'N', a.inv_value, x, x)
 end

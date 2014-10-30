@@ -69,30 +69,30 @@ invquad!(r::AbstractArray, a::PDMat, x::DenseMatrix{Float64}) = colwise_dot!(r, 
 
 ### tri products
 
-function X_A_Xt(a::PDMat, x::Matrix{Float64})
-    z = copy(x) # dimension checks will be done in the A_mul_B*! methods
+function X_A_Xt(a::PDMat, x::DenseMatrix{Float64})
+    z = copy(x) 
     cf = a.chol[:UL]
     istriu(cf) ? A_mul_Bc!(z, cf) : A_mul_B!(z, cf)
-    gemm('N', 'T', 1.0, z, z)
+    A_mul_Bt(z, z)
 end
 
-function Xt_A_X(a::PDMat, x::Matrix{Float64})
+function Xt_A_X(a::PDMat, x::DenseMatrix{Float64})
     z = copy(x)
     cf = a.chol[:UL]
     istriu(cf) ? A_mul_B!(cf, z) : Ac_mul_B!(cf, z)
-    gemm('T', 'N', 1.0, z, z)
+    At_mul_B(z, z)
 end
 
-function X_invA_Xt(a::PDMat, x::Matrix{Float64})
+function X_invA_Xt(a::PDMat, x::DenseMatrix{Float64})
     z = copy(x)
     cf = a.chol[:UL]
     istriu(cf) ? A_rdiv_B!(z, cf) : A_rdiv_Bc!(z, cf)
-    gemm('N','T', 1.0, z, z)
+    A_mul_Bt(z, z)
 end
 
-function Xt_invA_X(a::PDMat, x::Matrix{Float64})
+function Xt_invA_X(a::PDMat, x::DenseMatrix{Float64})
     z = copy(x)
     cf = a.chol[:UL]
     istriu(cf) ? Ac_ldiv_B!(cf, z) : A_ldiv_B!(cf, z)
-    gemm('T', 'N', 1.0, z, z)
+    At_mul_B(z, z)
 end
