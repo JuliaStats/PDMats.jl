@@ -60,9 +60,6 @@ unwhiten(a::PDiagMat, x::Matrix{Float64}) = x .* sqrt(a.diag)
 unwhiten!(a::PDiagMat, x::Vector{Float64}) = mulsqrt!(x, a.diag)
 unwhiten!(a::PDiagMat, x::Matrix{Float64}) = broadcast!(*, x, x, sqrt(a.diag))
 
-unwhiten_winv!(J::PDiagMat, z::StridedVecOrMat{Float64}) = whiten!(J, z)
-unwhiten_winv(J::PDiagMat, z::StridedVecOrMat{Float64}) = whiten(J, z)
-
 # quadratic forms
 
 quad(a::PDiagMat, x::Vector{Float64}) = wsumsq(a.diag, x)

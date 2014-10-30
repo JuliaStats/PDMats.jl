@@ -45,25 +45,18 @@ eigmin(a::PDMat) = eigmin(a.mat)
 
 # whiten and unwhiten
 
-## for a.chol.uplo == 'U', a.chol[:U] does not copy.
-## Similarly a.chol[:L] does not copy when a.chol.uplo == 'L'
 function whiten!(a::PDMat, x::StridedVecOrMat{Float64})
-    cholfactor = a.chol[:UL]
-    istriu(cholfactor) ? Ac_ldiv_B!(cholfactor, x) : A_ldiv_B!(cholfactor, x)
+    cf = a.chol[:UL]
+    istriu(cf) ? Ac_ldiv_B!(cf, x) : A_ldiv_B!(cf, x)
 end
 whiten(a::PDMat, x::StridedVecOrMat{Float64}) = whiten!(a, copy(x))
 
 function unwhiten!(a::PDMat, x::StridedVecOrMat{Float64})
-    cholfactor = a.chol[:UL]
-    istriu(cholfactor) ? Ac_mul_B!(cholfactor, x) : A_mul_B!(cholfactor, x)
+    cf = a.chol[:UL]
+    istriu(cf) ? Ac_mul_B!(cf, x) : A_mul_B!(cf, x)
 end
 unwhiten(a::PDMat, x::StridedVecOrMat{Float64}) = unwhiten!(a, copy(x))
 
-function unwhiten_winv!(a::PDMat, x::StridedVecOrMat{Float64})
-    cholfactor = a.chol[:UL]
-    istriu(cholfactor) ? A_mul_B!(cholfactor, x) : Ac_mul_B!(cholfactor, x)
-end
-unwhiten_winv(a::PDMat, x::StridedVecOrMat{Float64}) = unwhiten_winv!(a, copy(x))
 
 # quadratic forms
 

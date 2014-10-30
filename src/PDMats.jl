@@ -31,8 +31,6 @@ module PDMats
         Xt_A_X, 
         X_invA_Xt, 
         Xt_invA_X,
-        unwhiten_winv!, 
-        unwhiten_winv,
         test_pdmat
 
     import Base.BLAS: nrm2, axpy!, gemv!, gemm, gemm!, trmv, trmv!, trmm, trmm!

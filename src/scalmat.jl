@@ -77,9 +77,6 @@ function unwhiten!(a::ScalMat, x::StridedVecOrMat{Float64})
     x
 end
 
-unwhiten_winv!(J::ScalMat,  z::StridedVecOrMat{Float64}) = whiten!(J, z)
-unwhiten_winv(J::ScalMat, z::StridedVecOrMat{Float64}) = whiten(J, z)
-
 # quadratic forms
 
 function quad(a::ScalMat, x::Vector{Float64})
