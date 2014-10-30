@@ -21,23 +21,19 @@ pdadd(a::Matrix{Float64}, b::AbstractPDMat) = pdadd!(similar(a), a, b, 1.0)
 + (a::Matrix{Float64}, b::AbstractPDMat) = pdadd(a, b)
 + (a::AbstractPDMat, b::Matrix{Float64}) = pdadd(b, a)
 
-# deprecated
+* (a::AbstractPDMat, c::Real) = a * float64(c)
+* (c::Real, a::AbstractPDMat) = a * float64(c)
+/ (a::AbstractPDMat, c::Real) = a * float64(inv(c))
 
-
-* (c::Float64, a::AbstractPDMat) = a * c
-/ (a::AbstractPDMat, c::Float64) = a * inv(c)
+## quad
 
 function quad(a::AbstractPDMat, x::Matrix{Float64})
     @check_argdims dim(a) == size(x, 1)
-    r = Array(Float64, size(x,2))
-    quad!(r, a, x)
-    r
+    quad!(Array(Float64, size(x,2)), a, x)
 end
 
 function invquad(a::AbstractPDMat, x::Matrix{Float64})
     @check_argdims dim(a) == size(x, 1)
-    r = Array(Float64, size(x,2))
-    invquad!(r, a, x)
-    r
+    invquad!(Array(Float64, size(x,2)), a, x)
 end
 

@@ -3,7 +3,7 @@ module PDMats
     using ArrayViews
 
     import Base: +, *, \, /, ==
-    import Base: full, logdet, inv, diag, diagm, eigmax, eigmin
+    import Base: full, logdet, inv, diag, diagm, scale, scale!, eigmax, eigmin
 
     export
         # Types

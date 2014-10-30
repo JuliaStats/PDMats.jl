@@ -9,17 +9,18 @@ immutable ScalMat <: AbstractPDMat
     ScalMat(d::Int, v::Float64, inv_v::Float64) = new(d, v, inv_v)
 end
 
-# basics
+
+### Basics
 
 dim(a::ScalMat) = a.dim
 full(a::ScalMat) = diagm(fill(a.value, a.dim))
-inv(a::ScalMat) = ScalMat(a.dim, a.inv_value, a.value)
-logdet(a::ScalMat) = a.dim * log(a.value)
 diag(a::ScalMat) = fill(a.value, a.dim)
-eigmax(a::ScalMat) = a.value
-eigmin(a::ScalMat) = a.value
 
-# arithmetics
+
+### Arithmetics
+
+* (a::ScalMat, c::Float64) = ScalMat(a.dim, a.value * c)
+/ (a::ScalMat, c::Float64) = ScalMat(a.dim, a.value / c)
 
 function pdadd!(r::Matrix{Float64}, a::Matrix{Float64}, b::ScalMat, c::Real)
     @check_argdims size(r) == size(a) == size(b)
@@ -31,8 +32,17 @@ function pdadd!(r::Matrix{Float64}, a::Matrix{Float64}, b::ScalMat, c::Real)
     return r
 end
 
-* (a::ScalMat, c::Float64) = ScalMat(a.dim, a.value * c)
-/ (a::ScalMat, c::Float64) = ScalMat(a.dim, a.value / c)
+
+### Algebra
+
+inv(a::ScalMat) = ScalMat(a.dim, a.inv_value, a.value)
+logdet(a::ScalMat) = a.dim * log(a.value)
+eigmax(a::ScalMat) = a.value
+eigmin(a::ScalMat) = a.value
+
+
+### Transform
+
 * (a::ScalMat, x::StridedVecOrMat) = a.value * x
 \ (a::ScalMat, x::StridedVecOrMat) = a.inv_value * x
 

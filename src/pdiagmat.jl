@@ -13,17 +13,14 @@ immutable PDiagMat <: AbstractPDMat
     end
 end
 
-# basics
+
+### Basics
 
 dim(a::PDiagMat) = a.dim
 full(a::PDiagMat) = diagm(a.diag)
-inv(a::PDiagMat) = PDiagMat(a.inv_diag, a.diag)
-logdet(a::PDiagMat) = sum(log(a.diag))
 diag(a::PDiagMat) = copy(a.diag)
-eigmax(a::PDiagMat) = maximum(a.diag)
-eigmin(a::PDiagMat) = minimum(a.diag)
 
-# arithmetics
+### Arithmetics
 
 function pdadd!(r::Matrix{Float64}, a::Matrix{Float64}, b::PDiagMat, c::Real)
     @check_argdims size(r) == size(a) == size(b)
@@ -35,8 +32,19 @@ function pdadd!(r::Matrix{Float64}, a::Matrix{Float64}, b::PDiagMat, c::Real)
     return r
 end
 
-
 * (a::PDiagMat, c::Float64) = PDiagMat(a.diag * c)
+
+
+### Algebra
+
+inv(a::PDiagMat) = PDiagMat(a.inv_diag, a.diag)
+logdet(a::PDiagMat) = sum(log(a.diag))
+eigmax(a::PDiagMat) = maximum(a.diag)
+eigmin(a::PDiagMat) = minimum(a.diag)
+
+
+### Transform
+
 * (a::PDiagMat, x::Vector{Float64}) = a.diag .* x
 \ (a::PDiagMat, x::Vector{Float64}) = a.inv_diag .* x
 * (a::PDiagMat, x::Matrix{Float64}) = mulcols(x, a.diag)

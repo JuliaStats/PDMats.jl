@@ -15,28 +15,38 @@ end
 PDMat(fac::Cholesky) = PDMat(size(fac,1), full(fac), fac)
 PDMat(mat::Symmetric{Float64}) = PDMat(mat.S)
 
-# basics
+
+### Basics
 
 dim(a::PDMat) = a.dim
 full(a::PDMat) = copy(a.mat)
 diag(a::PDMat) = diag(a.mat)
 
-# arithmetics
+
+### Arithmetics
 
 function pdadd!(r::Matrix{Float64}, a::Matrix{Float64}, b::PDMat, c::Real)
     @check_argdims size(r) == size(a) == size(b)
     _addscal!(r, a, b.mat, float64(c))
 end
 
+* (a::PDMat, c::Float64) = PDMat(a.mat * c)
+
+### Algebra
 
 inv(a::PDMat) = PDMat(inv(a.chol))
 logdet(a::PDMat) = logdet(a.chol)
 eigmax(a::PDMat) = eigmax(a.mat)
 eigmin(a::PDMat) = eigmin(a.mat)
 
-* (a::PDMat, c::Float64) = PDMat(a.mat * c)
+
+### Transform
+
 * (a::PDMat, x::StridedVecOrMat) = a.mat * x
 \ (a::PDMat, x::StridedVecOrMat) = a.chol \ x
+
+
+
 
 # whiten and unwhiten
 
