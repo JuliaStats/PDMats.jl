@@ -8,22 +8,29 @@ end
 
 function PDMat(mat::Matrix{Float64})
     d = size(mat, 1)
-    if !(d >= 1 && size(mat, 2) == d)
+    (d >= 1 && size(mat, 2) == d) ||
         throw(ArgumentError("mat must be a square matrix."))
-    end
     PDMat(d, mat, cholfact(mat))
 end
 PDMat(fac::Cholesky) = PDMat(size(fac,1), full(fac), fac)
-PDMat(mat::Symmetric{Float64}) = PDMat(full(mat))
+PDMat(mat::Symmetric{Float64}) = PDMat(mat.S)
 
 # basics
 
 dim(a::PDMat) = a.dim
 full(a::PDMat) = copy(a.mat)
-inv(a::PDMat) = PDMat(inv(a.chol))
-logdet(a::PDMat) = logdet(a.chol)
 diag(a::PDMat) = diag(a.mat)
 
+# arithmetics
+
+function pdadd!(r::Matrix{Float64}, a::Matrix{Float64}, b::PDMat, c::Real)
+    @check_argdims size(r) == size(a) == size(b)
+    _addscal!(r, a, b.mat, float64(c))
+end
+
+
+inv(a::PDMat) = PDMat(inv(a.chol))
+logdet(a::PDMat) = logdet(a.chol)
 eigmax(a::PDMat) = eigmax(a.mat)
 eigmin(a::PDMat) = eigmin(a.mat)
 

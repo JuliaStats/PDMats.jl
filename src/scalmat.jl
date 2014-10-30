@@ -19,6 +19,18 @@ diag(a::ScalMat) = fill(a.value, a.dim)
 eigmax(a::ScalMat) = a.value
 eigmin(a::ScalMat) = a.value
 
+# arithmetics
+
+function pdadd!(r::Matrix{Float64}, a::Matrix{Float64}, b::ScalMat, c::Real)
+    @check_argdims size(r) == size(a) == size(b)
+    if is(r, a)
+        _adddiag!(r, b.value * float64(c))
+    else
+        _adddiag!(copy!(r, a), b.value * float64(c))
+    end
+    return r
+end
+
 * (a::ScalMat, c::Float64) = ScalMat(a.dim, a.value * c)
 / (a::ScalMat, c::Float64) = ScalMat(a.dim, a.value / c)
 * (a::ScalMat, x::StridedVecOrMat) = a.value * x

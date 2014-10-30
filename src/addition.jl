@@ -1,28 +1,4 @@
 
-+ (a::PDMat,    b::Matrix{Float64}) = a.mat + b
-+ (a::PDiagMat, b::Matrix{Float64}) = add_diag(b, a.diag)
-+ (a::ScalMat,  b::Matrix{Float64}) = add_diag(b, a.value)
-
-+ (a::Matrix{Float64}, b::AbstractPDMat) = b + a
-
-function add!(a::Matrix{Float64}, b::PDMat)
-    bm = b.mat
-    @check_argdims size(a) == size(bm)
-    for i = 1:length(a)
-        @inbounds a[i] += bm[i]
-    end
-    a
-end
-
-add!(a::Matrix{Float64}, b::PDiagMat) = add_diag!(a, b.diag)
-add!(a::Matrix{Float64}, b::ScalMat) = add_diag!(a, b.value)
-
-add_scal!(a::Matrix{Float64}, b::PDMat, c::Float64) = axpy!(c, b.mat, a)
-add_scal!(a::Matrix{Float64}, b::PDiagMat, c::Float64) = add_diag!(a, b.diag, c)
-add_scal!(a::Matrix{Float64}, b::ScalMat, c::Float64) = add_diag!(a, b.value * c)
-
-add_scal(a::Matrix{Float64}, b::AbstractPDMat, c::Float64) = add_scal!(copy(a), b, c)
-
 # between pdmat and pdmat
 
 + (a::PDMat, b::AbstractPDMat) = PDMat(a.mat + full(b))

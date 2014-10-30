@@ -12,7 +12,7 @@ function test_pdmat(C::AbstractPDMat, Cmat::Matrix{Float64};
                     cmat_eq::Bool=false,        # require Cmat and full(C) to be exactly equal
                     t_diag::Bool=true,          # whethet to test diag method
                     t_scale::Bool=true,         # whether to test scaling
-                    t_add::Bool=true,           # whether to test add and add_scal
+                    t_add::Bool=true,           # whether to test pdadd
                     t_logdet::Bool=true,        # whether to test logdet method
                     t_eig::Bool=true,           # whether to test eigmax and eigmin
                     t_mul::Bool=true,           # whether to test multiplication
@@ -110,11 +110,11 @@ function pdtest_add(C::AbstractPDMat, Cmat::Matrix, verbose::Int)
     @test_approx_eq M + C M + Cmat
 
     _pdt(verbose, "add_scal")
-    @test_approx_eq add_scal(M, C, 2.0) M + Cmat * 2.0
+    @test_approx_eq pdadd(M, C, 2.0) M + Cmat * 2.0
 
     _pdt(verbose, "add_scal!")
     R = M + Cmat * 2.0
-    Mr = add_scal!(M, C, 2.0)
+    Mr = pdadd!(M, C, 2.0)
     @test is(Mr, M)
     @test_approx_eq Mr R
 end

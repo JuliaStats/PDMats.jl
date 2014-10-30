@@ -7,6 +7,42 @@ macro check_argdims(cond)
     end
 end
 
+function _addscal!(r::Matrix, a::Matrix, b::Matrix, c::Real)
+    if c == 1.0
+        for i = 1:length(a)
+            @inbounds r[i] = a[i] + b[i]
+        end
+    else
+        for i = 1:length(a)
+            @inbounds r[i] = a[i] + b[i] * c
+        end
+    end
+    return r
+end
+
+function _adddiag!(a::Matrix, v::Real)
+    n = size(a, 1)
+    for i = 1:n
+        @inbounds a[i,i] += v
+    end
+    return a
+end
+
+function _adddiag!(a::Matrix, v::Vector, c::Real)
+    n = size(a, 1)
+    @check_argdims length(v) == n
+    if c == 1.0
+        for i = 1:n
+            @inbounds a[i,i] += v[i]
+        end
+    else
+        for i = 1:n
+            @inbounds a[i,i] += v[i] * c
+        end
+    end
+    return a
+end
+
 
 function sumsq{T}(a::AbstractArray{T})
     s = zero(T)
@@ -83,23 +119,7 @@ function add_diag!(a::Matrix, v::Number)
     a
 end
 
-function add_diag!(a::Matrix, v::Vector)
-    n = minimum(size(a))::Int
-    @check_argdims length(v) == n
-    for i = 1:n
-        @inbounds a[i,i] += v[i]
-    end
-    a
-end
 
-function add_diag!(a::Matrix, v::Vector, c::Number)
-    n = minimum(size(a))::Int
-    @check_argdims length(v) == n
-    for i = 1:n
-        @inbounds a[i,i] += v[i] * c
-    end
-    a
-end
 
 add_diag(a::Matrix, v::Number) = add_diag!(copy(a), v)
 add_diag(a::Matrix, v::Vector) = add_diag!(copy(a), v)

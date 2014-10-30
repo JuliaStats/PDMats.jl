@@ -23,6 +23,19 @@ diag(a::PDiagMat) = copy(a.diag)
 eigmax(a::PDiagMat) = maximum(a.diag)
 eigmin(a::PDiagMat) = minimum(a.diag)
 
+# arithmetics
+
+function pdadd!(r::Matrix{Float64}, a::Matrix{Float64}, b::PDiagMat, c::Real)
+    @check_argdims size(r) == size(a) == size(b)
+    if is(r, a)
+        _adddiag!(r, b.diag, float64(c))
+    else
+        _adddiag!(copy!(r, a), b.diag, float64(c))
+    end
+    return r
+end
+
+
 * (a::PDiagMat, c::Float64) = PDiagMat(a.diag * c)
 * (a::PDiagMat, x::Vector{Float64}) = a.diag .* x
 \ (a::PDiagMat, x::Vector{Float64}) = a.inv_diag .* x

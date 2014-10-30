@@ -19,8 +19,10 @@ module PDMats
         whiten!, 
         unwhiten, 
         unwhiten!, 
-        add_scal!, 
+        pdadd, 
+        pdadd!, 
         add_scal,
+        add_scal!, 
         quad, 
         quad!, 
         invquad, 
@@ -54,5 +56,7 @@ module PDMats
     include("addition.jl")
 
     include("testutils.jl")
+
+    include("deprecates.jl")
 
 end # module
