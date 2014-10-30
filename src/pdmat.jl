@@ -18,8 +18,6 @@ PDMat(mat::Symmetric{Float64}) = PDMat(full(mat))
 
 # basics
 
-Base.size(a::PDMat) = (a.dim,a.dim)
-Base.size(a::PDMat,i) = size(a.mat,i)
 dim(a::PDMat) = a.dim
 full(a::PDMat) = copy(a.mat)
 inv(a::PDMat) = PDMat(inv(a.chol))

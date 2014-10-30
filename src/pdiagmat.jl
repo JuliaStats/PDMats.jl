@@ -15,8 +15,6 @@ end
 
 # basics
 
-Base.size(a::PDiagMat) = (a.dim,a.dim)
-Base.size(a::PDiagMat,i) = (i < 1) ? error("dimension out of range") : (i < 3 ? a.dim : 1)
 dim(a::PDiagMat) = a.dim
 full(a::PDiagMat) = diagm(a.diag)
 inv(a::PDiagMat) = PDiagMat(a.inv_diag, a.diag)
