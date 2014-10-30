@@ -119,6 +119,9 @@ c * a       # equivalent to a * c.
 
 a + b       # add two positive definite matrices
 
+pdadd(a, b, c)      # add `a` with `b * c`, where both `a` and `b` are 
+                    # instances of `AbstractPDMat`.
+
 pdadd(m, a)         # add `a` to a dense matrix `m` of the same size.
 
 pdadd(m, a, c)      # add `a * c` to a dense matrix `m` of the same size.
@@ -179,8 +182,71 @@ unwhiten!(a, x)     # un-whitening transform inplace, updating `x`.
 
 unwhiten!(r, a, x)  # write the transformed result to `r`.
 
-
+test_pdmat(a, amat)     # test the correctness of implementation, given an 
+                        # instance of some sub-type of `AbstractPDMat`, and
+                        # a corresponding full matrix.
+                        #
+                        # Note: this function is provided for the developers
+                        # who want to define their own customized sub types.
 ```
+
+
+## Define Customized Subtypes
+
+In some situation, it is useful to define a customized subtype of `AbstractPDMat` to capture positive definite matrices with special structures. For this purpose, one has to define a subset of methods (as listed below), and other methods will be automatically provided.
+
+```julia
+
+# Let `M` be the name of the subtype, then the following methods need
+# to be implemented for `M`:
+
+dim(a::M)       # return the dimension of `a`
+
+full(a::M)      # return a copy of the matrix in full form, of type 
+                # ``Matrix{Float64}``.
+
+diag(a::M)      # return the vector of diagonal elements, of type
+                # ``Vector{Float64}``.
+
+* (a::M, c::Float64)        # return a scaled version of `a`.
+
+* (a::M, x::DenseVecOrMat)  # transform `x`, i.e. compute `a * x`.
+
+\ (a::M, x::DenseVecOrMat)  # inverse transform `x`, i.e. compute `inv(a) * x`.
+
+inv(a::M)       # compute the inverse of `a`.
+
+logdet(a::M)    # compute the log-determinant of `a`.
+
+eigmax(a::M)    # compute the maximum eigenvalue of `a`.
+
+eigmin(a::M)    # compute the minimum eigenvalue of `a`.
+
+whiten!(r::DenseVecOrMat, a::M, x::DenseVecOrMat)  # whitening transform,
+                                                   # write result to `r`.
+
+unwhiten!(r::DenseVecOrMat, a::M, x::DenseVecOrMat)  # un-whitening transform,
+                                                     # write result to `r`.
+
+quad(a::M, x::DenseVector)      # compute `x' * a * x`
+
+quad!(r::AbstractArray, a::M, x::DenseMatrix)   # compute `x' * a * x` in 
+                                                # a column-wise manner
+
+invquad(a::M, x::DenseVector)   # compute `x' * inv(a) * x`
+
+invquad!(r::AbstractArray, a::M, x::DenseMatrix) # compute `x' * inv(a) * x` 
+                                                 # in a column-wise manner
+
+X_A_Xt(a::M, x::DenseMatrix)        # compute `x * a * x'`
+
+Xt_A_X(a::M, x::DenseMatrix)        # compute `x' * a * x`
+
+X_invA_Xt(a::M, x::DenseMatrix)     # compute `x * inv(a) * x'`
+
+Xt_invA_X(a::M, x::DenseMatrix)     # compute `x' * inv(a) * x`
+```
+
 
 
 
