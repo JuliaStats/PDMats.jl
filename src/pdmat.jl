@@ -58,30 +58,16 @@ function unwhiten!(r::DenseVecOrMat{Float64}, a::PDMat, x::StridedVecOrMat{Float
 end
 
 
-# quadratic forms
+### quadratic forms
 
-quad(a::PDMat, x::Vector{Float64}) = dot(x, a.mat * x)
-invquad(a::PDMat, x::Vector{Float64}) = abs2(norm(whiten(a, x)))
+quad(a::PDMat, x::DenseVector{Float64}) = dot(x, a * x)
+invquad(a::PDMat, x::DenseVector{Float64}) = dot(x, a \ x)
     
-function quad!(r::Array{Float64}, a::PDMat, x::Matrix{Float64}) # = dot!(r, x, a.mat * x, 1)
-    n = size(x,2)
-    @check_argdims(length(r) == n)
-    ax = a.mat * x
-    for j = 1:n
-        r[j] = dot(view(ax, :, j), view(x, :, j))
-    end
-    r
-end
+quad!(r::AbstractArray, a::PDMat, x::DenseMatrix{Float64}) = colwise_dot!(r, x, a.mat * x)
+invquad!(r::AbstractArray, a::PDMat, x::DenseMatrix{Float64}) = colwise_dot!(r, x, a.mat \ x)
 
-function invquad!(r::Array{Float64}, a::PDMat, x::Matrix{Float64}) # = sumsq!(fill!(r, 0.0), whiten(a, x), 1)
-    n = size(x, 2)
-    @check_argdims(length(r) == n)
-    wx = whiten(a, x)
-    for j = 1:n
-        r[j] = sumabs2(view(wx, :, j))
-    end
-    return r
-end
+
+### tri products
 
 function X_A_Xt(a::PDMat, x::Matrix{Float64})
     z = copy(x) # dimension checks will be done in the A_mul_B*! methods

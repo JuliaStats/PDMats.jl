@@ -63,37 +63,17 @@ function unwhiten!(r::DenseVecOrMat{Float64}, a::ScalMat, x::StridedVecOrMat{Flo
     return r
 end
 
-# quadratic forms
 
-function quad(a::ScalMat, x::Vector{Float64})
-    @check_argdims dim(a) == size(x, 1)
-    abs2(nrm2(x)) * a.value
-end
+### quadratic forms
 
-function invquad(a::ScalMat, x::Vector{Float64})
-    @check_argdims dim(a) == size(x, 1)
-    abs2(nrm2(x)) * a.inv_value
-end
+quad(a::ScalMat, x::Vector{Float64}) = sumabs2(x) * a.value
+invquad(a::ScalMat, x::Vector{Float64}) = sumabs2(x) * a.inv_value
 
-function quad!(r::AbstractArray{Float64}, a::ScalMat, x::Matrix{Float64})
-    m = size(x, 1)
-    n = size(x, 2)
-    @check_argdims dim(a) == m && length(r) == n
-    for j = 1:n
-        r[j] = sumabs2(view(x, :, j)) * a.value
-    end
-    r
-end
+quad!(r::AbstractArray{Float64}, a::ScalMat, x::Matrix{Float64}) = colwise_sumsq!(r, x, a.value)
+invquad!(r::AbstractArray{Float64}, a::ScalMat, x::Matrix{Float64}) = colwise_sumsq!(r, x, a.inv_value)
 
-function invquad!(r::AbstractArray{Float64}, a::ScalMat, x::Matrix{Float64})
-    m = size(x, 1)
-    n = size(x, 2)
-    @check_argdims dim(a) == m && length(r) == n
-    for j = 1:n
-        r[j] = sumabs2(view(x, :, j)) * a.inv_value
-    end
-    r
-end
+
+### tri products
 
 function X_A_Xt(a::ScalMat, x::Matrix{Float64})
     @check_argdims dim(a) == size(x, 2)

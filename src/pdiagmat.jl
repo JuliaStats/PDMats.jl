@@ -75,13 +75,16 @@ unwhiten!(r::DenseMatrix{Float64}, a::PDiagMat, x::DenseMatrix{Float64}) =
     broadcast!(*, r, x, sqrt(a.diag))
 
 
-# quadratic forms
+### quadratic forms
 
 quad(a::PDiagMat, x::Vector{Float64}) = wsumsq(a.diag, x)
 invquad(a::PDiagMat, x::Vector{Float64}) = wsumsq(a.inv_diag, x)
 
-quad!(r::Array{Float64}, a::PDiagMat, x::Matrix{Float64}) = gemv!('T', 1., x .* x, a.diag, 0., r)
-invquad!(r::Array{Float64}, a::PDiagMat, x::Matrix{Float64}) = gemv!('T', 1., x .* x, a.inv_diag, 0., r)
+quad!(r::AbstractArray, a::PDiagMat, x::Matrix{Float64}) = At_mul_B!(r, abs2(x), a.diag)
+invquad!(r::AbstractArray, a::PDiagMat, x::Matrix{Float64}) = At_mul_B!(r, abs2(x), a.inv_diag)
+
+
+### tri products
 
 function X_A_Xt(a::PDiagMat, x::Matrix{Float64}) 
     z = x .* reshape(sqrt(a.diag), 1, dim(a))

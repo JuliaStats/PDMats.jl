@@ -55,3 +55,21 @@ function wsumsq(w::AbstractVector, a::AbstractVector)
     return s
 end
 
+function colwise_dot!(r::AbstractArray, a::DenseMatrix, b::DenseMatrix)
+    n = length(r)
+    @check_argdims n == size(a, 2) == size(b, 2) && size(a, 1) == size(b, 1)
+    for i = 1:n
+        r[i] = dot(view(a,:,i), view(b,:,i))
+    end
+    return r
+end
+
+function colwise_sumsq!(r::AbstractArray, a::DenseMatrix, c::Real)
+    n = length(r)
+    @check_argdims n == size(a, 2)
+    for i = 1:n
+        r[i] = sumabs2(view(a,:,i)) * c
+    end
+    return r
+end
+
