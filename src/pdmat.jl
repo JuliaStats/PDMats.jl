@@ -31,6 +31,9 @@ function pdadd!(r::Matrix{Float64}, a::Matrix{Float64}, b::PDMat, c::Real)
 end
 
 * (a::PDMat, c::Float64) = PDMat(a.mat * c)
+* (a::PDMat, x::DenseVecOrMat) = a.mat * x
+\ (a::PDMat, x::DenseVecOrMat) = a.chol \ x
+
 
 ### Algebra
 
@@ -38,14 +41,6 @@ inv(a::PDMat) = PDMat(inv(a.chol))
 logdet(a::PDMat) = logdet(a.chol)
 eigmax(a::PDMat) = eigmax(a.mat)
 eigmin(a::PDMat) = eigmin(a.mat)
-
-
-### Transform
-
-* (a::PDMat, x::StridedVecOrMat) = a.mat * x
-\ (a::PDMat, x::StridedVecOrMat) = a.chol \ x
-
-
 
 
 # whiten and unwhiten

@@ -19,9 +19,6 @@ diag(a::ScalMat) = fill(a.value, a.dim)
 
 ### Arithmetics
 
-* (a::ScalMat, c::Float64) = ScalMat(a.dim, a.value * c)
-/ (a::ScalMat, c::Float64) = ScalMat(a.dim, a.value / c)
-
 function pdadd!(r::Matrix{Float64}, a::Matrix{Float64}, b::ScalMat, c::Real)
     @check_argdims size(r) == size(a) == size(b)
     if is(r, a)
@@ -31,6 +28,11 @@ function pdadd!(r::Matrix{Float64}, a::Matrix{Float64}, b::ScalMat, c::Real)
     end
     return r
 end
+
+* (a::ScalMat, c::Float64) = ScalMat(a.dim, a.value * c)
+/ (a::ScalMat, c::Float64) = ScalMat(a.dim, a.value / c)
+* (a::ScalMat, x::DenseVecOrMat) = a.value * x
+\ (a::ScalMat, x::DenseVecOrMat) = a.inv_value * x
 
 
 ### Algebra
@@ -43,8 +45,7 @@ eigmin(a::ScalMat) = a.value
 
 ### Transform
 
-* (a::ScalMat, x::StridedVecOrMat) = a.value * x
-\ (a::ScalMat, x::StridedVecOrMat) = a.inv_value * x
+
 
 # whiten and unwhiten 
 

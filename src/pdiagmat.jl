@@ -20,6 +20,7 @@ dim(a::PDiagMat) = a.dim
 full(a::PDiagMat) = diagm(a.diag)
 diag(a::PDiagMat) = copy(a.diag)
 
+
 ### Arithmetics
 
 function pdadd!(r::Matrix{Float64}, a::Matrix{Float64}, b::PDiagMat, c::Real)
@@ -33,6 +34,8 @@ function pdadd!(r::Matrix{Float64}, a::Matrix{Float64}, b::PDiagMat, c::Real)
 end
 
 * (a::PDiagMat, c::Float64) = PDiagMat(a.diag * c)
+* (a::PDiagMat, x::DenseVecOrMat) = a.diag .* x
+\ (a::PDiagMat, x::DenseVecOrMat) = a.inv_diag .* x
 
 
 ### Algebra
@@ -43,26 +46,19 @@ eigmax(a::PDiagMat) = maximum(a.diag)
 eigmin(a::PDiagMat) = minimum(a.diag)
 
 
-### Transform
-
-* (a::PDiagMat, x::Vector{Float64}) = a.diag .* x
-\ (a::PDiagMat, x::Vector{Float64}) = a.inv_diag .* x
-* (a::PDiagMat, x::Matrix{Float64}) = mulcols(x, a.diag)
-\ (a::PDiagMat, x::Matrix{Float64}) = mulcols(x, a.inv_diag)
-
 # whiten and unwhiten 
 
 whiten(a::PDiagMat, x::Vector{Float64}) = mulsqrt(x, a.inv_diag)
-whiten(a::PDiagMat, x::Matrix{Float64}) = mulcols(x, sqrt(a.inv_diag))
+whiten(a::PDiagMat, x::Matrix{Float64}) = x .* sqrt(a.inv_diag)
 
 whiten!(a::PDiagMat, x::Vector{Float64}) = mulsqrt!(x, a.inv_diag)
-whiten!(a::PDiagMat, x::Matrix{Float64}) = mulcols!(x, sqrt(a.inv_diag))
+whiten!(a::PDiagMat, x::Matrix{Float64}) = broadcast!(*, x, x, sqrt(a.inv_diag))
 
 unwhiten(a::PDiagMat, x::Vector{Float64}) = mulsqrt(x, a.diag)
-unwhiten(a::PDiagMat, x::Matrix{Float64}) = mulcols(x, sqrt(a.diag))
+unwhiten(a::PDiagMat, x::Matrix{Float64}) = x .* sqrt(a.diag)
 
 unwhiten!(a::PDiagMat, x::Vector{Float64}) = mulsqrt!(x, a.diag)
-unwhiten!(a::PDiagMat, x::Matrix{Float64}) = mulcols!(x, sqrt(a.diag))
+unwhiten!(a::PDiagMat, x::Matrix{Float64}) = broadcast!(*, x, x, sqrt(a.diag))
 
 unwhiten_winv!(J::PDiagMat, z::StridedVecOrMat{Float64}) = whiten!(J, z)
 unwhiten_winv(J::PDiagMat, z::StridedVecOrMat{Float64}) = whiten(J, z)
@@ -76,22 +72,22 @@ quad!(r::Array{Float64}, a::PDiagMat, x::Matrix{Float64}) = gemv!('T', 1., x .* 
 invquad!(r::Array{Float64}, a::PDiagMat, x::Matrix{Float64}) = gemv!('T', 1., x .* x, a.inv_diag, 0., r)
 
 function X_A_Xt(a::PDiagMat, x::Matrix{Float64}) 
-    z = mulrows(x, sqrt(a.diag))
+    z = x .* reshape(sqrt(a.diag), 1, dim(a))
     gemm('N', 'T', 1.0, z, z)
 end
 
 function Xt_A_X(a::PDiagMat, x::Matrix{Float64})
-    z = mulcols(x, sqrt(a.diag))
+    z = x .* sqrt(a.diag)
     gemm('T', 'N', 1.0, z, z)
 end
 
 function X_invA_Xt(a::PDiagMat, x::Matrix{Float64})
-    z = mulrows(x, sqrt(a.inv_diag))
+    z = x .* reshape(sqrt(a.inv_diag), 1, dim(a))
     gemm('N', 'T', 1.0, z, z)
 end
 
 function Xt_invA_X(a::PDiagMat, x::Matrix{Float64})
-    z = mulcols(x, sqrt(a.inv_diag))
+    z = x .* sqrt(a.inv_diag)
     gemm('T', 'N', 1.0, z, z)
 end
 

@@ -61,43 +61,6 @@ function wsumsq(w::AbstractVector, a::AbstractVector)
     return s
 end
 
-function mulcols!{T}(r::AbstractMatrix{T}, a::AbstractMatrix{T}, b::AbstractVector{T}) 
-    # multiple b to each column of a
-    m = size(a, 1)
-    n = size(a, 2)
-    @check_argdims(size(r) == (m, n) && length(b) == m)
-    for j = 1:n
-        aj = view(a, :, j)
-        rj = view(r, :, j)
-        for i = 1:m
-            @inbounds rj[i] = aj[i] * b[i]
-        end
-    end
-    r
-end
-
-mulcols!{T}(a::AbstractMatrix{T}, b::AbstractVector{T}) = mulcols!(a, a, b)
-mulcols{T}(a::AbstractMatrix{T}, b::AbstractVector{T}) = mulcols!(similar(a), a, b)
-
-function mulrows!{T}(r::AbstractMatrix{T}, a::AbstractMatrix{T}, b::AbstractVector{T}) 
-    # multiple b to each column of a
-    m = size(a, 1)
-    n = size(a, 2)
-    @check_argdims(size(r) == (m, n) && length(b) == n)
-    for j = 1:n
-        aj = view(a, :, j)
-        rj = view(r, :, j)
-        bj = b[j]
-        for i = 1:m
-            @inbounds rj[i] = aj[i] * bj
-        end
-    end
-    r
-end
-
-mulrows!{T}(a::AbstractMatrix{T}, b::AbstractVector{T}) = mulrows!(a, a, b)
-mulrows{T}(a::AbstractMatrix{T}, b::AbstractVector{T}) = mulrows!(similar(a), a, b)
-
 function mulsqrt(x::Vector, c::Vector) 
     @check_argdims length(x) == length(c)
     [x[i] * sqrt(c[i]) for i in 1 : length(x)]
