@@ -7,6 +7,9 @@ macro check_argdims(cond)
     end
 end
 
+_rcopy!(r::DenseVecOrMat, x::DenseVecOrMat) = (is(r, x) || copy!(r, x); r)
+
+
 function _addscal!(r::Matrix, a::Matrix, b::Matrix, c::Real)
     if c == 1.0
         for i = 1:length(a)
@@ -51,18 +54,4 @@ function wsumsq(w::AbstractVector, a::AbstractVector)
     end
     return s
 end
-
-function mulsqrt(x::Vector, c::Vector) 
-    @check_argdims length(x) == length(c)
-    [x[i] * sqrt(c[i]) for i in 1 : length(x)]
-end
-
-function mulsqrt!(x::Vector, c::Vector)
-    @check_argdims length(x) == length(c)
-    for i in 1 : length(x)
-        x[i] .*= sqrt(c[i])
-    end
-    x
-end
-
 

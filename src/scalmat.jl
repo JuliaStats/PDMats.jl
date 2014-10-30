@@ -43,38 +43,24 @@ eigmax(a::ScalMat) = a.value
 eigmin(a::ScalMat) = a.value
 
 
-### Transform
+### whiten and unwhiten 
 
-
-
-# whiten and unwhiten 
-
-function whiten(a::ScalMat, x::StridedVecOrMat{Float64})
+function whiten!(r::DenseVecOrMat{Float64}, a::ScalMat, x::DenseVecOrMat{Float64})
     @check_argdims dim(a) == size(x, 1)
-    x * sqrt(a.inv_value)
-end
-
-function whiten!(a::ScalMat, x::StridedVecOrMat{Float64})
-    @check_argdims dim(a) == size(x, 1)
-    sv = sqrt(a.inv_value)
+    c = sqrt(a.inv_value)
     for i = 1:length(x)
-        @inbounds x[i] *= sv
+        @inbounds r[i] = x[i] * c
     end
-    x
+    return r
 end
 
-function unwhiten(a::ScalMat, x::StridedVecOrMat{Float64})
+function unwhiten!(r::DenseVecOrMat{Float64}, a::ScalMat, x::StridedVecOrMat{Float64})
     @check_argdims dim(a) == size(x, 1)
-    x * sqrt(a.value)
-end
-
-function unwhiten!(a::ScalMat, x::StridedVecOrMat{Float64})
-    @check_argdims dim(a) == size(x, 1)
-    sv = sqrt(a.value)
+    c = sqrt(a.value)
     for i = 1:length(x)
-        @inbounds x[i] *= sv
+        @inbounds r[i] = x[i] * c
     end
-    x
+    return r
 end
 
 # quadratic forms

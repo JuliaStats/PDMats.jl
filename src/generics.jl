@@ -25,6 +25,16 @@ pdadd(a::Matrix{Float64}, b::AbstractPDMat) = pdadd!(similar(a), a, b, 1.0)
 * (c::Real, a::AbstractPDMat) = a * float64(c)
 / (a::AbstractPDMat, c::Real) = a * float64(inv(c))
 
+
+## whiten and unwhiten
+
+whiten!(a::AbstractPDMat, x::DenseVecOrMat{Float64}) = whiten!(x, a, x)
+unwhiten!(a::AbstractPDMat, x::DenseVecOrMat{Float64}) = unwhiten!(x, a, x)
+
+whiten(a::AbstractPDMat, x::DenseVecOrMat{Float64}) = whiten!(similar(x), a, x)
+unwhiten(a::AbstractPDMat, x::DenseVecOrMat{Float64}) = unwhiten!(similar(x), a, x)
+
+
 ## quad
 
 function quad(a::AbstractPDMat, x::Matrix{Float64})

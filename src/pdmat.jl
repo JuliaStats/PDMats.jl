@@ -43,19 +43,19 @@ eigmax(a::PDMat) = eigmax(a.mat)
 eigmin(a::PDMat) = eigmin(a.mat)
 
 
-# whiten and unwhiten
+### whiten and unwhiten
 
-function whiten!(a::PDMat, x::StridedVecOrMat{Float64})
+function whiten!(r::DenseVecOrMat{Float64}, a::PDMat, x::DenseVecOrMat{Float64})
     cf = a.chol[:UL]
-    istriu(cf) ? Ac_ldiv_B!(cf, x) : A_ldiv_B!(cf, x)
+    istriu(cf) ? Ac_ldiv_B!(cf, _rcopy!(r, x)) : A_ldiv_B!(cf, _rcopy!(r, x))
+    return r
 end
-whiten(a::PDMat, x::StridedVecOrMat{Float64}) = whiten!(a, copy(x))
 
-function unwhiten!(a::PDMat, x::StridedVecOrMat{Float64})
+function unwhiten!(r::DenseVecOrMat{Float64}, a::PDMat, x::StridedVecOrMat{Float64})
     cf = a.chol[:UL]
-    istriu(cf) ? Ac_mul_B!(cf, x) : A_mul_B!(cf, x)
+    istriu(cf) ? Ac_mul_B!(cf, _rcopy!(r, x)) : A_mul_B!(r, _rcopy!(r, x))
+    return r
 end
-unwhiten(a::PDMat, x::StridedVecOrMat{Float64}) = unwhiten!(a, copy(x))
 
 
 # quadratic forms

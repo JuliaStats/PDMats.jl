@@ -46,19 +46,34 @@ eigmax(a::PDiagMat) = maximum(a.diag)
 eigmin(a::PDiagMat) = minimum(a.diag)
 
 
-# whiten and unwhiten 
+### whiten and unwhiten 
 
-whiten(a::PDiagMat, x::Vector{Float64}) = mulsqrt(x, a.inv_diag)
-whiten(a::PDiagMat, x::Matrix{Float64}) = x .* sqrt(a.inv_diag)
+function whiten!(r::DenseVector{Float64}, a::PDiagMat, x::DenseVector{Float64})
+    n = dim(a)
+    @check_argdims length(r) == length(x) == n
+    v = a.inv_diag
+    for i = 1:n
+        r[i] = x[i] * sqrt(v[i])
+    end
+    return r
+end
 
-whiten!(a::PDiagMat, x::Vector{Float64}) = mulsqrt!(x, a.inv_diag)
-whiten!(a::PDiagMat, x::Matrix{Float64}) = broadcast!(*, x, x, sqrt(a.inv_diag))
+function unwhiten!(r::DenseVector{Float64}, a::PDiagMat, x::DenseVector{Float64})
+    n = dim(a)
+    @check_argdims length(r) == length(x) == n
+    v = a.diag
+    for i = 1:n
+        r[i] = x[i] * sqrt(v[i])
+    end
+    return r
+end
 
-unwhiten(a::PDiagMat, x::Vector{Float64}) = mulsqrt(x, a.diag)
-unwhiten(a::PDiagMat, x::Matrix{Float64}) = x .* sqrt(a.diag)
+whiten!(r::DenseMatrix{Float64}, a::PDiagMat, x::DenseMatrix{Float64}) = 
+    broadcast!(*, r, x, sqrt(a.inv_diag))
 
-unwhiten!(a::PDiagMat, x::Vector{Float64}) = mulsqrt!(x, a.diag)
-unwhiten!(a::PDiagMat, x::Matrix{Float64}) = broadcast!(*, x, x, sqrt(a.diag))
+unwhiten!(r::DenseMatrix{Float64}, a::PDiagMat, x::DenseMatrix{Float64}) = 
+    broadcast!(*, r, x, sqrt(a.diag))
+
 
 # quadratic forms
 
