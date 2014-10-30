@@ -14,7 +14,11 @@ function PDMat(mat::Matrix{Float64}, chol::Cholesky{Float64})
 end
 
 PDMat(mat::Matrix{Float64}) = PDMat(mat, cholfact(mat))
+PDMat(mat::Matrix{Float64}, uplo::Symbol) = PDMat(mat, cholfact(mat, uplo))
+
 PDMat(mat::Symmetric{Float64}) = PDMat(mat.S)
+PDMat(mat::Symmetric{Float64}, uplo::Symbol) = PDMat(mat.S, uplo)
+
 PDMat(fac::Cholesky) = PDMat(size(fac,1), full(fac), fac)
 
 ### Basics
@@ -54,7 +58,7 @@ end
 
 function unwhiten!(r::DenseVecOrMat{Float64}, a::PDMat, x::StridedVecOrMat{Float64})
     cf = a.chol[:UL]
-    istriu(cf) ? Ac_mul_B!(cf, _rcopy!(r, x)) : A_mul_B!(r, _rcopy!(r, x))
+    istriu(cf) ? Ac_mul_B!(cf, _rcopy!(r, x)) : A_mul_B!(cf, _rcopy!(r, x))
     return r
 end
 
