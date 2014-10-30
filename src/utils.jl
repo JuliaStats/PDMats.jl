@@ -46,6 +46,10 @@ function _adddiag!(a::Matrix, v::Vector, c::Real)
     return a
 end
 
+_adddiag(a::Matrix, v::Real) = _adddiag!(copy(a), v)
+_adddiag(a::Matrix, v::Vector, c::Real) = _adddiag!(copy(a), v, c)
+_adddiag(a::Matrix, v::Vector) = _adddiag!(copy(a), v, 1.0)
+
 function wsumsq(w::AbstractVector, a::AbstractVector)
     @check_argdims(length(a) == length(w))
     s = 0.

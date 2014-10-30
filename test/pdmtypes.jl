@@ -2,8 +2,8 @@
 
 using PDMats
 
-const C1 = [4. -2. -1.; -2. 5. -1.; -1. -1. 6.]
-const va = [1.5, 2.5, 2.0]
+C1 = [4. -2. -1.; -2. 5. -1.; -1. -1. 6.]
+va = [1.5, 2.5, 2.0]
 
 for (C, Cmat, ceq) in Any[
     (PDMat(C1), C1, true),

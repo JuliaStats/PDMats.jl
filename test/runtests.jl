@@ -1,7 +1,7 @@
 
 
 
-tests = ["pdmtypes"]
+tests = ["pdmtypes", "addition"]
 println("Running tests ...")
 
 for t in tests
