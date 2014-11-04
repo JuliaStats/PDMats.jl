@@ -52,7 +52,7 @@ end
 
 ## core testing functions
 
-_pdt(vb::Int, s::String) = (vb >= 2 && print_with_color(:green, "    .. testing $s\n"))
+_pdt(vb::Int, s) = (vb >= 2 && print_with_color(:green, "    .. testing $s\n"))
 
 
 function pdtest_basics(C::AbstractPDMat, d::Int, verbose::Int)
