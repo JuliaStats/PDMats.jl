@@ -17,6 +17,11 @@
 + (a::ScalMat, b::PDiagMat) = PDiagMat(a.value .+ b.diag)
 + (a::ScalMat, b::ScalMat) = ScalMat(a.dim, a.value + b.value)
 
+# between pdmat and uniformscaling (multiple of identity)
+
++ (a::AbstractPDMat, b::UniformScaling) = a + ScalMat(dim(a), convert(Float64, b.λ))
++ (a::UniformScaling, b::AbstractPDMat) = ScalMat(dim(b), convert(Float64, a.λ)) + b
+
 pdadd(a::PDMat, b::AbstractPDMat, c::Float64) = PDMat(a.mat + full(b * c))
 pdadd(a::PDiagMat, b::AbstractPDMat, c::Float64) = PDMat(_adddiag!(full(b * c), a.diag, 1.0))
 pdadd(a::ScalMat, b::AbstractPDMat, c::Float64) = PDMat(_adddiag!(full(b * c), a.value))
