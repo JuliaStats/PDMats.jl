@@ -32,7 +32,7 @@ diag(a::PDMat) = diag(a.mat)
 
 function pdadd!(r::Matrix{Float64}, a::Matrix{Float64}, b::PDMat, c::Real)
     @check_argdims size(r) == size(a) == size(b)
-    _addscal!(r, a, b.mat, float64(c))
+    _addscal!(r, a, b.mat, convert(Float64, c))
 end
 
 * (a::PDMat, c::Float64) = PDMat(a.mat * c)
@@ -67,7 +67,7 @@ end
 
 quad(a::PDMat, x::DenseVector{Float64}) = dot(x, a * x)
 invquad(a::PDMat, x::DenseVector{Float64}) = dot(x, a \ x)
-    
+
 quad!(r::AbstractArray, a::PDMat, x::DenseMatrix{Float64}) = colwise_dot!(r, x, a.mat * x)
 invquad!(r::AbstractArray, a::PDMat, x::DenseMatrix{Float64}) = colwise_dot!(r, x, a.mat \ x)
 
@@ -75,7 +75,7 @@ invquad!(r::AbstractArray, a::PDMat, x::DenseMatrix{Float64}) = colwise_dot!(r, 
 ### tri products
 
 function X_A_Xt(a::PDMat, x::DenseMatrix{Float64})
-    z = copy(x) 
+    z = copy(x)
     cf = a.chol[:UL]
     istriu(cf) ? A_mul_Bc!(z, cf) : A_mul_B!(z, cf)
     A_mul_Bt(z, z)

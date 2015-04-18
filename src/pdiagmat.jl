@@ -4,9 +4,9 @@ immutable PDiagMat <: AbstractPDMat
     dim::Int
     diag::Vector{Float64}
     inv_diag::Vector{Float64}
-    
-    PDiagMat(v::Vector{Float64}) = new(length(v), v, 1.0 ./ v)    
-    
+
+    PDiagMat(v::Vector{Float64}) = new(length(v), v, 1.0 ./ v)
+
     function PDiagMat(v::Vector{Float64}, inv_v::Vector{Float64})
         @check_argdims length(v) == length(inv_v)
         new(length(v), v, inv_v)
@@ -26,9 +26,9 @@ diag(a::PDiagMat) = copy(a.diag)
 function pdadd!(r::Matrix{Float64}, a::Matrix{Float64}, b::PDiagMat, c::Real)
     @check_argdims size(r) == size(a) == size(b)
     if is(r, a)
-        _adddiag!(r, b.diag, float64(c))
+        _adddiag!(r, b.diag, convert(Float64, c))
     else
-        _adddiag!(copy!(r, a), b.diag, float64(c))
+        _adddiag!(copy!(r, a), b.diag, convert(Float64, c))
     end
     return r
 end
@@ -46,7 +46,7 @@ eigmax(a::PDiagMat) = maximum(a.diag)
 eigmin(a::PDiagMat) = minimum(a.diag)
 
 
-### whiten and unwhiten 
+### whiten and unwhiten
 
 function whiten!(r::DenseVector{Float64}, a::PDiagMat, x::DenseVector{Float64})
     n = dim(a)
@@ -68,10 +68,10 @@ function unwhiten!(r::DenseVector{Float64}, a::PDiagMat, x::DenseVector{Float64}
     return r
 end
 
-whiten!(r::DenseMatrix{Float64}, a::PDiagMat, x::DenseMatrix{Float64}) = 
+whiten!(r::DenseMatrix{Float64}, a::PDiagMat, x::DenseMatrix{Float64}) =
     broadcast!(*, r, x, sqrt(a.inv_diag))
 
-unwhiten!(r::DenseMatrix{Float64}, a::PDiagMat, x::DenseMatrix{Float64}) = 
+unwhiten!(r::DenseMatrix{Float64}, a::PDiagMat, x::DenseMatrix{Float64}) =
     broadcast!(*, r, x, sqrt(a.diag))
 
 
@@ -86,7 +86,7 @@ invquad!(r::AbstractArray, a::PDiagMat, x::Matrix{Float64}) = At_mul_B!(r, abs2(
 
 ### tri products
 
-function X_A_Xt(a::PDiagMat, x::DenseMatrix{Float64}) 
+function X_A_Xt(a::PDiagMat, x::DenseMatrix{Float64})
     z = x .* reshape(sqrt(a.diag), 1, dim(a))
     A_mul_Bt(z, z)
 end
@@ -105,4 +105,3 @@ function Xt_invA_X(a::PDiagMat, x::DenseMatrix{Float64})
     z = x .* sqrt(a.inv_diag)
     At_mul_B(z, z)
 end
-

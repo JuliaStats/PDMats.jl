@@ -4,7 +4,7 @@ immutable ScalMat <: AbstractPDMat
     dim::Int
     value::Float64
     inv_value::Float64
-    
+
     ScalMat(d::Int, v::Float64) = new(d, v, 1.0 / v)
     ScalMat(d::Int, v::Float64, inv_v::Float64) = new(d, v, inv_v)
 end
@@ -22,9 +22,9 @@ diag(a::ScalMat) = fill(a.value, a.dim)
 function pdadd!(r::Matrix{Float64}, a::Matrix{Float64}, b::ScalMat, c::Real)
     @check_argdims size(r) == size(a) == size(b)
     if is(r, a)
-        _adddiag!(r, b.value * float64(c))
+        _adddiag!(r, b.value * convert(Float64, c))
     else
-        _adddiag!(copy!(r, a), b.value * float64(c))
+        _adddiag!(copy!(r, a), b.value * convert(Float64, c))
     end
     return r
 end
@@ -43,7 +43,7 @@ eigmax(a::ScalMat) = a.value
 eigmin(a::ScalMat) = a.value
 
 
-### whiten and unwhiten 
+### whiten and unwhiten
 
 function whiten!(r::DenseVecOrMat{Float64}, a::ScalMat, x::DenseVecOrMat{Float64})
     @check_argdims dim(a) == size(x, 1)
@@ -94,4 +94,3 @@ function Xt_invA_X(a::ScalMat, x::DenseMatrix{Float64})
     @check_argdims dim(a) == size(x, 1)
     gemm('T', 'N', a.inv_value, x, x)
 end
-

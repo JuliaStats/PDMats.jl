@@ -12,18 +12,18 @@ Base.length(a::AbstractPDMat) = abs2(dim(a))
 
 pdadd!(r::Matrix{Float64}, a::Matrix{Float64}, b::AbstractPDMat) = pdadd!(r, a, b, 1.0)
 
-pdadd!(a::Matrix{Float64}, b::AbstractPDMat, c::Real) = pdadd!(a, a, b, float64(c))
+pdadd!(a::Matrix{Float64}, b::AbstractPDMat, c::Real) = pdadd!(a, a, b, convert(Float64, c))
 pdadd!(a::Matrix{Float64}, b::AbstractPDMat) = pdadd!(a, a, b, 1.0)
 
-pdadd(a::Matrix{Float64}, b::AbstractPDMat, c::Real) = pdadd!(similar(a), a, b, float64(c))
+pdadd(a::Matrix{Float64}, b::AbstractPDMat, c::Real) = pdadd!(similar(a), a, b, convert(Float64, c))
 pdadd(a::Matrix{Float64}, b::AbstractPDMat) = pdadd!(similar(a), a, b, 1.0)
 
 + (a::Matrix{Float64}, b::AbstractPDMat) = pdadd(a, b)
 + (a::AbstractPDMat, b::Matrix{Float64}) = pdadd(b, a)
 
-* (a::AbstractPDMat, c::Real) = a * float64(c)
-* (c::Real, a::AbstractPDMat) = a * float64(c)
-/ (a::AbstractPDMat, c::Real) = a * float64(inv(c))
+* (a::AbstractPDMat, c::Real) = a * convert(Float64, c)
+* (c::Real, a::AbstractPDMat) = a * convert(Float64, c)
+/ (a::AbstractPDMat, c::Real) = a * convert(Float64, inv(c))
 
 
 ## whiten and unwhiten
@@ -46,4 +46,3 @@ function invquad(a::AbstractPDMat, x::DenseMatrix{Float64})
     @check_argdims dim(a) == size(x, 1)
     invquad!(Array(Float64, size(x,2)), a, x)
 end
-
