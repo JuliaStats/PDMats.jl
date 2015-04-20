@@ -7,29 +7,29 @@ module PDMats
 
     export
         # Types
-        AbstractPDMat, 
-        PDMat, 
-        PDiagMat, 
-        ScalMat, 
+        AbstractPDMat,
+        PDMat,
+        PDiagMat,
+        ScalMat,
 
         # Functions
-        dim, 
-        full, 
-        whiten, 
-        whiten!, 
-        unwhiten, 
-        unwhiten!, 
-        pdadd, 
-        pdadd!, 
+        dim,
+        full,
+        whiten,
+        whiten!,
+        unwhiten,
+        unwhiten!,
+        pdadd,
+        pdadd!,
         add_scal,
-        add_scal!, 
-        quad, 
-        quad!, 
-        invquad, 
-        invquad!, 
-        X_A_Xt, 
-        Xt_A_X, 
-        X_invA_Xt, 
+        add_scal!,
+        quad,
+        quad!,
+        invquad,
+        invquad!,
+        X_A_Xt,
+        Xt_A_X,
+        X_invA_Xt,
         Xt_invA_X,
         test_pdmat
 
@@ -44,6 +44,7 @@ module PDMats
 
     # source files
 
+    include("chol.jl")   # make Cholesky compatible with both Julia 0.3 & 0.4
     include("utils.jl")
 
     include("pdmat.jl")
