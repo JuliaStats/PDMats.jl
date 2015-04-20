@@ -1,13 +1,13 @@
-# Utilities for testing 
+# Utilities for testing
 #
-#       One can use the facilities provided here to simplify the testing of 
+#       One can use the facilities provided here to simplify the testing of
 #       the implementation of a subtype of AbstractPDMat
 #
 
 import Base.Test: @test, @test_approx_eq
 
 ## driver function
-function test_pdmat(C::AbstractPDMat, Cmat::Matrix{Float64}; 
+function test_pdmat(C::AbstractPDMat, Cmat::Matrix{Float64};
                     verbose::Int=2,             # the level to display intermediate steps
                     cmat_eq::Bool=false,        # require Cmat and full(C) to be exactly equal
                     t_diag::Bool=true,          # whethet to test diag method
@@ -27,7 +27,7 @@ function test_pdmat(C::AbstractPDMat, Cmat::Matrix{Float64};
 
     pdtest_basics(C, d, verbose)
     pdtest_cmat(C, Cmat, cmat_eq, verbose)
-        
+
     t_diag && pdtest_diag(C, Cmat, cmat_eq, verbose)
     t_scale && pdtest_scale(C, Cmat, verbose)
     t_add && pdtest_add(C, Cmat, verbose)
@@ -212,7 +212,7 @@ end
 
 
 function pdtest_whiten(C::AbstractPDMat, Cmat::Matrix, verbose::Int)
-    Y = chol(Cmat, :L)
+    Y = chol_lower(Cmat)
     Q = qr(randn(size(Cmat)))[1]
     Y = Y * Q'                    # generate a matrix Y such that Y * Y' = C
     @test_approx_eq Y * Y' Cmat
@@ -246,5 +246,3 @@ function pdtest_whiten(C::AbstractPDMat, Cmat::Matrix, verbose::Int)
     @test_approx_eq unwhiten(C, whiten(C, eye(d))) eye(d)
     @test_approx_eq whiten(C, unwhiten(C, eye(d))) eye(d)
 end
-
-

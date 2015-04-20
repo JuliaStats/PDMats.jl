@@ -3,7 +3,7 @@
 immutable PDMat <: AbstractPDMat
     dim::Int
     mat::Matrix{Float64}
-    chol::Cholesky{Float64}
+    chol::CholType
 end
 
 function PDMat(mat::Matrix{Float64}, chol::Cholesky{Float64})
@@ -14,10 +14,7 @@ function PDMat(mat::Matrix{Float64}, chol::Cholesky{Float64})
 end
 
 PDMat(mat::Matrix{Float64}) = PDMat(mat, cholfact(mat))
-PDMat(mat::Matrix{Float64}, uplo::Symbol) = PDMat(mat, cholfact(mat, uplo))
-
 PDMat(mat::Symmetric{Float64}) = PDMat(mat.S)
-PDMat(mat::Symmetric{Float64}, uplo::Symbol) = PDMat(mat.S, uplo)
 
 PDMat(fac::Cholesky) = PDMat(size(fac,1), full(fac), fac)
 
