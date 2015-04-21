@@ -9,6 +9,7 @@ module PDMats
         # Types
         AbstractPDMat,
         PDMat,
+        PDSparseMat,
         PDiagMat,
         ScalMat,
 
@@ -35,7 +36,7 @@ module PDMats
 
     import Base.BLAS: nrm2, axpy!, gemv!, gemm, gemm!, trmv, trmv!, trmm, trmm!
     import Base.LAPACK: trtrs!
-    import Base.LinAlg: A_ldiv_B!, A_mul_B!, A_mul_Bc!, A_rdiv_B!, A_rdiv_Bc!, Ac_ldiv_B!, Cholesky
+    import Base.LinAlg: A_ldiv_B!, A_mul_B!, A_mul_Bc!, A_rdiv_B!, A_rdiv_Bc!, Ac_ldiv_B!, Cholesky, CHOLMOD.CholmodFactor
 
 
     # The abstract base type
@@ -48,6 +49,7 @@ module PDMats
     include("utils.jl")
 
     include("pdmat.jl")
+    include("pdsparsemat.jl")
     include("pdiagmat.jl")
     include("scalmat.jl")
 
