@@ -10,7 +10,7 @@ end
 _rcopy!(r::DenseVecOrMat, x::DenseVecOrMat) = (is(r, x) || copy!(r, x); r)
 
 
-function _addscal!(r::Matrix, a::Matrix, b::Matrix, c::Real)
+function _addscal!(r::Matrix, a::Matrix, b::Union(Matrix, SparseMatrixCSC), c::Real)
     if c == 1.0
         for i = 1:length(a)
             @inbounds r[i] = a[i] + b[i]
@@ -76,4 +76,3 @@ function colwise_sumsq!(r::AbstractArray, a::DenseMatrix, c::Real)
     end
     return r
 end
-

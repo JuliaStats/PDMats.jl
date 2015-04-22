@@ -26,6 +26,12 @@ diag(a::PDSparseMat) = diag(a.mat)
 
 ### Arithmetics
 
+# add `a * c` to a dense matrix `m` of the same size inplace.
+function pdadd!(r::Matrix{Float64}, a::Matrix{Float64}, b::PDSparseMat, c::Real)
+    @check_argdims size(r) == size(a) == size(b)
+    _addscal!(r, a, b.mat, convert(Float64, c))
+end
+
 * (a::PDSparseMat, c::Float64) = PDSparseMat(a.mat * c)
 * (a::PDSparseMat, x::DenseVecOrMat) = a.mat * x
 \ (a::PDSparseMat, x::DenseVecOrMat) = a.chol \ x
@@ -35,17 +41,29 @@ diag(a::PDSparseMat) = diag(a.mat)
 
 inv(a::PDSparseMat) = PDMat( a\eye(a.dim) )
 logdet(a::PDSparseMat) = logdet(a.chol)
-eigmax(a::PDSparseMat) = maximum(eigs(a.mat, ritzvec = false)[1])
-eigmin(a::PDSparseMat) = minimum(eigs(a.mat, ritzvec = false)[1])
+eigmax(a::PDSparseMat) = eigs(a.mat, which=:LM, nev=1, ritzvec=false)[1][1]
+eigmin(a::PDSparseMat) = eigs(a.mat, which=:SM, nev=1, ritzvec=false)[1][1]
 
 
 ### whiten and unwhiten
+
+
+## function whiten!(r::DenseVecOrMat{Float64}, a::PDMat, x::DenseVecOrMat{Float64})
+##     cf = a.chol[:UL]
+##     A_ldiv_B!(cf, _rcopy!(r, x))
+##     return r
+## end
 
 function whiten!(r::DenseVecOrMat{Float64}, a::PDSparseMat, x::DenseVecOrMat{Float64})
     A_ldiv_B!(a.chol, _rcopy!(r, x))
     return r
 end
 
+## function unwhiten!(r::DenseVecOrMat{Float64}, a::PDMat, x::StridedVecOrMat{Float64})
+##     cf = a.chol[:UL]
+##     A_mul_B!(cf, _rcopy!(r, x))
+##     return r
+## end
 
 function unwhiten!(r::DenseVecOrMat{Float64}, a::PDSparseMat, x::StridedVecOrMat{Float64})
     r[:] = sparse(a.chol) * x
@@ -62,32 +80,24 @@ function quad!(r::AbstractArray, a::PDSparseMat, x::DenseMatrix{Float64})
     for i in 1:size(x, 2)
         r[i] = quad(a, x[:,i])
     end
+    return r
 end
 
 function invquad!(r::AbstractArray, a::PDSparseMat, x::DenseMatrix{Float64})
     for i in 1:size(x, 2)
         r[i] = invquad(a, x[:,i])
     end
+    return r
 end
 
 
 ### tri products
-
-
-## function X_A_Xt(a::PDSparseMat, x::DenseMatrix{Float64})
-##     z = x*a.mat
-##     A_mul_Bt(z, X)
-## end
 
 function X_A_Xt(a::PDSparseMat, x::DenseMatrix{Float64})
     z = x*sparse(a.chol)
     A_mul_Bt(z, z)
 end
 
-## function Xt_A_X(a::PDSparseMat, x::DenseMatrix{Float64})
-##     z = a.mat*x
-##     At_mul_B(X, z)
-## end
 
 function Xt_A_X(a::PDSparseMat, x::DenseMatrix{Float64})
     z = At_mul_B(x, sparse(a.chol))

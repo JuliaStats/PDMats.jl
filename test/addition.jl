@@ -10,6 +10,7 @@ pm1 = PDMat(C1)
 pm2 = PDiagMat(va)
 pm3 = ScalMat(3, 2.0)
 pm4 = 2.0I
+pm5 = PDSparseMat(sparse(C1))
 
 pmats = Any[pm1, pm2, pm3]
 

@@ -1,11 +1,11 @@
 # PDMats.jl
 
-Uniform interface for positive definite matrices of various structures. 
+Uniform interface for positive definite matrices of various structures.
 [![Build Status](https://travis-ci.org/JuliaStats/PDMats.jl.png?branch=master)](https://travis-ci.org/JuliaStats/PDMats.jl)
 
 --------------
 
-Positive definite matrices are widely used in machine learning and probabilistic modeling, especially in applications related to graph analysis and Gaussian models. It is not uncommon that positive definite matrices used in practice have special structures (e.g. diagonal), which can be exploited to accelerate computation. 
+Positive definite matrices are widely used in machine learning and probabilistic modeling, especially in applications related to graph analysis and Gaussian models. It is not uncommon that positive definite matrices used in practice have special structures (e.g. diagonal), which can be exploited to accelerate computation.
 
 *PDMats.jl* supports efficient computation on positive definite matrices of various structures. In particular, it provides uniform interfaces to use positive definite matrices of various structures for writing generic algorithms, while ensuring that the most efficient implementation is used in actual computation.
 
@@ -14,7 +14,7 @@ Positive definite matrices are widely used in machine learning and probabilistic
 
 ## Positive definite matrix types
 
-This package defines an abstract type ``AbstractPDMat`` as the base type for positive definite matrices with different internal representations. 
+This package defines an abstract type ``AbstractPDMat`` as the base type for positive definite matrices with different internal representations.
 
 * ``PDMat``: full covariance matrix, defined as
 
@@ -37,7 +37,7 @@ PDMat(mat, uplo)    # with the input matrix, and an uplo argument (:U or :L)
                     # to specify the way Choleksy is done
 
 PDMat(chol)         # with the Cholesky factorization
-                    # Remarks: the full matrix will be computed upon 
+                    # Remarks: the full matrix will be computed upon
                     # construction.
 ```
 
@@ -79,7 +79,7 @@ All subtypes of ``AbstractPDMat`` share the same API, *i.e.* with the same set o
 
 ```julia
 
-dim(a)      # return the dimension of `a`. 
+dim(a)      # return the dimension of `a`.
             # Let `a` represent a d x d matrix, then `dim(a)` returns d.
 
 size(a)     # return the size tuple of `a`, i.e. `(dim(a), dim(a))`.
@@ -95,10 +95,10 @@ full(a)     # return a copy of the matrix in full form.
 diag(a)     # return a vector of diagonal elements.
 
 inv(a)      # inverse of `a`, of a proper subtype of `AbstractPDMat`.
-            # Note: when `a` is an instance of either `PDMat`, `PDiagMat`, 
-            # and `ScalMat`, `inv(a)` is of the same type of `a`. 
-            # This needs not be required for customized subtypes -- the 
-            # inverse does not always has the same pattern as `a`. 
+            # Note: when `a` is an instance of either `PDMat`, `PDiagMat`,
+            # and `ScalMat`, `inv(a)` is of the same type of `a`.
+            # This needs not be required for customized subtypes -- the
+            # inverse does not always has the same pattern as `a`.
 
 eigmax(a)   # maximum eigenvalue of `a`.
 
@@ -108,7 +108,7 @@ logdet(a)   # log-determinant of `a`, computed in a numerically stable way.
 
 a * x       # multiple `a` with `x` (forward transform)
 
-a \ x       # multiply `inv(a)` with `x` (backward transform). 
+a \ x       # multiply `inv(a)` with `x` (backward transform).
             # The internal implementation may not explicitly instantiate
             # the inverse of `a`.
 
@@ -119,7 +119,7 @@ c * a       # equivalent to a * c.
 
 a + b       # add two positive definite matrices
 
-pdadd(a, b, c)      # add `a` with `b * c`, where both `a` and `b` are 
+pdadd(a, b, c)      # add `a` with `b * c`, where both `a` and `b` are
                     # instances of `AbstractPDMat`.
 
 pdadd(m, a)         # add `a` to a dense matrix `m` of the same size.
@@ -134,7 +134,7 @@ pdadd!(m, a, c)     # add `a * c` to a dense matrix `m` of the same size,
 pdadd!(r, m, a)     # add `a` to a dense matrix `m` of the same size, and write
                     # the result to `r`.
 
-pdadd!(r, m, a, c)  # add `a * c` to a dense matrix `m` of the same size, and 
+pdadd!(r, m, a, c)  # add `a * c` to a dense matrix `m` of the same size, and
                     # write the result to `r`.
 
 quad(a, x)          # compute x' * a * x when `x` is a vector.
@@ -149,7 +149,7 @@ invquad(a, x)       # compute x' * inv(a) * x when `x` is a vector.
                     # perform such computation in a column-wise fashion, when
                     # `x` is a matrix, and return a vector of length `n`.
 
-invquad!(r, a, x)   # compute x' * inv(a) * x in a column-wise fashion, and 
+invquad!(r, a, x)   # compute x' * inv(a) * x in a column-wise fashion, and
                     # write the results to `r`.
 
 X_A_Xt(a, x)        # compute `x * a * x'` for a matrix `x`.
@@ -162,8 +162,8 @@ Xt_invA_X(a, x)     # compute `x' * inv(a) * x` for a matrix `x`.
 
 whiten(a, x)        # whitening transform. `x` can be a vector or a matrix.
                     #
-                    # Note: If the covariance of `x` is `a`, then the 
-                    # covariance of the transformed result is an identity 
+                    # Note: If the covariance of `x` is `a`, then the
+                    # covariance of the transformed result is an identity
                     # matrix.
 
 whiten!(a, x)       # whitening transform inplace, directly updating `x`.
@@ -173,7 +173,7 @@ whiten!(r, a, x)    # write the transformed result to `r`.
 unwhiten(a, x)      # inverse of whitening transform. `x` can be a vector or
                     # a matrix.
                     #
-                    # Note: If the covariance of `x` is an identity matrix, 
+                    # Note: If the covariance of `x` is an identity matrix,
                     # then the covariance of the transformed result is `a`.
                     # Note: the un-whitening transform is useful for
                     # generating Gaussian samples.
@@ -182,7 +182,7 @@ unwhiten!(a, x)     # un-whitening transform inplace, updating `x`.
 
 unwhiten!(r, a, x)  # write the transformed result to `r`.
 
-test_pdmat(a, amat)     # test the correctness of implementation, given an 
+test_pdmat(a, amat)     # test the correctness of implementation, given an
                         # instance of some sub-type of `AbstractPDMat`, and
                         # a corresponding full matrix.
                         #
@@ -202,11 +202,14 @@ In some situation, it is useful to define a customized subtype of `AbstractPDMat
 
 dim(a::M)       # return the dimension of `a`
 
-full(a::M)      # return a copy of the matrix in full form, of type 
+full(a::M)      # return a copy of the matrix in full form, of type
                 # ``Matrix{Float64}``.
 
 diag(a::M)      # return the vector of diagonal elements, of type
                 # ``Vector{Float64}``.
+
+pdadd!(m, a, c)     # add `a * c` to a dense matrix `m` of the same size
+                    # inplace.
 
 * (a::M, c::Float64)        # return a scaled version of `a`.
 
@@ -230,12 +233,12 @@ unwhiten!(r::DenseVecOrMat, a::M, x::DenseVecOrMat)  # un-whitening transform,
 
 quad(a::M, x::DenseVector)      # compute `x' * a * x`
 
-quad!(r::AbstractArray, a::M, x::DenseMatrix)   # compute `x' * a * x` in 
+quad!(r::AbstractArray, a::M, x::DenseMatrix)   # compute `x' * a * x` in
                                                 # a column-wise manner
 
 invquad(a::M, x::DenseVector)   # compute `x' * inv(a) * x`
 
-invquad!(r::AbstractArray, a::M, x::DenseMatrix) # compute `x' * inv(a) * x` 
+invquad!(r::AbstractArray, a::M, x::DenseMatrix) # compute `x' * inv(a) * x`
                                                  # in a column-wise manner
 
 X_A_Xt(a::M, x::DenseMatrix)        # compute `x * a * x'`
@@ -246,7 +249,3 @@ X_invA_Xt(a::M, x::DenseMatrix)     # compute `x * inv(a) * x'`
 
 Xt_invA_X(a::M, x::DenseMatrix)     # compute `x' * inv(a) * x`
 ```
-
-
-
-
