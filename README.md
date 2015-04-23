@@ -67,9 +67,33 @@ immutable ScalMat <: AbstractPDMat
     inv_value::Float64      # inv(value)
 end
 
+
 # Constructors
 
 ScalMat(d, v)       # with dimension d and diagonal value v
+```
+
+
+* ``PDSparseMat``: sparse covariance matrix, defined as
+
+```julia
+immutable PDSparseMat <: AbstractPDMat
+    dim::Int                       # matrix dimension
+    mat::SparseMatrixCSC{Float64}  # input matrix
+    chol::CholmodFactor{Float64}   # Cholesky factorization of mat
+end
+
+# Constructors
+
+PDSparseMat(mat, chol)    # with both the input matrix and a Cholesky factorization
+
+PDSparseMat(mat)          # with the sparse input matrix, of type SparseMatrixCSC{Float64}
+                          # Remarks: the Cholesky factorization will be computed
+                          # upon construction.
+
+PDSparseMat(chol)         # with the Cholesky factorization
+                          # Remarks: the sparse matrix 'mat' will be computed upon
+                          # construction.
 ```
 
 
