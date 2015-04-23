@@ -1,21 +1,20 @@
 # Sparse positive definite matrix together with a Cholesky factorization object
-
 immutable PDSparseMat <: AbstractPDMat
     dim::Int
-    mat::SparseMatrixCSC{Float64, Int64}
-    chol::CholmodFactor{Float64, Int64}
+    mat::SparseMatrixCSC{Float64}
+    chol::CholmodFactor{Float64}
 end
 
-function PDSparseMat(mat::SparseMatrixCSC{Float64, Int64}, chol::CholmodFactor{Float64, Int64})
+function PDSparseMat(mat::SparseMatrixCSC{Float64}, chol::CholmodFactor{Float64})
     d = size(mat, 1)
     size(chol, 1) == d ||
         throw(DimensionMismatch("Dimensions of mat and chol are inconsistent."))
     PDSparseMat(d, mat, chol)
 end
 
-PDSparseMat(mat::SparseMatrixCSC{Float64, Int64}) = PDSparseMat(mat, cholfact(mat))
+PDSparseMat(mat::SparseMatrixCSC{Float64}) = PDSparseMat(mat, cholfact(mat))
 
-PDSparseMat(fac::CholmodFactor{Float64, Int64}) = PDSparseMat(size(fac,1), sparse(fac) |> x -> x*x', fac)
+PDSparseMat(fac::CholmodFactor{Float64}) = PDSparseMat(size(fac,1), sparse(fac) |> x -> x*x', fac)
 
 ### Basics
 
@@ -47,23 +46,10 @@ eigmin(a::PDSparseMat) = eigs(a.mat, which=:SM, nev=1, ritzvec=false)[1][1]
 
 ### whiten and unwhiten
 
-
-## function whiten!(r::DenseVecOrMat{Float64}, a::PDMat, x::DenseVecOrMat{Float64})
-##     cf = a.chol[:UL]
-##     A_ldiv_B!(cf, _rcopy!(r, x))
-##     return r
-## end
-
 function whiten!(r::DenseVecOrMat{Float64}, a::PDSparseMat, x::DenseVecOrMat{Float64})
-    A_ldiv_B!(a.chol, _rcopy!(r, x))
+    r[:] = sparse(a.chol) \ x
     return r
 end
-
-## function unwhiten!(r::DenseVecOrMat{Float64}, a::PDMat, x::StridedVecOrMat{Float64})
-##     cf = a.chol[:UL]
-##     A_mul_B!(cf, _rcopy!(r, x))
-##     return r
-## end
 
 function unwhiten!(r::DenseVecOrMat{Float64}, a::PDSparseMat, x::StridedVecOrMat{Float64})
     r[:] = sparse(a.chol) * x
