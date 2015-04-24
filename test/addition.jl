@@ -12,7 +12,7 @@ pm3 = ScalMat(3, 2.0)
 pm4 = 2.0I
 pm5 = PDSparseMat(sparse(C1))
 
-pmats = Any[pm1, pm2, pm3]
+pmats = Any[pm1, pm2, pm3, pm5]
 
 for p1 in pmats, p2 in pmats
 	pr = p1 + p2
