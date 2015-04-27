@@ -81,7 +81,7 @@ ScalMat(d, v)       # with dimension d and diagonal value v
 immutable PDSparseMat <: AbstractPDMat
     dim::Int                       # matrix dimension
     mat::SparseMatrixCSC{Float64}  # input matrix
-    chol::CholmodFactor{Float64}   # Cholesky factorization of mat
+    chol::CholTypeSparse           # Cholesky factorization of mat
 end
 
 # Constructors

@@ -2,10 +2,10 @@
 immutable PDSparseMat <: AbstractPDMat
     dim::Int
     mat::SparseMatrixCSC{Float64}
-    chol::CholmodFactor{Float64}
+    chol::CholTypeSparse
 end
 
-function PDSparseMat(mat::SparseMatrixCSC{Float64}, chol::CholmodFactor{Float64})
+function PDSparseMat(mat::SparseMatrixCSC{Float64}, chol::CholTypeSparse)
     d = size(mat, 1)
     size(chol, 1) == d ||
         throw(DimensionMismatch("Dimensions of mat and chol are inconsistent."))
@@ -14,7 +14,7 @@ end
 
 PDSparseMat(mat::SparseMatrixCSC{Float64}) = PDSparseMat(mat, cholfact(mat))
 
-PDSparseMat(fac::CholmodFactor{Float64}) = PDSparseMat(size(fac,1), sparse(fac) |> x -> x*x', fac)
+PDSparseMat(fac::CholTypeSparse) = PDSparseMat(size(fac,1), sparse(fac) |> x -> x*x', fac)
 
 ### Basics
 
