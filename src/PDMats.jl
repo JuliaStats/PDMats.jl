@@ -9,6 +9,7 @@ module PDMats
         # Types
         AbstractPDMat,
         PDMat,
+        PDSparseMat,
         PDiagMat,
         ScalMat,
 
@@ -48,6 +49,7 @@ module PDMats
     include("utils.jl")
 
     include("pdmat.jl")
+    include("pdsparsemat.jl")
     include("pdiagmat.jl")
     include("scalmat.jl")
 
