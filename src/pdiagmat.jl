@@ -33,9 +33,9 @@ function pdadd!(r::Matrix{Float64}, a::Matrix{Float64}, b::PDiagMat, c::Real)
     return r
 end
 
-* (a::PDiagMat, c::Float64) = PDiagMat(a.diag * c)
-* (a::PDiagMat, x::DenseVecOrMat) = a.diag .* x
-\ (a::PDiagMat, x::DenseVecOrMat) = a.inv_diag .* x
+*(a::PDiagMat, c::Float64) = PDiagMat(a.diag * c)
+*(a::PDiagMat, x::DenseVecOrMat) = a.diag .* x
+\(a::PDiagMat, x::DenseVecOrMat) = a.inv_diag .* x
 
 
 ### Algebra

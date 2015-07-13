@@ -31,9 +31,9 @@ function pdadd!(r::Matrix{Float64}, a::Matrix{Float64}, b::PDSparseMat, c::Real)
     _addscal!(r, a, b.mat, convert(Float64, c))
 end
 
-* (a::PDSparseMat, c::Float64) = PDSparseMat(a.mat * c)
-* (a::PDSparseMat, x::DenseVecOrMat) = a.mat * x
-\ (a::PDSparseMat, x::DenseVecOrMat) = a.chol \ x
+*(a::PDSparseMat, c::Float64) = PDSparseMat(a.mat * c)
+*(a::PDSparseMat, x::DenseVecOrMat) = a.mat * x
+\(a::PDSparseMat, x::DenseVecOrMat) = a.chol \ x
 
 
 ### Algebra
