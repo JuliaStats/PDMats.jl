@@ -29,10 +29,10 @@ function pdadd!(r::Matrix{Float64}, a::Matrix{Float64}, b::ScalMat, c::Real)
     return r
 end
 
-* (a::ScalMat, c::Float64) = ScalMat(a.dim, a.value * c)
-/ (a::ScalMat, c::Float64) = ScalMat(a.dim, a.value / c)
-* (a::ScalMat, x::DenseVecOrMat) = a.value * x
-\ (a::ScalMat, x::DenseVecOrMat) = a.inv_value * x
+*(a::ScalMat, c::Float64) = ScalMat(a.dim, a.value * c)
+/(a::ScalMat, c::Float64) = ScalMat(a.dim, a.value / c)
+*(a::ScalMat, x::DenseVecOrMat) = a.value * x
+\(a::ScalMat, x::DenseVecOrMat) = a.inv_value * x
 
 
 ### Algebra
