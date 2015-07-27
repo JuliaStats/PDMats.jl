@@ -47,12 +47,12 @@ eigmin(a::PDSparseMat) = eigs(a.mat, which=:SM, nev=1, ritzvec=false)[1][1]
 ### whiten and unwhiten
 
 function whiten!(r::DenseVecOrMat{Float64}, a::PDSparseMat, x::DenseVecOrMat{Float64})
-    r[:] = sparse(a.chol) \ x
+    r[:] = sparse(chol_lower(a.chol)) \ x
     return r
 end
 
 function unwhiten!(r::DenseVecOrMat{Float64}, a::PDSparseMat, x::StridedVecOrMat{Float64})
-    r[:] = sparse(a.chol) * x
+    r[:] = sparse(chol_lower(a.chol)) * x
     return r
 end
 
@@ -80,13 +80,13 @@ end
 ### tri products
 
 function X_A_Xt(a::PDSparseMat, x::DenseMatrix{Float64})
-    z = x*sparse(a.chol)
+    z = x*sparse(chol_lower(a.chol))
     A_mul_Bt(z, z)
 end
 
 
 function Xt_A_X(a::PDSparseMat, x::DenseMatrix{Float64})
-    z = At_mul_B(x, sparse(a.chol))
+    z = At_mul_B(x, sparse(chol_lower(a.chol)))
     A_mul_Bt(z, z)
 end
 
