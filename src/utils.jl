@@ -10,7 +10,7 @@ end
 _rcopy!(r::DenseVecOrMat, x::DenseVecOrMat) = (is(r, x) || copy!(r, x); r)
 
 
-function _addscal!(r::Matrix, a::Matrix, b::Union(Matrix, SparseMatrixCSC), c::Real)
+@compat function _addscal!(r::Matrix, a::Matrix, b::Union{Matrix, SparseMatrixCSC}, c::Real)
     if c == 1.0
         for i = 1:length(a)
             @inbounds r[i] = a[i] + b[i]
@@ -23,7 +23,7 @@ function _addscal!(r::Matrix, a::Matrix, b::Union(Matrix, SparseMatrixCSC), c::R
     return r
 end
 
-function _adddiag!(a::Union(Matrix, SparseMatrixCSC), v::Real)
+@compat function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::Real)
     n = size(a, 1)
     for i = 1:n
         @inbounds a[i,i] += v
@@ -31,7 +31,7 @@ function _adddiag!(a::Union(Matrix, SparseMatrixCSC), v::Real)
     return a
 end
 
-function _adddiag!(a::Union(Matrix, SparseMatrixCSC), v::Vector, c::Real)
+@compat function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::Vector, c::Real)
     n = size(a, 1)
     @check_argdims length(v) == n
     if c == 1.0
@@ -46,9 +46,9 @@ function _adddiag!(a::Union(Matrix, SparseMatrixCSC), v::Vector, c::Real)
     return a
 end
 
-_adddiag(a::Union(Matrix, SparseMatrixCSC), v::Real) = _adddiag!(copy(a), v)
-_adddiag(a::Union(Matrix, SparseMatrixCSC), v::Vector, c::Real) = _adddiag!(copy(a), v, c)
-_adddiag(a::Union(Matrix, SparseMatrixCSC), v::Vector) = _adddiag!(copy(a), v, 1.0)
+@compat _adddiag(a::Union{Matrix, SparseMatrixCSC}, v::Real) = _adddiag!(copy(a), v)
+@compat _adddiag(a::Union{Matrix, SparseMatrixCSC}, v::Vector, c::Real) = _adddiag!(copy(a), v, c)
+@compat _adddiag(a::Union{Matrix, SparseMatrixCSC}, v::Vector) = _adddiag!(copy(a), v, 1.0)
 
 function wsumsq(w::AbstractVector, a::AbstractVector)
     @check_argdims(length(a) == length(w))

@@ -1,6 +1,7 @@
 module PDMats
 
     using ArrayViews
+    using Compat
 
     import Base: +, *, \, /, ==
     import Base: full, logdet, inv, diag, diagm, scale, scale!, eigmax, eigmin
