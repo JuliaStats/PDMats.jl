@@ -6,7 +6,7 @@ if VERSION >= v"0.4.0-dev+4370"
     typealias CholType Cholesky{Float64, Matrix{Float64}}
     chol_lower(a::Matrix{Float64}) = chol(a, Val{:L})
 
-    typealias CholTypeSparse Base.SparseMatrix.CHOLMOD.Factor{Float64}
+    typealias CholTypeSparse SparseArrays.CHOLMOD.Factor{Float64}
 
     chol_lower(cf::CholTypeSparse) = cf[:L]
 else
