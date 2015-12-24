@@ -1,6 +1,13 @@
 # needs special attention to Cholesky, as the syntax & behavior changes in 0.4-pre
 
-if VERSION >= v"0.4.0-dev+4370"
+if VERSION >= v"0.5.0-dev+907"
+    typealias CholType Cholesky{Float64, Matrix{Float64}}
+    chol_lower(a::Matrix{Float64}) = ctranspose(chol(a))
+
+    typealias CholTypeSparse SparseArrays.CHOLMOD.Factor{Float64}
+
+    chol_lower(cf::CholTypeSparse) = cf[:L]
+elseif VERSION >= v"0.4.0-dev+4370"
     # error("Choleksy changes in 0.4.0-dev+4370 (PR #10862), we are still working to make it work with these changes.")
 
     typealias CholType Cholesky{Float64, Matrix{Float64}}
