@@ -10,8 +10,8 @@ end
 _rcopy!(r::DenseVecOrMat, x::DenseVecOrMat) = (is(r, x) || copy!(r, x); r)
 
 
-@compat function _addscal!(r::Matrix, a::Matrix, b::Union{Matrix, SparseMatrixCSC}, c::Real)
-    if c == 1.0
+@compat function _addscal!{T<:AbstractFloat}(r::Matrix{T}, a::Matrix{T}, b::Union{Matrix{T}, SparseMatrixCSC{T}}, c::T)
+    if c == one(T)
         for i = 1:length(a)
             @inbounds r[i] = a[i] + b[i]
         end
@@ -23,7 +23,7 @@ _rcopy!(r::DenseVecOrMat, x::DenseVecOrMat) = (is(r, x) || copy!(r, x); r)
     return r
 end
 
-@compat function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::Real)
+@compat function _adddiag!{T<:AbstractFloat}(a::Union{Matrix{T}, SparseMatrixCSC{T}}, v::T)
     n = size(a, 1)
     for i = 1:n
         @inbounds a[i,i] += v
@@ -31,10 +31,10 @@ end
     return a
 end
 
-@compat function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::Vector, c::Real)
+@compat function _adddiag!{T<:AbstractFloat}(a::Union{Matrix{T}, SparseMatrixCSC{T}}, v::Vector{T}, c::T)
     n = size(a, 1)
     @check_argdims length(v) == n
-    if c == 1.0
+    if c == one(T)
         for i = 1:n
             @inbounds a[i,i] += v[i]
         end
@@ -46,20 +46,20 @@ end
     return a
 end
 
-@compat _adddiag(a::Union{Matrix, SparseMatrixCSC}, v::Real) = _adddiag!(copy(a), v)
-@compat _adddiag(a::Union{Matrix, SparseMatrixCSC}, v::Vector, c::Real) = _adddiag!(copy(a), v, c)
-@compat _adddiag(a::Union{Matrix, SparseMatrixCSC}, v::Vector) = _adddiag!(copy(a), v, 1.0)
+@compat _adddiag{T<:AbstractFloat}(a::Union{Matrix{T}, SparseMatrixCSC{T}}, v::T) = _adddiag!(copy(a), v)
+@compat _adddiag{T<:AbstractFloat}(a::Union{Matrix{T}, SparseMatrixCSC{T}}, v::Vector{T}, c::T) = _adddiag!(copy(a), v, c)
+@compat _adddiag{T<:AbstractFloat}(a::Union{Matrix{T}, SparseMatrixCSC{T}}, v::Vector{T}) = _adddiag!(copy(a), v, one(T))
 
-function wsumsq(w::AbstractVector, a::AbstractVector)
+function wsumsq{T<:AbstractFloat}(w::AbstractVector{T}, a::AbstractVector{T})
     @check_argdims(length(a) == length(w))
-    s = 0.
+    s = zero(T)
     for i = 1:length(a)
         @inbounds s += abs2(a[i]) * w[i]
     end
     return s
 end
 
-function colwise_dot!(r::AbstractArray, a::DenseMatrix, b::DenseMatrix)
+function colwise_dot!{T<:AbstractFloat}(r::AbstractArray{T}, a::DenseMatrix{T}, b::DenseMatrix{T})
     n = length(r)
     @check_argdims n == size(a, 2) == size(b, 2) && size(a, 1) == size(b, 1)
     for i = 1:n
@@ -68,7 +68,7 @@ function colwise_dot!(r::AbstractArray, a::DenseMatrix, b::DenseMatrix)
     return r
 end
 
-function colwise_sumsq!(r::AbstractArray, a::DenseMatrix, c::Real)
+function colwise_sumsq!{T<:AbstractFloat}(r::AbstractArray{T}, a::DenseMatrix{T}, c::T)
     n = length(r)
     @check_argdims n == size(a, 2)
     for i = 1:n

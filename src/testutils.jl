@@ -7,7 +7,7 @@
 import Base.Test: @test, @test_approx_eq
 
 ## driver function
-function test_pdmat(C::AbstractPDMat, Cmat::Matrix{Float64};
+function test_pdmat(C::AbstractPDMat, Cmat::Matrix;
                     verbose::Int=2,             # the level to display intermediate steps
                     cmat_eq::Bool=false,        # require Cmat and full(C) to be exactly equal
                     t_diag::Bool=true,          # whethet to test diag method
@@ -25,7 +25,7 @@ function test_pdmat(C::AbstractPDMat, Cmat::Matrix{Float64};
     d = size(Cmat, 1)
     verbose >= 1 && print_with_color(:blue, "Testing $(typeof(C)) with dim = $d\n")
 
-    pdtest_basics(C, d, verbose)
+    pdtest_basics(C, Cmat, d, verbose)
     pdtest_cmat(C, Cmat, cmat_eq, verbose)
 
     t_diag && pdtest_diag(C, Cmat, cmat_eq, verbose)
@@ -37,7 +37,7 @@ function test_pdmat(C::AbstractPDMat, Cmat::Matrix{Float64};
     Imat = inv(Cmat)
 
     n = 5
-    X = rand(d, n) - 0.5
+    X = rand(eltype(C),d,n) - convert(eltype(C),0.5)
 
     t_mul && pdtest_mul(C, Cmat, X, verbose)
     t_rdiv && pdtest_rdiv(C, Imat, X, verbose)
@@ -55,7 +55,7 @@ end
 _pdt(vb::Int, s) = (vb >= 2 && print_with_color(:green, "    .. testing $s\n"))
 
 
-function pdtest_basics(C::AbstractPDMat, d::Int, verbose::Int)
+function pdtest_basics(C::AbstractPDMat, Cmat::Matrix, d::Int, verbose::Int)
     _pdt(verbose, "dim")
     @test dim(C) == d
 
@@ -72,7 +72,7 @@ function pdtest_basics(C::AbstractPDMat, d::Int, verbose::Int)
     @test length(C) == d * d
 
     _pdt(verbose, "eltype")
-    @test eltype(C) == Float64
+    @test eltype(C) == eltype(Cmat)
 end
 
 
@@ -98,23 +98,23 @@ end
 
 function pdtest_scale(C::AbstractPDMat, Cmat::Matrix, verbose::Int)
     _pdt(verbose, "scale")
-    @test_approx_eq full(C * 2.0) Cmat * 2.0
-    @test_approx_eq full(2.0 * C) 2.0 * Cmat
+    @test_approx_eq full(C * convert(eltype(C),2)) Cmat * convert(eltype(C),2)
+    @test_approx_eq full(convert(eltype(C),2) * C) convert(eltype(C),2) * Cmat
 end
 
 
 function pdtest_add(C::AbstractPDMat, Cmat::Matrix, verbose::Int)
-    M = rand(size(Cmat))
+    M = rand(eltype(C),size(Cmat))
     _pdt(verbose, "add")
     @test_approx_eq C + M Cmat + M
     @test_approx_eq M + C M + Cmat
 
     _pdt(verbose, "add_scal")
-    @test_approx_eq pdadd(M, C, 2.0) M + Cmat * 2.0
+    @test_approx_eq pdadd(M, C, convert(eltype(C),2)) M + Cmat * convert(eltype(C),2)
 
     _pdt(verbose, "add_scal!")
-    R = M + Cmat * 2.0
-    Mr = pdadd!(M, C, 2.0)
+    R = M + Cmat * convert(eltype(C),2)
+    Mr = pdadd!(M, C, convert(eltype(C),2))
     @test is(Mr, M)
     @test_approx_eq Mr R
 end
@@ -137,7 +137,7 @@ end
 
 function pdtest_mul(C::AbstractPDMat, Cmat::Matrix, verbose::Int)
     n = 5
-    X = rand(dim(C), n)
+    X = rand(eltype(C),dim(C), n)
 
     _pdt(verbose, "multiply")
     @test_approx_eq C * X Cmat * X
@@ -175,7 +175,7 @@ function pdtest_quad(C::AbstractPDMat, Cmat::Matrix, Imat::Matrix, X::Matrix, ve
     n = size(X, 2)
 
     _pdt(verbose, "quad")
-    r_quad = zeros(n)
+    r_quad = zeros(eltype(C),n)
     for i = 1:n
         xi = vec(X[:,i])
         r_quad[i] = dot(xi, Cmat * xi)
@@ -184,7 +184,7 @@ function pdtest_quad(C::AbstractPDMat, Cmat::Matrix, Imat::Matrix, X::Matrix, ve
     @test_approx_eq quad(C, X) r_quad
 
     _pdt(verbose, "invquad")
-    r_invquad = zeros(n)
+    r_invquad = zeros(eltype(C),n)
     for i = 1:n
         xi = vec(X[:,i])
         r_invquad[i] = dot(xi, Imat * xi)
@@ -213,14 +213,14 @@ end
 
 function pdtest_whiten(C::AbstractPDMat, Cmat::Matrix, verbose::Int)
     Y = chol_lower(Cmat)
-    Q = qr(randn(size(Cmat)))[1]
+    Q = qr(convert(Array{eltype(C),2},randn(size(Cmat))))[1]
     Y = Y * Q'                    # generate a matrix Y such that Y * Y' = C
     @test_approx_eq Y * Y' Cmat
     d = dim(C)
 
     _pdt(verbose, "whiten")
     Z = whiten(C, Y)
-    @test_approx_eq Z * Z' eye(d)
+    @test_approx_eq Z * Z' eye(eltype(C),d)
     for i = 1:d
         @test_approx_eq whiten(C, Y[:,i]) Z[:,i]
     end
@@ -243,6 +243,6 @@ function pdtest_whiten(C::AbstractPDMat, Cmat::Matrix, verbose::Int)
     @test_approx_eq X X2
 
     _pdt(verbose, "whiten-unwhiten")
-    @test_approx_eq unwhiten(C, whiten(C, eye(d))) eye(d)
-    @test_approx_eq whiten(C, unwhiten(C, eye(d))) eye(d)
+    @test_approx_eq unwhiten(C, whiten(C, eye(eltype(C),d))) eye(eltype(C),d)
+    @test_approx_eq whiten(C, unwhiten(C, eye(eltype(C),d))) eye(eltype(C),d)
 end

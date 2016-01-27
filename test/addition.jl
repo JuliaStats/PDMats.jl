@@ -3,29 +3,37 @@
 using PDMats
 using Base.Test
 
-C1 = [4. -2. -1.; -2. 5. -1.; -1. -1. 6.]
-va = [1.5, 2.5, 2.0]
+for T in [Float64,Float32]
 
-pm1 = PDMat(C1)
-pm2 = PDiagMat(va)
-pm3 = ScalMat(3, 2.0)
-pm4 = 2.0I
-pm5 = PDSparseMat(sparse(C1))
+  print_with_color(:blue, "Testing addition with eltype = $T\n")
+  M = convert(Array{T,2},[4. -2. -1.; -2. 5. -1.; -1. -1. 6.])
+  V = convert(Array{T,1},[1.5, 2.5, 2.0])
+  X = convert(T,2.0)
 
-pmats = Any[pm1, pm2, pm3, pm5]
+  pm1 = PDMat(M)
+  pm2 = PDiagMat(V)
+  pm3 = ScalMat(3,X)
+  pm4 = X*I
+  #do not test PDSparseMat for Float32 on Julia 0.3 - impossible because of issue #14076
+  pm5 = (T==Float64 || VERSION > v"0.4.2")?PDSparseMat(sparse(M)):PDMat(M)
 
-for p1 in pmats, p2 in pmats
-	pr = p1 + p2
-	@test size(pr) == size(p1)
-	@test_approx_eq full(pr) full(p1) + full(p2)
+  pmats = Any[pm1, pm2, pm3, pm5]
 
-	pr = pdadd(p1, p2, 1.5)
-	@test size(pr) == size(p1)
-	@test_approx_eq full(pr) full(p1) + full(p2) * 1.5
-end
+  for p1 in pmats, p2 in pmats
+	  pr = p1 + p2
+	  @test size(pr) == size(p1)
+	  @test_approx_eq full(pr) full(p1) + full(p2)
 
-for p1 in pmats
+	  pr = pdadd(p1, p2, convert(T,1.5))
+	  @test size(pr) == size(p1)
+	  @test_approx_eq full(pr) full(p1) + full(p2) * convert(T,1.5)
+  end
+
+  for p1 in pmats
         pr = p1 + pm4
         @test size(pr) == size(p1)
         @test_approx_eq full(pr) full(p1) + pm4
+  end
 end
+
+

@@ -18,15 +18,21 @@ Positive definite matrices are widely used in machine learning and probabilistic
 
 ## Positive definite matrix types
 
-This package defines an abstract type ``AbstractPDMat`` as the base type for positive definite matrices with different internal representations.
+This package defines an abstract type ``AbstractPDMat{T<:AbstractFloat}`` as the base type for positive definite matrices with different internal representations.
+
+Elemenent types are in princple all AbstractFloat types, but in practice this is limited by the support for floating point types in Base.LinAlg.Cholesky.
+  - ``Float64``     Fully supported from Julia 0.3.
+  - ``Float32``     Fully supported from Julia 0.4.2. Full, diagonal and scale matrix types are supported in Julia 0.3 or higher.
+  - ``Float16``     Promoted to ``Float32`` for full, diagonal and scale matrix. Currently unsupported for sparse matrix.
+  - ``BigFloat``    Supported in Julia 0.4 for full, diagonal and scale matrix. Currently unsupported for sparse matrix.
 
 * ``PDMat``: full covariance matrix, defined as
 
 ```julia
-immutable PDMat <: AbstractPDMat
+immutable PDMat{T<:AbstractFloat,S<:AbstractMatrix} <: AbstractPDMat{T}
     dim::Int                    # matrix dimension
-    mat::Matrix{Float64}        # input matrix
-    chol::Cholesky{Float64}     # Cholesky factorization of mat
+    mat::S                      # input matrix
+    chol::Cholesky{T,S}         # Cholesky factorization of mat
 end
 
 # Constructors
@@ -37,9 +43,6 @@ PDMat(mat)          # with the input matrix, of type Matrix or Symmetric
                     # Remarks: the Cholesky factorization will be computed
                     # upon construction.
 
-PDMat(mat, uplo)    # with the input matrix, and an uplo argument (:U or :L)
-                    # to specify the way Choleksy is done
-
 PDMat(chol)         # with the Cholesky factorization
                     # Remarks: the full matrix will be computed upon
                     # construction.
@@ -49,41 +52,43 @@ PDMat(chol)         # with the Cholesky factorization
 * ``PDiagMat``: diagonal matrix, defined as
 
 ```julia
-immutable PDiagMat <: AbstractPDMat
+immutable {T<:AbstractFloat,V<:AbstractVector} <: AbstractPDMat{T}
     dim::Int                    # matrix dimension
-    diag::Vector{Float64}       # the vector of diagonal elements
-    inv_diag::Vector{Float64}   # the element-wise inverse of diag
+    diag::V                     # the vector of diagonal elements
+    inv_diag::V                 # the element-wise inverse of diag
 end
 
 # Constructors
 
-PDiagMat(v)     # with the vector of diagonal elements
-                # inv_diag will be computed upon construction
+PDiagMat(v,inv_v)   # with the vector of diagonal elements and its inverse
+PDiagMat(v)         # with the vector of diagonal elements
+                    # inv_diag will be computed upon construction
 ```
 
 
 * ``ScalMat``: uniform scaling matrix, as ``v * eye(d)``, defined as
 
 ```julia
-immutable ScalMat <: AbstractPDMat
-    dim::Int                # matrix dimension
-    value::Float64          # diagonal value (shared by all diagonal elements)
-    inv_value::Float64      # inv(value)
+immutable ScalMat{T<:AbstractFloat} <: AbstractPDMat{T}
+    dim::Int         # matrix dimension
+    value::T         # diagonal value (shared by all diagonal elements)
+    inv_value::T     # inv(value)
 end
 
 
 # Constructors
 
-ScalMat(d, v)       # with dimension d and diagonal value v
+ScalMat(d, v, inv_v) # with dimension d, diagonal value v and its inverse inv_v
+ScalMat(d, v)        # with dimension d and diagonal value v
 ```
 
 
 * ``PDSparseMat``: sparse covariance matrix, defined as
 
 ```julia
-immutable PDSparseMat <: AbstractPDMat
+immutable PDSparseMat{T<:AbstractFloat,S<:AbstractSparseMatrix} <: AbstractPDMat{T}
     dim::Int                       # matrix dimension
-    mat::SparseMatrixCSC{Float64}  # input matrix
+    mat::SparseMatrixCSC           # input matrix
     chol::CholTypeSparse           # Cholesky factorization of mat
 end
 
@@ -91,7 +96,7 @@ end
 
 PDSparseMat(mat, chol)    # with both the input matrix and a Cholesky factorization
 
-PDSparseMat(mat)          # with the sparse input matrix, of type SparseMatrixCSC{Float64}
+PDSparseMat(mat)          # with the sparse input matrix, of type SparseMatrixCSC
                           # Remarks: the Cholesky factorization will be computed
                           # upon construction.
 
@@ -116,7 +121,7 @@ size(a, i)  # return the i-th dimension of `a`.
 
 ndims(a)    # the number of dimensions, which is always 2.
 
-eltype(a)   # the element type, which is always `Float64`
+eltype(a)   # the element type
 
 full(a)     # return a copy of the matrix in full form.
 
@@ -231,15 +236,15 @@ In some situation, it is useful to define a customized subtype of `AbstractPDMat
 dim(a::M)       # return the dimension of `a`
 
 full(a::M)      # return a copy of the matrix in full form, of type
-                # ``Matrix{Float64}``.
+                # ``Matrix{eltype(M)}``.
 
 diag(a::M)      # return the vector of diagonal elements, of type
-                # ``Vector{Float64}``.
+                # ``Vector{eltype(M)}``.
 
 pdadd!(m, a, c)     # add `a * c` to a dense matrix `m` of the same size
                     # inplace.
 
-* (a::M, c::Float64)        # return a scaled version of `a`.
+* (a::M, c::Real)        # return a scaled version of `a`.
 
 * (a::M, x::DenseVecOrMat)  # transform `x`, i.e. compute `a * x`.
 
