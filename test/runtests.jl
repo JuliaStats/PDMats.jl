@@ -1,6 +1,3 @@
-
-
-
 tests = ["pdmtypes", "addition"]
 println("Running tests ...")
 

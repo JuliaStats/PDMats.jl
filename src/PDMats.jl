@@ -44,7 +44,7 @@ module PDMats
 
     # The abstract base type
 
-    abstract AbstractPDMat
+    abstract AbstractPDMat{T<:AbstractFloat}
 
     # source files
 

@@ -1,14 +1,12 @@
 # Scaling matrix
 
-immutable ScalMat <: AbstractPDMat
-    dim::Int
-    value::Float64
-    inv_value::Float64
-
-    ScalMat(d::Int, v::Float64) = new(d, v, 1.0 / v)
-    ScalMat(d::Int, v::Float64, inv_v::Float64) = new(d, v, inv_v)
+immutable ScalMat{T<:AbstractFloat} <: AbstractPDMat{T}
+  dim::Int
+  value::T
+  inv_value::T
 end
 
+ScalMat(d::Int,v::AbstractFloat) = ScalMat{typeof(v)}(d, v, one(v) / v)
 
 ### Basics
 
@@ -19,20 +17,20 @@ diag(a::ScalMat) = fill(a.value, a.dim)
 
 ### Arithmetics
 
-function pdadd!(r::Matrix{Float64}, a::Matrix{Float64}, b::ScalMat, c::Real)
+function pdadd!{T<:AbstractFloat}(r::Matrix{T}, a::Matrix{T}, b::ScalMat{T}, c::T)
     @check_argdims size(r) == size(a) == size(b)
     if is(r, a)
-        _adddiag!(r, b.value * convert(Float64, c))
+        _adddiag!(r, b.value * c)
     else
-        _adddiag!(copy!(r, a), b.value * convert(Float64, c))
+        _adddiag!(copy!(r, a), b.value * c)
     end
     return r
 end
 
-*(a::ScalMat, c::Float64) = ScalMat(a.dim, a.value * c)
-/(a::ScalMat, c::Float64) = ScalMat(a.dim, a.value / c)
-*(a::ScalMat, x::DenseVecOrMat) = a.value * x
-\(a::ScalMat, x::DenseVecOrMat) = a.inv_value * x
+*{T<:AbstractFloat}(a::ScalMat{T}, c::T) = ScalMat(a.dim, a.value * c)
+/{T<:AbstractFloat}(a::ScalMat{T}, c::T) = ScalMat(a.dim, a.value / c)
+*{T<:AbstractFloat}(a::ScalMat{T}, x::DenseVecOrMat{T}) = a.value * x
+\{T<:AbstractFloat}(a::ScalMat{T}, x::DenseVecOrMat{T}) = a.inv_value * x
 
 
 ### Algebra
@@ -45,7 +43,7 @@ eigmin(a::ScalMat) = a.value
 
 ### whiten and unwhiten
 
-function whiten!(r::DenseVecOrMat{Float64}, a::ScalMat, x::DenseVecOrMat{Float64})
+function whiten!{T<:AbstractFloat}(r::DenseVecOrMat{T}, a::ScalMat{T}, x::DenseVecOrMat{T})
     @check_argdims dim(a) == size(x, 1)
     c = sqrt(a.inv_value)
     for i = 1:length(x)
@@ -54,7 +52,7 @@ function whiten!(r::DenseVecOrMat{Float64}, a::ScalMat, x::DenseVecOrMat{Float64
     return r
 end
 
-function unwhiten!(r::DenseVecOrMat{Float64}, a::ScalMat, x::StridedVecOrMat{Float64})
+function unwhiten!{T<:AbstractFloat}(r::DenseVecOrMat{T}, a::ScalMat{T}, x::StridedVecOrMat{T})
     @check_argdims dim(a) == size(x, 1)
     c = sqrt(a.value)
     for i = 1:length(x)
@@ -66,31 +64,31 @@ end
 
 ### quadratic forms
 
-quad(a::ScalMat, x::Vector{Float64}) = sumabs2(x) * a.value
-invquad(a::ScalMat, x::Vector{Float64}) = sumabs2(x) * a.inv_value
+quad{T<:AbstractFloat}(a::ScalMat, x::Vector{T}) = sumabs2(x) * a.value
+invquad{T<:AbstractFloat}(a::ScalMat, x::Vector{T}) = sumabs2(x) * a.inv_value
 
-quad!(r::AbstractArray{Float64}, a::ScalMat, x::Matrix{Float64}) = colwise_sumsq!(r, x, a.value)
-invquad!(r::AbstractArray{Float64}, a::ScalMat, x::Matrix{Float64}) = colwise_sumsq!(r, x, a.inv_value)
+quad!{T<:AbstractFloat}(r::AbstractArray{T}, a::ScalMat{T}, x::Matrix{T}) = colwise_sumsq!(r, x, a.value)
+invquad!{T<:AbstractFloat}(r::AbstractArray{T}, a::ScalMat{T}, x::Matrix{T}) = colwise_sumsq!(r, x, a.inv_value)
 
 
 ### tri products
 
-function X_A_Xt(a::ScalMat, x::DenseMatrix{Float64})
+function X_A_Xt{T<:AbstractFloat}(a::ScalMat{T}, x::DenseMatrix{T})
     @check_argdims dim(a) == size(x, 2)
     gemm('N', 'T', a.value, x, x)
 end
 
-function Xt_A_X(a::ScalMat, x::DenseMatrix{Float64})
+function Xt_A_X{T<:AbstractFloat}(a::ScalMat{T}, x::DenseMatrix{T})
     @check_argdims dim(a) == size(x, 1)
     gemm('T', 'N', a.value, x, x)
 end
 
-function X_invA_Xt(a::ScalMat, x::DenseMatrix{Float64})
+function X_invA_Xt{T<:AbstractFloat}(a::ScalMat{T}, x::DenseMatrix{T})
     @check_argdims dim(a) == size(x, 2)
     gemm('N', 'T', a.inv_value, x, x)
 end
 
-function Xt_invA_X(a::ScalMat, x::DenseMatrix{Float64})
+function Xt_invA_X{T<:AbstractFloat}(a::ScalMat{T}, x::DenseMatrix{T})
     @check_argdims dim(a) == size(x, 1)
     gemm('T', 'N', a.inv_value, x, x)
 end

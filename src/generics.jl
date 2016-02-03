@@ -2,7 +2,7 @@
 
 ## Basic functions
 
-Base.eltype(a::AbstractPDMat) = Float64
+Base.eltype{T<:AbstractFloat}(a::AbstractPDMat{T}) = T
 Base.ndims(a::AbstractPDMat) = 2
 Base.size(a::AbstractPDMat) = (dim(a), dim(a))
 Base.size(a::AbstractPDMat, i::Integer) = 1 <= i <= 2 ? dim(a) : 1
@@ -10,39 +10,39 @@ Base.length(a::AbstractPDMat) = abs2(dim(a))
 
 ## arithmetics
 
-pdadd!(r::Matrix{Float64}, a::Matrix{Float64}, b::AbstractPDMat) = pdadd!(r, a, b, 1.0)
+pdadd!{T<:AbstractFloat}(r::Matrix{T}, a::Matrix{T}, b::AbstractPDMat{T}) = pdadd!(r, a, b, one(T))
 
-pdadd!(a::Matrix{Float64}, b::AbstractPDMat, c::Real) = pdadd!(a, a, b, convert(Float64, c))
-pdadd!(a::Matrix{Float64}, b::AbstractPDMat) = pdadd!(a, a, b, 1.0)
+pdadd!{T<:AbstractFloat}(a::Matrix{T}, b::AbstractPDMat{T}, c::T) = pdadd!(a, a, b, c)
+pdadd!{T<:AbstractFloat}(a::Matrix{T}, b::AbstractPDMat{T}) = pdadd!(a, a, b, one(T))
 
-pdadd(a::Matrix{Float64}, b::AbstractPDMat, c::Real) = pdadd!(similar(a), a, b, convert(Float64, c))
-pdadd(a::Matrix{Float64}, b::AbstractPDMat) = pdadd!(similar(a), a, b, 1.0)
+pdadd{T<:AbstractFloat}(a::Matrix{T}, b::AbstractPDMat{T}, c::T) = pdadd!(similar(a), a, b, c)
+pdadd{T<:AbstractFloat}(a::Matrix{T}, b::AbstractPDMat{T}) = pdadd!(similar(a), a, b, one(T))
 
-+(a::Matrix{Float64}, b::AbstractPDMat) = pdadd(a, b)
-+(a::AbstractPDMat, b::Matrix{Float64}) = pdadd(b, a)
++{T<:AbstractFloat}(a::Matrix{T}, b::AbstractPDMat{T}) = pdadd(a, b)
++{T<:AbstractFloat}(a::AbstractPDMat{T}, b::Matrix{T}) = pdadd(b, a)
 
-*(a::AbstractPDMat, c::Real) = a * convert(Float64, c)
-*(c::Real, a::AbstractPDMat) = a * convert(Float64, c)
-/(a::AbstractPDMat, c::Real) = a * convert(Float64, inv(c))
+*{T<:AbstractFloat}(a::AbstractPDMat{T}, c::T) = a * c
+*{T<:AbstractFloat}(c::T, a::AbstractPDMat{T}) = a * c
+/{T<:AbstractFloat}(a::AbstractPDMat{T}, c::T) = a * inv(c)
 
 
 ## whiten and unwhiten
 
-whiten!(a::AbstractPDMat, x::DenseVecOrMat{Float64}) = whiten!(x, a, x)
-unwhiten!(a::AbstractPDMat, x::DenseVecOrMat{Float64}) = unwhiten!(x, a, x)
+whiten!{T<:AbstractFloat}(a::AbstractPDMat{T}, x::DenseVecOrMat{T}) = whiten!(x, a, x)
+unwhiten!{T<:AbstractFloat}(a::AbstractPDMat{T}, x::DenseVecOrMat{T}) = unwhiten!(x, a, x)
 
-whiten(a::AbstractPDMat, x::DenseVecOrMat{Float64}) = whiten!(similar(x), a, x)
-unwhiten(a::AbstractPDMat, x::DenseVecOrMat{Float64}) = unwhiten!(similar(x), a, x)
+whiten{T<:AbstractFloat}(a::AbstractPDMat{T}, x::DenseVecOrMat{T}) = whiten!(similar(x), a, x)
+unwhiten{T<:AbstractFloat}(a::AbstractPDMat{T}, x::DenseVecOrMat{T}) = unwhiten!(similar(x), a, x)
 
 
 ## quad
 
-function quad(a::AbstractPDMat, x::DenseMatrix{Float64})
+function quad{T<:AbstractFloat}(a::AbstractPDMat{T}, x::DenseMatrix{T})
     @check_argdims dim(a) == size(x, 1)
-    quad!(Array(Float64, size(x,2)), a, x)
+    quad!(Array(T, size(x,2)), a, x)
 end
 
-function invquad(a::AbstractPDMat, x::DenseMatrix{Float64})
+function invquad{T<:AbstractFloat}(a::AbstractPDMat{T}, x::DenseMatrix{T})
     @check_argdims dim(a) == size(x, 1)
-    invquad!(Array(Float64, size(x,2)), a, x)
+    invquad!(Array(T, size(x,2)), a, x)
 end

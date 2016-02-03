@@ -1,22 +1,21 @@
 # Full positive definite matrix together with a Cholesky factorization object
-
-immutable PDMat <: AbstractPDMat
+immutable PDMat{T<:AbstractFloat,S<:AbstractMatrix} <: AbstractPDMat{T}
     dim::Int
-    mat::Matrix{Float64}
-    chol::CholType
+    mat::S
+    chol::CholType{T,S}
+    PDMat(d::Int,m::AbstractMatrix{T},c::CholType{T,S}) = new(d,m,c)
 end
 
-function PDMat(mat::Matrix{Float64}, chol::Cholesky{Float64})
+function PDMat(mat::AbstractMatrix,chol::CholType)
     d = size(mat, 1)
     size(chol, 1) == d ||
         throw(DimensionMismatch("Dimensions of mat and chol are inconsistent."))
-    PDMat(d, mat, chol)
+    PDMat{eltype(mat),typeof(mat)}(d, mat, chol)
 end
 
-PDMat(mat::Matrix{Float64}) = PDMat(mat, cholfact(mat))
-PDMat(mat::Symmetric{Float64}) = PDMat(mat.S)
-
-PDMat(fac::Cholesky) = PDMat(size(fac,1), full(fac), fac)
+PDMat(mat::Matrix) = PDMat(mat,cholfact(mat))
+PDMat(mat::Symmetric) = PDMat(full(mat))
+PDMat(fac::CholType) = PDMat(full(fac),fac)
 
 ### Basics
 
@@ -27,14 +26,14 @@ diag(a::PDMat) = diag(a.mat)
 
 ### Arithmetics
 
-function pdadd!(r::Matrix{Float64}, a::Matrix{Float64}, b::PDMat, c::Real)
+function pdadd!{T<:AbstractFloat}(r::Matrix{T}, a::Matrix{T}, b::PDMat{T}, c::T)
     @check_argdims size(r) == size(a) == size(b)
-    _addscal!(r, a, b.mat, convert(Float64, c))
+    _addscal!(r, a, b.mat, c)
 end
 
-*(a::PDMat, c::Float64) = PDMat(a.mat * c)
-*(a::PDMat, x::DenseVecOrMat) = a.mat * x
-\(a::PDMat, x::DenseVecOrMat) = a.chol \ x
+*{T<:AbstractFloat}(a::PDMat{T}, c::T) = PDMat(a.mat * c)
+*{T<:AbstractFloat}(a::PDMat{T}, x::DenseVecOrMat{T}) = a.mat * x
+\{T<:AbstractFloat}(a::PDMat{T}, x::DenseVecOrMat{T}) = a.chol \ x
 
 
 ### Algebra
@@ -47,13 +46,13 @@ eigmin(a::PDMat) = eigmin(a.mat)
 
 ### whiten and unwhiten
 
-function whiten!(r::DenseVecOrMat{Float64}, a::PDMat, x::DenseVecOrMat{Float64})
+function whiten!{T<:AbstractFloat}(r::DenseVecOrMat{T}, a::PDMat{T}, x::DenseVecOrMat{T})
     cf = a.chol[:UL]
     istriu(cf) ? Ac_ldiv_B!(cf, _rcopy!(r, x)) : A_ldiv_B!(cf, _rcopy!(r, x))
     return r
 end
 
-function unwhiten!(r::DenseVecOrMat{Float64}, a::PDMat, x::StridedVecOrMat{Float64})
+function unwhiten!{T<:AbstractFloat}(r::DenseVecOrMat{T}, a::PDMat{T}, x::StridedVecOrMat{T})
     cf = a.chol[:UL]
     istriu(cf) ? Ac_mul_B!(cf, _rcopy!(r, x)) : A_mul_B!(cf, _rcopy!(r, x))
     return r
@@ -62,37 +61,37 @@ end
 
 ### quadratic forms
 
-quad(a::PDMat, x::DenseVector{Float64}) = dot(x, a * x)
-invquad(a::PDMat, x::DenseVector{Float64}) = dot(x, a \ x)
+quad{T<:AbstractFloat}(a::PDMat{T}, x::DenseVector{T}) = dot(x, a * x)
+invquad{T<:AbstractFloat}(a::PDMat{T}, x::DenseVector{T}) = dot(x, a \ x)
 
-quad!(r::AbstractArray, a::PDMat, x::DenseMatrix{Float64}) = colwise_dot!(r, x, a.mat * x)
-invquad!(r::AbstractArray, a::PDMat, x::DenseMatrix{Float64}) = colwise_dot!(r, x, a.mat \ x)
+quad!{T<:AbstractFloat}(r::AbstractArray{T}, a::PDMat{T}, x::DenseMatrix{T}) = colwise_dot!(r, x, a.mat * x)
+invquad!{T<:AbstractFloat}(r::AbstractArray{T}, a::PDMat{T}, x::DenseMatrix{T}) = colwise_dot!(r, x, a.mat \ x)
 
 
 ### tri products
 
-function X_A_Xt(a::PDMat, x::DenseMatrix{Float64})
+function X_A_Xt{T<:AbstractFloat}(a::PDMat{T}, x::DenseMatrix{T})
     z = copy(x)
     cf = a.chol[:UL]
     istriu(cf) ? A_mul_Bc!(z, cf) : A_mul_B!(z, cf)
     A_mul_Bt(z, z)
 end
 
-function Xt_A_X(a::PDMat, x::DenseMatrix{Float64})
+function Xt_A_X{T<:AbstractFloat}(a::PDMat{T}, x::DenseMatrix{T})
     z = copy(x)
     cf = a.chol[:UL]
     istriu(cf) ? A_mul_B!(cf, z) : Ac_mul_B!(cf, z)
     At_mul_B(z, z)
 end
 
-function X_invA_Xt(a::PDMat, x::DenseMatrix{Float64})
+function X_invA_Xt{T<:AbstractFloat}(a::PDMat{T}, x::DenseMatrix{T})
     z = copy(x)
     cf = a.chol[:UL]
     istriu(cf) ? A_rdiv_B!(z, cf) : A_rdiv_Bc!(z, cf)
     A_mul_Bt(z, z)
 end
 
-function Xt_invA_X(a::PDMat, x::DenseMatrix{Float64})
+function Xt_invA_X{T<:AbstractFloat}(a::PDMat{T}, x::DenseMatrix{T})
     z = copy(x)
     cf = a.chol[:UL]
     istriu(cf) ? Ac_ldiv_B!(cf, z) : A_ldiv_B!(cf, z)
