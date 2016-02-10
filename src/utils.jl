@@ -59,20 +59,28 @@ function wsumsq{T<:AbstractFloat}(w::AbstractVector{T}, a::AbstractVector{T})
     return s
 end
 
-function colwise_dot!{T<:AbstractFloat}(r::AbstractArray{T}, a::DenseMatrix{T}, b::DenseMatrix{T})
+function colwise_dot!{T<:AbstractFloat}(r::AbstractArray{T}, a::AbstractMatrix{T}, b::AbstractMatrix{T})
     n = length(r)
     @check_argdims n == size(a, 2) == size(b, 2) && size(a, 1) == size(b, 1)
-    for i = 1:n
-        r[i] = dot(view(a,:,i), view(b,:,i))
+    for j = 1:n
+        v = zero(T)
+        @simd for i = 1:size(a, 1)
+            @inbounds v += a[i, j]*b[i, j]
+        end
+        r[j] = v
     end
     return r
 end
 
-function colwise_sumsq!{T<:AbstractFloat}(r::AbstractArray{T}, a::DenseMatrix{T}, c::T)
+function colwise_sumsq!{T<:AbstractFloat}(r::AbstractArray{T}, a::AbstractMatrix{T}, c::T)
     n = length(r)
     @check_argdims n == size(a, 2)
-    for i = 1:n
-        r[i] = sumabs2(view(a,:,i)) * c
+    for j = 1:n
+        v = zero(T)
+        @simd for i = 1:size(a, 1)
+            @inbounds v += abs2(a[i, j])
+        end
+        r[j] = v*c
     end
     return r
 end

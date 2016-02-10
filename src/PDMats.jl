@@ -2,7 +2,6 @@ VERSION >= v"0.4.0-dev+6521" && __precompile__(true)
 
 module PDMats
 
-    using ArrayViews
     using Compat
 
     import Base: +, *, \, /, ==
