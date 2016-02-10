@@ -32,8 +32,8 @@ function pdadd!{T<:AbstractFloat}(r::Matrix{T}, a::Matrix{T}, b::PDSparseMat{T},
 end
 
 *{T<:AbstractFloat}(a::PDSparseMat{T}, c::T) = PDSparseMat(a.mat * c)
-*{T<:AbstractFloat}(a::PDSparseMat{T}, x::DenseVecOrMat{T}) = a.mat * x
-\{T<:AbstractFloat}(a::PDSparseMat{T}, x::DenseVecOrMat{T}) = convert(Array{T},a.chol \ convert(Array{Float64},x)) #to avoid limitations in sparse factorization library CHOLMOD, see e.g., julia issue #14076
+*{T<:AbstractFloat}(a::PDSparseMat{T}, x::StridedVecOrMat{T}) = a.mat * x
+\{T<:AbstractFloat}(a::PDSparseMat{T}, x::StridedVecOrMat{T}) = convert(Array{T},a.chol \ convert(Array{Float64},x)) #to avoid limitations in sparse factorization library CHOLMOD, see e.g., julia issue #14076
 
 
 ### Algebra
@@ -46,12 +46,12 @@ eigmin{T<:AbstractFloat}(a::PDSparseMat{T}) = convert(T,eigs(convert(SparseMatri
 
 ### whiten and unwhiten
 
-function whiten!{T<:AbstractFloat}(r::DenseVecOrMat{T}, a::PDSparseMat{T}, x::DenseVecOrMat{T})
+function whiten!{T<:AbstractFloat}(r::StridedVecOrMat{T}, a::PDSparseMat{T}, x::StridedVecOrMat{T})
     r[:] = sparse(chol_lower(a.chol)) \ x
     return r
 end
 
-function unwhiten!{T<:AbstractFloat}(r::DenseVecOrMat{T}, a::PDSparseMat{T}, x::StridedVecOrMat{T})
+function unwhiten!{T<:AbstractFloat}(r::StridedVecOrMat{T}, a::PDSparseMat{T}, x::StridedVecOrMat{T})
     r[:] = sparse(chol_lower(a.chol)) * x
     return r
 end
@@ -59,17 +59,17 @@ end
 
 ### quadratic forms
 
-quad{T<:AbstractFloat}(a::PDSparseMat{T}, x::DenseVector{T}) = dot(x, a * x)
-invquad{T<:AbstractFloat}(a::PDSparseMat{T}, x::DenseVector{T}) = dot(x, a \ x)
+quad{T<:AbstractFloat}(a::PDSparseMat{T}, x::StridedVector{T}) = dot(x, a * x)
+invquad{T<:AbstractFloat}(a::PDSparseMat{T}, x::StridedVector{T}) = dot(x, a \ x)
 
-function quad!{T<:AbstractFloat}(r::AbstractArray{T}, a::PDSparseMat{T}, x::DenseMatrix{T})
+function quad!{T<:AbstractFloat}(r::AbstractArray{T}, a::PDSparseMat{T}, x::StridedMatrix{T})
     for i in 1:size(x, 2)
         r[i] = quad(a, x[:,i])
     end
     return r
 end
 
-function invquad!{T<:AbstractFloat}(r::AbstractArray{T}, a::PDSparseMat{T}, x::DenseMatrix{T})
+function invquad!{T<:AbstractFloat}(r::AbstractArray{T}, a::PDSparseMat{T}, x::StridedMatrix{T})
     for i in 1:size(x, 2)
         r[i] = invquad(a, x[:,i])
     end
@@ -79,24 +79,24 @@ end
 
 ### tri products
 
-function X_A_Xt{T<:AbstractFloat}(a::PDSparseMat{T}, x::DenseMatrix{T})
+function X_A_Xt{T<:AbstractFloat}(a::PDSparseMat{T}, x::StridedMatrix{T})
     z = x*sparse(chol_lower(a.chol))
     A_mul_Bt(z, z)
 end
 
 
-function Xt_A_X{T<:AbstractFloat}(a::PDSparseMat{T}, x::DenseMatrix{T})
+function Xt_A_X{T<:AbstractFloat}(a::PDSparseMat{T}, x::StridedMatrix{T})
     z = At_mul_B(x, sparse(chol_lower(a.chol)))
     A_mul_Bt(z, z)
 end
 
 
-function X_invA_Xt{T<:AbstractFloat}(a::PDSparseMat{T}, x::DenseMatrix{T})
+function X_invA_Xt{T<:AbstractFloat}(a::PDSparseMat{T}, x::StridedMatrix{T})
     z = a \ x'
     x * z
 end
 
-function Xt_invA_X{T<:AbstractFloat}(a::PDSparseMat{T}, x::DenseMatrix{T})
+function Xt_invA_X{T<:AbstractFloat}(a::PDSparseMat{T}, x::StridedMatrix{T})
     z = a \ x
     At_mul_B(x, z)
 end
