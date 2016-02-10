@@ -35,8 +35,8 @@ function pdadd!{T<:AbstractFloat}(r::Matrix{T}, a::Matrix{T}, b::PDiagMat{T}, c:
 end
 
 *{T<:AbstractFloat}(a::PDiagMat{T}, c::T) = PDiagMat(a.diag * c)
-*{T<:AbstractFloat}(a::PDiagMat{T}, x::DenseVecOrMat{T}) = a.diag .* x
-\{T<:AbstractFloat}(a::PDiagMat{T}, x::DenseVecOrMat{T}) = a.inv_diag .* x
+*{T<:AbstractFloat}(a::PDiagMat{T}, x::StridedVecOrMat{T}) = a.diag .* x
+\{T<:AbstractFloat}(a::PDiagMat{T}, x::StridedVecOrMat{T}) = a.inv_diag .* x
 
 
 ### Algebra
@@ -49,7 +49,7 @@ eigmin(a::PDiagMat) = minimum(a.diag)
 
 ### whiten and unwhiten
 
-function whiten!{T<:AbstractFloat}(r::DenseVector{T}, a::PDiagMat{T}, x::DenseVector{T})
+function whiten!{T<:AbstractFloat}(r::StridedVector{T}, a::PDiagMat{T}, x::StridedVector{T})
     n = dim(a)
     @check_argdims length(r) == length(x) == n
     v = a.inv_diag
@@ -59,7 +59,7 @@ function whiten!{T<:AbstractFloat}(r::DenseVector{T}, a::PDiagMat{T}, x::DenseVe
     return r
 end
 
-function unwhiten!{T<:AbstractFloat}(r::DenseVector{T}, a::PDiagMat{T}, x::DenseVector{T})
+function unwhiten!{T<:AbstractFloat}(r::StridedVector{T}, a::PDiagMat{T}, x::StridedVector{T})
     n = dim(a)
     @check_argdims length(r) == length(x) == n
     v = a.diag
@@ -69,10 +69,10 @@ function unwhiten!{T<:AbstractFloat}(r::DenseVector{T}, a::PDiagMat{T}, x::Dense
     return r
 end
 
-whiten!{T<:AbstractFloat}(r::DenseMatrix{T}, a::PDiagMat{T}, x::DenseMatrix{T}) =
+whiten!{T<:AbstractFloat}(r::StridedMatrix{T}, a::PDiagMat{T}, x::StridedMatrix{T}) =
     broadcast!(*, r, x, sqrt(a.inv_diag))
 
-unwhiten!{T<:AbstractFloat}(r::DenseMatrix{T}, a::PDiagMat{T}, x::DenseMatrix{T}) =
+unwhiten!{T<:AbstractFloat}(r::StridedMatrix{T}, a::PDiagMat{T}, x::StridedMatrix{T}) =
     broadcast!(*, r, x, sqrt(a.diag))
 
 
@@ -87,22 +87,22 @@ invquad!{T<:AbstractFloat}(r::AbstractArray{T}, a::PDiagMat{T}, x::Matrix{T}) = 
 
 ### tri products
 
-function X_A_Xt{T<:AbstractFloat}(a::PDiagMat{T}, x::DenseMatrix{T})
+function X_A_Xt{T<:AbstractFloat}(a::PDiagMat{T}, x::StridedMatrix{T})
     z = x .* reshape(sqrt(a.diag), 1, dim(a))
     A_mul_Bt(z, z)
 end
 
-function Xt_A_X{T<:AbstractFloat}(a::PDiagMat{T}, x::DenseMatrix{T})
+function Xt_A_X{T<:AbstractFloat}(a::PDiagMat{T}, x::StridedMatrix{T})
     z = x .* sqrt(a.diag)
     At_mul_B(z, z)
 end
 
-function X_invA_Xt{T<:AbstractFloat}(a::PDiagMat{T}, x::DenseMatrix{T})
+function X_invA_Xt{T<:AbstractFloat}(a::PDiagMat{T}, x::StridedMatrix{T})
     z = x .* reshape(sqrt(a.inv_diag), 1, dim(a))
     A_mul_Bt(z, z)
 end
 
-function Xt_invA_X{T<:AbstractFloat}(a::PDiagMat{T}, x::DenseMatrix{T})
+function Xt_invA_X{T<:AbstractFloat}(a::PDiagMat{T}, x::StridedMatrix{T})
     z = x .* sqrt(a.inv_diag)
     At_mul_B(z, z)
 end

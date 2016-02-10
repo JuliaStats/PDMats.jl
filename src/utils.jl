@@ -7,7 +7,7 @@ macro check_argdims(cond)
     end
 end
 
-_rcopy!(r::DenseVecOrMat, x::DenseVecOrMat) = (is(r, x) || copy!(r, x); r)
+_rcopy!(r::StridedVecOrMat, x::StridedVecOrMat) = (is(r, x) || copy!(r, x); r)
 
 
 @compat function _addscal!{T<:AbstractFloat}(r::Matrix{T}, a::Matrix{T}, b::Union{Matrix{T}, SparseMatrixCSC{T}}, c::T)

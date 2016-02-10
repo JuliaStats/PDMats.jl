@@ -28,21 +28,21 @@ pdadd{T<:AbstractFloat}(a::Matrix{T}, b::AbstractPDMat{T}) = pdadd!(similar(a), 
 
 ## whiten and unwhiten
 
-whiten!{T<:AbstractFloat}(a::AbstractPDMat{T}, x::DenseVecOrMat{T}) = whiten!(x, a, x)
-unwhiten!{T<:AbstractFloat}(a::AbstractPDMat{T}, x::DenseVecOrMat{T}) = unwhiten!(x, a, x)
+whiten!{T<:AbstractFloat}(a::AbstractPDMat{T}, x::StridedVecOrMat{T}) = whiten!(x, a, x)
+unwhiten!{T<:AbstractFloat}(a::AbstractPDMat{T}, x::StridedVecOrMat{T}) = unwhiten!(x, a, x)
 
-whiten{T<:AbstractFloat}(a::AbstractPDMat{T}, x::DenseVecOrMat{T}) = whiten!(similar(x), a, x)
-unwhiten{T<:AbstractFloat}(a::AbstractPDMat{T}, x::DenseVecOrMat{T}) = unwhiten!(similar(x), a, x)
+whiten{T<:AbstractFloat}(a::AbstractPDMat{T}, x::StridedVecOrMat{T}) = whiten!(similar(x), a, x)
+unwhiten{T<:AbstractFloat}(a::AbstractPDMat{T}, x::StridedVecOrMat{T}) = unwhiten!(similar(x), a, x)
 
 
 ## quad
 
-function quad{T<:AbstractFloat}(a::AbstractPDMat{T}, x::DenseMatrix{T})
+function quad{T<:AbstractFloat}(a::AbstractPDMat{T}, x::StridedMatrix{T})
     @check_argdims dim(a) == size(x, 1)
     quad!(Array(T, size(x,2)), a, x)
 end
 
-function invquad{T<:AbstractFloat}(a::AbstractPDMat{T}, x::DenseMatrix{T})
+function invquad{T<:AbstractFloat}(a::AbstractPDMat{T}, x::StridedMatrix{T})
     @check_argdims dim(a) == size(x, 1)
     invquad!(Array(T, size(x,2)), a, x)
 end

@@ -29,8 +29,8 @@ end
 
 *{T<:AbstractFloat}(a::ScalMat{T}, c::T) = ScalMat(a.dim, a.value * c)
 /{T<:AbstractFloat}(a::ScalMat{T}, c::T) = ScalMat(a.dim, a.value / c)
-*{T<:AbstractFloat}(a::ScalMat{T}, x::DenseVecOrMat{T}) = a.value * x
-\{T<:AbstractFloat}(a::ScalMat{T}, x::DenseVecOrMat{T}) = a.inv_value * x
+*{T<:AbstractFloat}(a::ScalMat{T}, x::StridedVecOrMat{T}) = a.value * x
+\{T<:AbstractFloat}(a::ScalMat{T}, x::StridedVecOrMat{T}) = a.inv_value * x
 
 
 ### Algebra
@@ -43,7 +43,7 @@ eigmin(a::ScalMat) = a.value
 
 ### whiten and unwhiten
 
-function whiten!{T<:AbstractFloat}(r::DenseVecOrMat{T}, a::ScalMat{T}, x::DenseVecOrMat{T})
+function whiten!{T<:AbstractFloat}(r::StridedVecOrMat{T}, a::ScalMat{T}, x::StridedVecOrMat{T})
     @check_argdims dim(a) == size(x, 1)
     c = sqrt(a.inv_value)
     for i = 1:length(x)
@@ -52,7 +52,7 @@ function whiten!{T<:AbstractFloat}(r::DenseVecOrMat{T}, a::ScalMat{T}, x::DenseV
     return r
 end
 
-function unwhiten!{T<:AbstractFloat}(r::DenseVecOrMat{T}, a::ScalMat{T}, x::StridedVecOrMat{T})
+function unwhiten!{T<:AbstractFloat}(r::StridedVecOrMat{T}, a::ScalMat{T}, x::StridedVecOrMat{T})
     @check_argdims dim(a) == size(x, 1)
     c = sqrt(a.value)
     for i = 1:length(x)
@@ -73,22 +73,22 @@ invquad!{T<:AbstractFloat}(r::AbstractArray{T}, a::ScalMat{T}, x::Matrix{T}) = c
 
 ### tri products
 
-function X_A_Xt{T<:AbstractFloat}(a::ScalMat{T}, x::DenseMatrix{T})
+function X_A_Xt{T<:AbstractFloat}(a::ScalMat{T}, x::StridedMatrix{T})
     @check_argdims dim(a) == size(x, 2)
     gemm('N', 'T', a.value, x, x)
 end
 
-function Xt_A_X{T<:AbstractFloat}(a::ScalMat{T}, x::DenseMatrix{T})
+function Xt_A_X{T<:AbstractFloat}(a::ScalMat{T}, x::StridedMatrix{T})
     @check_argdims dim(a) == size(x, 1)
     gemm('T', 'N', a.value, x, x)
 end
 
-function X_invA_Xt{T<:AbstractFloat}(a::ScalMat{T}, x::DenseMatrix{T})
+function X_invA_Xt{T<:AbstractFloat}(a::ScalMat{T}, x::StridedMatrix{T})
     @check_argdims dim(a) == size(x, 2)
     gemm('N', 'T', a.inv_value, x, x)
 end
 
-function Xt_invA_X{T<:AbstractFloat}(a::ScalMat{T}, x::DenseMatrix{T})
+function Xt_invA_X{T<:AbstractFloat}(a::ScalMat{T}, x::StridedMatrix{T})
     @check_argdims dim(a) == size(x, 1)
     gemm('T', 'N', a.inv_value, x, x)
 end
