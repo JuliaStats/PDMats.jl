@@ -2,7 +2,7 @@
 
 ## Basic functions
 
-Base.eltype{T<:AbstractFloat}(a::AbstractPDMat{T}) = T
+Base.eltype{T<:Real}(a::AbstractPDMat{T}) = T
 Base.ndims(a::AbstractPDMat) = 2
 Base.size(a::AbstractPDMat) = (dim(a), dim(a))
 Base.size(a::AbstractPDMat, i::Integer) = 1 <= i <= 2 ? dim(a) : 1
@@ -10,39 +10,39 @@ Base.length(a::AbstractPDMat) = abs2(dim(a))
 
 ## arithmetics
 
-pdadd!{T<:AbstractFloat}(r::Matrix{T}, a::Matrix{T}, b::AbstractPDMat{T}) = pdadd!(r, a, b, one(T))
+pdadd!{T<:Real}(r::Matrix{T}, a::Matrix{T}, b::AbstractPDMat{T}) = pdadd!(r, a, b, one(T))
 
-pdadd!{T<:AbstractFloat}(a::Matrix{T}, b::AbstractPDMat{T}, c::T) = pdadd!(a, a, b, c)
-pdadd!{T<:AbstractFloat}(a::Matrix{T}, b::AbstractPDMat{T}) = pdadd!(a, a, b, one(T))
+pdadd!(a::Matrix, b::AbstractPDMat, c) = pdadd!(a, a, b, c)
+pdadd!{T<:Real}(a::Matrix{T}, b::AbstractPDMat{T}) = pdadd!(a, a, b, one(T))
 
-pdadd{T<:AbstractFloat}(a::Matrix{T}, b::AbstractPDMat{T}, c::T) = pdadd!(similar(a), a, b, c)
-pdadd{T<:AbstractFloat}(a::Matrix{T}, b::AbstractPDMat{T}) = pdadd!(similar(a), a, b, one(T))
+pdadd(a::Matrix, b::AbstractPDMat, c) = pdadd!(similar(a), a, b, c)
+pdadd{T<:Real}(a::Matrix{T}, b::AbstractPDMat{T}) = pdadd!(similar(a), a, b, one(T))
 
-+{T<:AbstractFloat}(a::Matrix{T}, b::AbstractPDMat{T}) = pdadd(a, b)
-+{T<:AbstractFloat}(a::AbstractPDMat{T}, b::Matrix{T}) = pdadd(b, a)
++(a::Matrix, b::AbstractPDMat) = pdadd(a, b)
++(a::AbstractPDMat, b::Matrix) = pdadd(b, a)
 
-*{T<:AbstractFloat}(a::AbstractPDMat{T}, c::T) = a * c
-*{T<:AbstractFloat}(c::T, a::AbstractPDMat{T}) = a * c
-/{T<:AbstractFloat}(a::AbstractPDMat{T}, c::T) = a * inv(c)
+*{T<:Real}(a::AbstractPDMat{T}, c::T) = a * c
+*{T<:Real}(c::T, a::AbstractPDMat) = a * c
+/{T<:Real}(a::AbstractPDMat, c::T) = a * inv(c)
 
 
 ## whiten and unwhiten
 
-whiten!{T<:AbstractFloat}(a::AbstractPDMat{T}, x::StridedVecOrMat{T}) = whiten!(x, a, x)
-unwhiten!{T<:AbstractFloat}(a::AbstractPDMat{T}, x::StridedVecOrMat{T}) = unwhiten!(x, a, x)
+whiten!(a::AbstractPDMat, x::StridedVecOrMat) = whiten!(x, a, x)
+unwhiten!(a::AbstractPDMat, x::StridedVecOrMat) = unwhiten!(x, a, x)
 
-whiten{T<:AbstractFloat}(a::AbstractPDMat{T}, x::StridedVecOrMat{T}) = whiten!(similar(x), a, x)
-unwhiten{T<:AbstractFloat}(a::AbstractPDMat{T}, x::StridedVecOrMat{T}) = unwhiten!(similar(x), a, x)
+whiten(a::AbstractPDMat, x::StridedVecOrMat) = whiten!(similar(x), a, x)
+unwhiten(a::AbstractPDMat, x::StridedVecOrMat) = unwhiten!(similar(x), a, x)
 
 
 ## quad
 
-function quad{T<:AbstractFloat}(a::AbstractPDMat{T}, x::StridedMatrix{T})
+function quad{T<:Real}(a::AbstractPDMat{T}, x::StridedMatrix{T})
     @check_argdims dim(a) == size(x, 1)
     quad!(Array(T, size(x,2)), a, x)
 end
 
-function invquad{T<:AbstractFloat}(a::AbstractPDMat{T}, x::StridedMatrix{T})
+function invquad{T<:Real}(a::AbstractPDMat{T}, x::StridedMatrix{T})
     @check_argdims dim(a) == size(x, 1)
     invquad!(Array(T, size(x,2)), a, x)
 end

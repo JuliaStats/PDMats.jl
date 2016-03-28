@@ -1,5 +1,5 @@
 # Full positive definite matrix together with a Cholesky factorization object
-immutable PDMat{T<:AbstractFloat,S<:AbstractMatrix} <: AbstractPDMat{T}
+immutable PDMat{T<:Real,S<:AbstractMatrix} <: AbstractPDMat{T}
     dim::Int
     mat::S
     chol::CholType{T,S}
@@ -26,14 +26,14 @@ diag(a::PDMat) = diag(a.mat)
 
 ### Arithmetics
 
-function pdadd!{T<:AbstractFloat}(r::Matrix{T}, a::Matrix{T}, b::PDMat{T}, c::T)
+function pdadd!(r::Matrix, a::Matrix, b::PDMat, c)
     @check_argdims size(r) == size(a) == size(b)
     _addscal!(r, a, b.mat, c)
 end
 
-*{T<:AbstractFloat}(a::PDMat{T}, c::T) = PDMat(a.mat * c)
-*{T<:AbstractFloat}(a::PDMat{T}, x::StridedVecOrMat{T}) = a.mat * x
-\{T<:AbstractFloat}(a::PDMat{T}, x::StridedVecOrMat{T}) = a.chol \ x
+*{T<:Real}(a::PDMat{T}, c::T) = PDMat(a.mat * c)
+*(a::PDMat, x::StridedVecOrMat) = a.mat * x
+\(a::PDMat, x::StridedVecOrMat) = a.chol \ x
 
 
 ### Algebra
@@ -46,13 +46,13 @@ eigmin(a::PDMat) = eigmin(a.mat)
 
 ### whiten and unwhiten
 
-function whiten!{T<:AbstractFloat}(r::StridedVecOrMat{T}, a::PDMat{T}, x::StridedVecOrMat{T})
+function whiten!(r::StridedVecOrMat, a::PDMat, x::StridedVecOrMat)
     cf = a.chol[:UL]
     istriu(cf) ? Ac_ldiv_B!(cf, _rcopy!(r, x)) : A_ldiv_B!(cf, _rcopy!(r, x))
     return r
 end
 
-function unwhiten!{T<:AbstractFloat}(r::StridedVecOrMat{T}, a::PDMat{T}, x::StridedVecOrMat{T})
+function unwhiten!(r::StridedVecOrMat, a::PDMat, x::StridedVecOrMat)
     cf = a.chol[:UL]
     istriu(cf) ? Ac_mul_B!(cf, _rcopy!(r, x)) : A_mul_B!(cf, _rcopy!(r, x))
     return r
@@ -61,37 +61,37 @@ end
 
 ### quadratic forms
 
-quad{T<:AbstractFloat}(a::PDMat{T}, x::StridedVector{T}) = dot(x, a * x)
-invquad{T<:AbstractFloat}(a::PDMat{T}, x::StridedVector{T}) = dot(x, a \ x)
+quad(a::PDMat, x::StridedVector) = dot(x, a * x)
+invquad(a::PDMat, x::StridedVector) = dot(x, a \ x)
 
-quad!{T<:AbstractFloat}(r::AbstractArray{T}, a::PDMat{T}, x::StridedMatrix{T}) = colwise_dot!(r, x, a.mat * x)
-invquad!{T<:AbstractFloat}(r::AbstractArray{T}, a::PDMat{T}, x::StridedMatrix{T}) = colwise_dot!(r, x, a.mat \ x)
+quad!(r::AbstractArray, a::PDMat, x::StridedMatrix) = colwise_dot!(r, x, a.mat * x)
+invquad!(r::AbstractArray, a::PDMat, x::StridedMatrix) = colwise_dot!(r, x, a.mat \ x)
 
 
 ### tri products
 
-function X_A_Xt{T<:AbstractFloat}(a::PDMat{T}, x::StridedMatrix{T})
+function X_A_Xt(a::PDMat, x::StridedMatrix)
     z = copy(x)
     cf = a.chol[:UL]
     istriu(cf) ? A_mul_Bc!(z, cf) : A_mul_B!(z, cf)
     A_mul_Bt(z, z)
 end
 
-function Xt_A_X{T<:AbstractFloat}(a::PDMat{T}, x::StridedMatrix{T})
+function Xt_A_X(a::PDMat, x::StridedMatrix)
     z = copy(x)
     cf = a.chol[:UL]
     istriu(cf) ? A_mul_B!(cf, z) : Ac_mul_B!(cf, z)
     At_mul_B(z, z)
 end
 
-function X_invA_Xt{T<:AbstractFloat}(a::PDMat{T}, x::StridedMatrix{T})
+function X_invA_Xt(a::PDMat, x::StridedMatrix)
     z = copy(x)
     cf = a.chol[:UL]
     istriu(cf) ? A_rdiv_B!(z, cf) : A_rdiv_Bc!(z, cf)
     A_mul_Bt(z, z)
 end
 
-function Xt_invA_X{T<:AbstractFloat}(a::PDMat{T}, x::StridedMatrix{T})
+function Xt_invA_X(a::PDMat, x::StridedMatrix)
     z = copy(x)
     cf = a.chol[:UL]
     istriu(cf) ? Ac_ldiv_B!(cf, z) : A_ldiv_B!(cf, z)
