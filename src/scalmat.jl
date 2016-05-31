@@ -27,8 +27,8 @@ function pdadd!(r::Matrix, a::Matrix, b::ScalMat, c)
     return r
 end
 
-*{T<:AbstractFloat}(a::ScalMat, c::T) = ScalMat(a.dim, a.value * c)
-/{T<:AbstractFloat}(a::ScalMat{T}, c::T) = ScalMat(a.dim, a.value / c)
+*{T<:Real}(a::ScalMat, c::T) = ScalMat(a.dim, a.value * c)
+/{T<:Real}(a::ScalMat{T}, c::T) = ScalMat(a.dim, a.value / c)
 *(a::ScalMat, x::StridedVecOrMat) = a.value * x
 \(a::ScalMat, x::StridedVecOrMat) = a.inv_value * x
 

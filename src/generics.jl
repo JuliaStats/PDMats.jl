@@ -21,7 +21,7 @@ pdadd{T<:Real}(a::Matrix{T}, b::AbstractPDMat{T}) = pdadd!(similar(a), a, b, one
 +(a::Matrix, b::AbstractPDMat) = pdadd(a, b)
 +(a::AbstractPDMat, b::Matrix) = pdadd(b, a)
 
-*{T<:Real}(a::AbstractPDMat{T}, c::T) = a * c
+*{T<:Real}(a::AbstractPDMat, c::T) = a * c
 *{T<:Real}(c::T, a::AbstractPDMat) = a * c
 /{T<:Real}(a::AbstractPDMat, c::T) = a * inv(c)
 

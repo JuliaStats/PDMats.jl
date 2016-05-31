@@ -10,7 +10,7 @@ end
 _rcopy!(r::StridedVecOrMat, x::StridedVecOrMat) = (is(r, x) || copy!(r, x); r)
 
 
-@compat function _addscal!{T<:AbstractFloat}(r::Matrix{T}, a::Matrix{T}, b::Union{Matrix{T}, SparseMatrixCSC{T}}, c::T)
+@compat function _addscal!{T<:Real}(r::Matrix{T}, a::Matrix{T}, b::Union{Matrix{T}, SparseMatrixCSC{T}}, c::T)
     if c == one(T)
         for i = 1:length(a)
             @inbounds r[i] = a[i] + b[i]
@@ -23,7 +23,7 @@ _rcopy!(r::StridedVecOrMat, x::StridedVecOrMat) = (is(r, x) || copy!(r, x); r)
     return r
 end
 
-@compat function _adddiag!{T<:AbstractFloat}(a::Union{Matrix{T}, SparseMatrixCSC{T}}, v::T)
+@compat function _adddiag!{T<:Real}(a::Union{Matrix{T}, SparseMatrixCSC{T}}, v::T)
     n = size(a, 1)
     for i = 1:n
         @inbounds a[i,i] += v
@@ -31,7 +31,7 @@ end
     return a
 end
 
-@compat function _adddiag!{T<:AbstractFloat}(a::Union{Matrix{T}, SparseMatrixCSC{T}}, v::Vector{T}, c::T)
+@compat function _adddiag!{T<:Real}(a::Union{Matrix{T}, SparseMatrixCSC{T}}, v::Vector{T}, c::T)
     n = size(a, 1)
     @check_argdims length(v) == n
     if c == one(T)
@@ -46,11 +46,11 @@ end
     return a
 end
 
-@compat _adddiag{T<:AbstractFloat}(a::Union{Matrix{T}, SparseMatrixCSC{T}}, v::T) = _adddiag!(copy(a), v)
-@compat _adddiag{T<:AbstractFloat}(a::Union{Matrix{T}, SparseMatrixCSC{T}}, v::Vector{T}, c::T) = _adddiag!(copy(a), v, c)
-@compat _adddiag{T<:AbstractFloat}(a::Union{Matrix{T}, SparseMatrixCSC{T}}, v::Vector{T}) = _adddiag!(copy(a), v, one(T))
+@compat _adddiag{T<:Real}(a::Union{Matrix{T}, SparseMatrixCSC{T}}, v::T) = _adddiag!(copy(a), v)
+@compat _adddiag{T<:Real}(a::Union{Matrix{T}, SparseMatrixCSC{T}}, v::Vector{T}, c::T) = _adddiag!(copy(a), v, c)
+@compat _adddiag{T<:Real}(a::Union{Matrix{T}, SparseMatrixCSC{T}}, v::Vector{T}) = _adddiag!(copy(a), v, one(T))
 
-function wsumsq{T<:AbstractFloat}(w::AbstractVector{T}, a::AbstractVector{T})
+function wsumsq{T<:Real}(w::AbstractVector{T}, a::AbstractVector{T})
     @check_argdims(length(a) == length(w))
     s = zero(T)
     for i = 1:length(a)
@@ -59,7 +59,7 @@ function wsumsq{T<:AbstractFloat}(w::AbstractVector{T}, a::AbstractVector{T})
     return s
 end
 
-function colwise_dot!{T<:AbstractFloat}(r::AbstractArray{T}, a::AbstractMatrix{T}, b::AbstractMatrix{T})
+function colwise_dot!{T<:Real}(r::AbstractArray{T}, a::AbstractMatrix{T}, b::AbstractMatrix{T})
     n = length(r)
     @check_argdims n == size(a, 2) == size(b, 2) && size(a, 1) == size(b, 1)
     for j = 1:n
@@ -72,7 +72,7 @@ function colwise_dot!{T<:AbstractFloat}(r::AbstractArray{T}, a::AbstractMatrix{T
     return r
 end
 
-function colwise_sumsq!{T<:AbstractFloat}(r::AbstractArray{T}, a::AbstractMatrix{T}, c::T)
+function colwise_sumsq!{T<:Real}(r::AbstractArray{T}, a::AbstractMatrix{T}, c::T)
     n = length(r)
     @check_argdims n == size(a, 2)
     for j = 1:n

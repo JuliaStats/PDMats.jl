@@ -18,9 +18,9 @@ Positive definite matrices are widely used in machine learning and probabilistic
 
 ## Positive definite matrix types
 
-This package defines an abstract type ``AbstractPDMat{T<:AbstractFloat}`` as the base type for positive definite matrices with different internal representations.
+This package defines an abstract type ``AbstractPDMat{T<:Real}`` as the base type for positive definite matrices with different internal representations.
 
-Elemenent types are in princple all AbstractFloat types, but in practice this is limited by the support for floating point types in Base.LinAlg.Cholesky.
+Elemenent types are in princple all Real types, but in practice this is limited by the support for floating point types in Base.LinAlg.Cholesky.
   - ``Float64``     Fully supported from Julia 0.3.
   - ``Float32``     Fully supported from Julia 0.4.2. Full, diagonal and scale matrix types are supported in Julia 0.3 or higher.
   - ``Float16``     Promoted to ``Float32`` for full, diagonal and scale matrix. Currently unsupported for sparse matrix.
@@ -29,7 +29,7 @@ Elemenent types are in princple all AbstractFloat types, but in practice this is
 * ``PDMat``: full covariance matrix, defined as
 
 ```julia
-immutable PDMat{T<:AbstractFloat,S<:AbstractMatrix} <: AbstractPDMat{T}
+immutable PDMat{T<:Real,S<:AbstractMatrix} <: AbstractPDMat{T}
     dim::Int                    # matrix dimension
     mat::S                      # input matrix
     chol::Cholesky{T,S}         # Cholesky factorization of mat
@@ -52,7 +52,7 @@ PDMat(chol)         # with the Cholesky factorization
 * ``PDiagMat``: diagonal matrix, defined as
 
 ```julia
-immutable {T<:AbstractFloat,V<:AbstractVector} <: AbstractPDMat{T}
+immutable {T<:Real,V<:AbstractVector} <: AbstractPDMat{T}
     dim::Int                    # matrix dimension
     diag::V                     # the vector of diagonal elements
     inv_diag::V                 # the element-wise inverse of diag
@@ -69,7 +69,7 @@ PDiagMat(v)         # with the vector of diagonal elements
 * ``ScalMat``: uniform scaling matrix, as ``v * eye(d)``, defined as
 
 ```julia
-immutable ScalMat{T<:AbstractFloat} <: AbstractPDMat{T}
+immutable ScalMat{T<:Real} <: AbstractPDMat{T}
     dim::Int         # matrix dimension
     value::T         # diagonal value (shared by all diagonal elements)
     inv_value::T     # inv(value)
@@ -86,7 +86,7 @@ ScalMat(d, v)        # with dimension d and diagonal value v
 * ``PDSparseMat``: sparse covariance matrix, defined as
 
 ```julia
-immutable PDSparseMat{T<:AbstractFloat,S<:AbstractSparseMatrix} <: AbstractPDMat{T}
+immutable PDSparseMat{T<:Real,S<:AbstractSparseMatrix} <: AbstractPDMat{T}
     dim::Int                       # matrix dimension
     mat::SparseMatrixCSC           # input matrix
     chol::CholTypeSparse           # Cholesky factorization of mat
