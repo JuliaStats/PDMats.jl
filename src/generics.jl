@@ -10,13 +10,13 @@ Base.length(a::AbstractPDMat) = abs2(dim(a))
 
 ## arithmetics
 
-pdadd!{T<:Real}(r::Matrix{T}, a::Matrix{T}, b::AbstractPDMat{T}) = pdadd!(r, a, b, one(T))
+pdadd!{T<:Real}(r::Matrix, a::Matrix, b::AbstractPDMat{T}) = pdadd!(r, a, b, one(T))
 
 pdadd!(a::Matrix, b::AbstractPDMat, c) = pdadd!(a, a, b, c)
-pdadd!{T<:Real}(a::Matrix{T}, b::AbstractPDMat{T}) = pdadd!(a, a, b, one(T))
+pdadd!{T<:Real}(a::Matrix, b::AbstractPDMat{T}) = pdadd!(a, a, b, one(T))
 
-pdadd(a::Matrix, b::AbstractPDMat, c) = pdadd!(similar(a), a, b, c)
-pdadd{T<:Real}(a::Matrix{T}, b::AbstractPDMat{T}) = pdadd!(similar(a), a, b, one(T))
+pdadd{T<:Real, S<:Real, R<:Real}(a::Matrix{T}, b::AbstractPDMat{S}, c::R) = pdadd!(similar(a, promote_type(T, S, R)), a, b, c)
+pdadd{T<:Real, S<:Real}(a::Matrix{T}, b::AbstractPDMat{S}) = pdadd!(similar(a, promote_type(T, S)), a, b, one(T))
 
 +(a::Matrix, b::AbstractPDMat) = pdadd(a, b)
 +(a::AbstractPDMat, b::Matrix) = pdadd(b, a)
@@ -37,12 +37,12 @@ unwhiten(a::AbstractPDMat, x::StridedVecOrMat) = unwhiten!(similar(x), a, x)
 
 ## quad
 
-function quad{T<:Real}(a::AbstractPDMat{T}, x::StridedMatrix{T})
+function quad{T<:Real, S<:Real}(a::AbstractPDMat{T}, x::StridedMatrix{S})
     @check_argdims dim(a) == size(x, 1)
-    quad!(Array(T, size(x,2)), a, x)
+    quad!(Array(promote_type(T, S), size(x,2)), a, x)
 end
 
-function invquad{T<:Real}(a::AbstractPDMat{T}, x::StridedMatrix{T})
+function invquad{T<:Real, S<:Real}(a::AbstractPDMat{T}, x::StridedMatrix{S})
     @check_argdims dim(a) == size(x, 1)
-    invquad!(Array(T, size(x,2)), a, x)
+    invquad!(Array(promote_type(T, S), size(x,2)), a, x)
 end
