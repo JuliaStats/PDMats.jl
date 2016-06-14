@@ -6,7 +6,10 @@ immutable ScalMat{T<:Real} <: AbstractPDMat{T}
   inv_value::T
 end
 
-ScalMat(d::Int,v::Real) = ScalMat{typeof(v)}(d, v, one(v) / v)
+ScalMat(d::Int,v::Real) = ScalMat{typeof(one(v)/v)}(d, v, one(v) / v)
+
+### Conversion
+convert{T<:Real}(::Type{ScalMat{T}}, a::ScalMat) = ScalMat(a.dim, T(a.value))
 
 ### Basics
 

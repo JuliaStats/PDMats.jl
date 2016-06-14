@@ -14,6 +14,8 @@ end
 
 PDiagMat(v::Vector) = PDiagMat(v, ones(v)./v)
 
+### Conversion
+convert{T<:Real}(::Type{PDiagMat{T}}, a::PDiagMat) = PDiagMat(convert(Vector{T}, a.diag))
 
 ### Basics
 

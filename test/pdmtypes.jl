@@ -12,6 +12,7 @@ for T in [Float64,Float32]
   #for Julia v0.3, do not test sparse matrices with Float32 (see issue #14076)
   (T == Float64 || VERSION >= v"0.4.2") && (s = speye(T,2,2) ; @test PDSparseMat(s,cholfact(s)).mat == PDSparseMat(s).mat == PDSparseMat(cholfact(s)).mat)
 
+
   #test the functionality
   M = convert(Array{T,2},[4. -2. -1.; -2. 5. -1.; -1. -1. 6.])
   V = convert(Array{T,1},[1.5, 2.5, 2.0])
@@ -22,4 +23,15 @@ for T in [Float64,Float32]
   call_test_pdmat(ScalMat(3,x),x*eye(T,3)) #tests of ScalMat
   #for Julia v0.3, do not test sparse matrices with Float32 (see issue #14076)
   (T == Float64 || VERSION >= v"0.4.2") && call_test_pdmat(PDSparseMat(sparse(M)),M)
+end
+
+m = eye(Float32,2)
+@test convert(PDMat{Float64}, PDMat(m)).mat == PDMat(convert(Array{Float64}, m)).mat
+m = ones(Float32,2)
+@test convert(PDiagMat{Float64}, PDiagMat(m)).diag == PDiagMat(convert(Array{Float64}, m)).diag
+x = one(Float32); d = 4
+@test convert(ScalMat{Float64}, ScalMat(d, x)).value == ScalMat(d, Float64(x)).value
+if VERSION >= v"0.4.2"
+    s = speye(Float32, 2, 2)
+    @test convert(PDSparseMat{Float64}, PDSparseMat(s)).mat == PDSparseMat(convert(SparseMatrixCSC{Float64}, s)).mat
 end

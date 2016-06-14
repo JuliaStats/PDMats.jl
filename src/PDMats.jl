@@ -5,7 +5,7 @@ module PDMats
     using Compat
 
     import Base: +, *, \, /, ==
-    import Base: full, logdet, inv, diag, diagm, scale, scale!, eigmax, eigmin
+    import Base: full, logdet, inv, diag, diagm, scale, scale!, eigmax, eigmin, convert
 
     export
         # Types
