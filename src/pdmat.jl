@@ -17,6 +17,9 @@ PDMat(mat::Matrix) = PDMat(mat,cholfact(mat))
 PDMat(mat::Symmetric) = PDMat(full(mat))
 PDMat(fac::CholType) = PDMat(full(fac),fac)
 
+### Conversion
+convert{T<:Real}(::Type{PDMat{T}}, a::PDMat) = PDMat(convert(Matrix{T}, a.mat))
+
 ### Basics
 
 dim(a::PDMat) = a.dim

@@ -16,6 +16,9 @@ end
 PDSparseMat(mat::SparseMatrixCSC) = PDSparseMat(mat, cholfact(mat))
 PDSparseMat(fac::CholTypeSparse) = PDSparseMat(sparse(fac) |> x -> x*x', fac)
 
+### Conversion
+convert{T<:Real}(::Type{PDSparseMat{T}}, a::PDSparseMat) = PDSparseMat(convert(SparseMatrixCSC{T}, a.mat))
+
 ### Basics
 
 dim(a::PDSparseMat) = a.dim
