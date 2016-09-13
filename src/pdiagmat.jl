@@ -44,7 +44,7 @@ end
 ### Algebra
 
 inv(a::PDiagMat) = PDiagMat(a.inv_diag, a.diag)
-logdet(a::PDiagMat) = sum(@compat(log.(a.diag)))
+logdet(a::PDiagMat) = sum(log, a.diag)
 eigmax(a::PDiagMat) = maximum(a.diag)
 eigmin(a::PDiagMat) = minimum(a.diag)
 
