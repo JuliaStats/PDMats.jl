@@ -7,7 +7,7 @@ macro check_argdims(cond)
     end
 end
 
-_rcopy!(r::StridedVecOrMat, x::StridedVecOrMat) = (is(r, x) || copy!(r, x); r)
+_rcopy!(r::StridedVecOrMat, x::StridedVecOrMat) = (r === x || copy!(r, x); r)
 
 
 @compat function _addscal!(r::Matrix, a::Matrix, b::Union{Matrix, SparseMatrixCSC}, c::Real)

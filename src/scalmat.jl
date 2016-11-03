@@ -23,7 +23,7 @@ diag(a::ScalMat) = fill(a.value, a.dim)
 
 function pdadd!(r::Matrix, a::Matrix, b::ScalMat, c)
     @check_argdims size(r) == size(a) == size(b)
-    if is(r, a)
+    if r === a
         _adddiag!(r, b.value * c)
     else
         _adddiag!(copy!(r, a), b.value * c)

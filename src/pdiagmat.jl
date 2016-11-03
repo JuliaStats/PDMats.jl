@@ -28,7 +28,7 @@ diag(a::PDiagMat) = copy(a.diag)
 
 function pdadd!(r::Matrix, a::Matrix, b::PDiagMat, c)
     @check_argdims size(r) == size(a) == size(b)
-    if is(r, a)
+    if r === a
         _adddiag!(r, b.diag, c)
     else
         _adddiag!(copy!(r, a), b.diag, c)

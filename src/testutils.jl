@@ -115,7 +115,7 @@ function pdtest_add(C::AbstractPDMat, Cmat::Matrix, verbose::Int)
     _pdt(verbose, "add_scal!")
     R = M + Cmat * convert(eltype(C),2)
     Mr = pdadd!(M, C, convert(eltype(C),2))
-    @test is(Mr, M)
+    @test Mr === M
     @test_approx_eq Mr R
 end
 
