@@ -3,7 +3,7 @@
 
 macro check_argdims(cond)
     quote
-        ($(cond)) || throw(DimensionMismatch("Inconsistent argument dimensions."))
+        ($(esc(cond))) || throw(DimensionMismatch("Inconsistent argument dimensions."))
     end
 end
 
