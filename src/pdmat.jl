@@ -34,7 +34,7 @@ function pdadd!(r::Matrix, a::Matrix, b::PDMat, c)
     _addscal!(r, a, b.mat, c)
 end
 
-*{T<:Real}(a::PDMat{T}, c::T) = PDMat(a.mat * c)
+*{S<:Real, T<:Real}(a::PDMat{S}, c::T) = PDMat(a.mat * c)
 *(a::PDMat, x::StridedVecOrMat) = a.mat * x
 \(a::PDMat, x::StridedVecOrMat) = a.chol \ x
 
