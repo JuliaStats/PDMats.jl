@@ -68,8 +68,8 @@ end
 
 ### quadratic forms
 
-quad(a::ScalMat, x::Vector) = sumabs2(x) * a.value
-invquad(a::ScalMat, x::Vector) = sumabs2(x) * a.inv_value
+quad(a::ScalMat, x::Vector) = sum(abs2, x) * a.value
+invquad(a::ScalMat, x::Vector) = sum(abs2, x) * a.inv_value
 
 quad!(r::AbstractArray, a::ScalMat, x::Matrix) = colwise_sumsq!(r, x, a.value)
 invquad!(r::AbstractArray, a::ScalMat, x::Matrix) = colwise_sumsq!(r, x, a.inv_value)
