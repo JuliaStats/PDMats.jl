@@ -122,7 +122,9 @@ end
 
 function pdtest_logdet(C::AbstractPDMat, Cmat::Matrix, verbose::Int)
     _pdt(verbose, "logdet")
-    @test logdet(C) ≈ logdet(Cmat)
+    # default tolerance in isapprox is different on 0.4. rtol argument can be deleted
+    # ≈ form used when 0.4 is no longer supported
+    @test isapprox(logdet(C), logdet(Cmat), rtol=sqrt(max(eps(real(eltype(C))), eps(real(eltype(Cmat))))))
 end
 
 
@@ -198,10 +200,14 @@ function pdtest_triprod(C::AbstractPDMat, Cmat::Matrix, Imat::Matrix, X::Matrix,
     Xt = copy(transpose(X))
 
     _pdt(verbose, "X_A_Xt")
-    @test X_A_Xt(C, Xt) ≈ Xt * Cmat * X
+    # default tolerance in isapprox is different on 0.4. rtol argument can be deleted
+    # ≈ form used when 0.4 is no longer supported
+    lhs, rhs = X_A_Xt(C, Xt), Xt * Cmat * X
+    @test isapprox(lhs, rhs, rtol=sqrt(max(eps(real(float(eltype(lhs)))), eps(real(float(eltype(rhs)))))))
 
     _pdt(verbose, "Xt_A_X")
-    @test Xt_A_X(C, X) ≈ Xt * Cmat * X
+    lhs, rhs = Xt_A_X(C, X), Xt * Cmat * X
+    @test isapprox(lhs, rhs, rtol=sqrt(max(eps(real(float(eltype(lhs)))), eps(real(float(eltype(rhs)))))))
 
     _pdt(verbose, "X_invA_Xt")
     @test X_invA_Xt(C, Xt) ≈ Xt * Imat * X
