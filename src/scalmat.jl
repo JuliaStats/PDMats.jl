@@ -9,8 +9,8 @@ end
 ScalMat(d::Int,v::Real) = ScalMat{typeof(one(v)/v)}(d, v, one(v) / v)
 
 ### Conversion
-# can rewrite convert(T, a.value) as T(a.value) when we drop v0.3 support
-convert{T<:Real}(::Type{ScalMat{T}}, a::ScalMat) = ScalMat(a.dim, convert(T, a.value))
+convert{T<:Real}(::Type{ScalMat{T}}, a::ScalMat) = ScalMat(a.dim, T(a.value), T(a.inv_value))
+convert{T<:Real}(::Type{AbstractArray{T}}, a::ScalMat) = convert(ScalMat{T}, a)
 
 ### Basics
 

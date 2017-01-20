@@ -18,7 +18,8 @@ PDMat(mat::Symmetric) = PDMat(full(mat))
 PDMat(fac::CholType) = PDMat(full(fac),fac)
 
 ### Conversion
-convert{T<:Real}(::Type{PDMat{T}}, a::PDMat) = PDMat(convert(Matrix{T}, a.mat))
+convert{T<:Real}(::Type{PDMat{T}},         a::PDMat) = PDMat(convert(AbstractArray{T}, a.mat))
+convert{T<:Real}(::Type{AbstractArray{T}}, a::PDMat) = convert(PDMat{T}, a)
 
 ### Basics
 
