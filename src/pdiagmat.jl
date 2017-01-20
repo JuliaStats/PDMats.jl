@@ -15,7 +15,8 @@ end
 PDiagMat(v::Vector) = PDiagMat(v, ones(v)./v)
 
 ### Conversion
-convert{T<:Real}(::Type{PDiagMat{T}}, a::PDiagMat) = PDiagMat(convert(Vector{T}, a.diag))
+convert{T<:Real}(::Type{PDiagMat{T}},      a::PDiagMat) = PDiagMat(convert(AbstractArray{T}, a.diag))
+convert{T<:Real}(::Type{AbstractArray{T}}, a::PDiagMat) = convert(PDiagMat{T}, a)
 
 ### Basics
 
