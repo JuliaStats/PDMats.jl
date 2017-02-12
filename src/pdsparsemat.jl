@@ -1,9 +1,9 @@
 # Sparse positive definite matrix together with a Cholesky factorization object
-immutable PDSparseMat{T<:Real,S<:AbstractSparseMatrix} <: AbstractPDMat{T}
+@compat immutable PDSparseMat{T<:Real,S<:AbstractSparseMatrix} <: AbstractPDMat{T}
   dim::Int
   mat::S
   chol::CholTypeSparse
-  PDSparseMat(d::Int,m::AbstractSparseMatrix{T},c::CholTypeSparse) = new(d,m,c) #add {T} to CholTypeSparse argument once #14076 is implemented
+  (::Type{PDSparseMat{T,S}}){T,S}(d::Int,m::AbstractSparseMatrix{T},c::CholTypeSparse) = new{T,S}(d,m,c) #add {T} to CholTypeSparse argument once #14076 is implemented
 end
 
 function PDSparseMat(mat::AbstractSparseMatrix,chol::CholTypeSparse)

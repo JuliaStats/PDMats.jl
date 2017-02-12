@@ -1,10 +1,10 @@
 # positive diagonal matrix
 
-immutable PDiagMat{T<:Real,V<:AbstractVector} <: AbstractPDMat{T}
+@compat immutable PDiagMat{T<:Real,V<:AbstractVector} <: AbstractPDMat{T}
   dim::Int
   diag::V
   inv_diag::V
-  PDiagMat(d::Int,v::AbstractVector{T},inv_v::AbstractVector{T}) = new(d,v,inv_v)
+  (::Type{PDiagMat{T,S}}){T,S}(d::Int,v::AbstractVector{T},inv_v::AbstractVector{T}) = new{T,S}(d,v,inv_v)
 end
 
 function PDiagMat(v::AbstractVector,inv_v::AbstractVector)
