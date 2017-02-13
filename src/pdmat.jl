@@ -1,9 +1,9 @@
 # Full positive definite matrix together with a Cholesky factorization object
-immutable PDMat{T<:Real,S<:AbstractMatrix} <: AbstractPDMat{T}
+@compat immutable PDMat{T<:Real,S<:AbstractMatrix} <: AbstractPDMat{T}
     dim::Int
     mat::S
     chol::CholType{T,S}
-    PDMat(d::Int,m::AbstractMatrix{T},c::CholType{T,S}) = new(d,m,c)
+    (::Type{PDMat{T,S}}){T,S}(d::Int,m::AbstractMatrix{T},c::CholType{T,S}) = new{T,S}(d,m,c)
 end
 
 function PDMat(mat::AbstractMatrix,chol::CholType)

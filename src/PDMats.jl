@@ -5,7 +5,7 @@ module PDMats
     using Compat
 
     import Base: +, *, \, /, ==
-    import Base: full, logdet, inv, diag, diagm, scale, scale!, eigmax, eigmin, convert
+    import Base: full, logdet, inv, diag, diagm, eigmax, eigmin, convert
 
     export
         # Types
@@ -43,7 +43,7 @@ module PDMats
 
     # The abstract base type
 
-    abstract AbstractPDMat{T<:Real}
+    @compat abstract type AbstractPDMat{T<:Real} end
 
     # source files
 
