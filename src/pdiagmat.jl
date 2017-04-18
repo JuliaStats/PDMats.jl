@@ -81,11 +81,11 @@ unwhiten!(r::StridedMatrix, a::PDiagMat, x::StridedMatrix) =
 
 ### quadratic forms
 
-quad(a::PDiagMat, x::Vector) = wsumsq(a.diag, x)
-invquad(a::PDiagMat, x::Vector) = wsumsq(a.inv_diag, x)
+quad(a::PDiagMat, x::StridedVector) = wsumsq(a.diag, x)
+invquad(a::PDiagMat, x::StridedVector) = wsumsq(a.inv_diag, x)
 
-quad!(r::AbstractArray, a::PDiagMat, x::Matrix) = At_mul_B!(r, @compat(abs2.(x)), a.diag)
-invquad!(r::AbstractArray, a::PDiagMat, x::Matrix) = At_mul_B!(r, @compat(abs2.(x)), a.inv_diag)
+quad!(r::AbstractArray, a::PDiagMat, x::StridedMatrix) = At_mul_B!(r, @compat(abs2.(x)), a.diag)
+invquad!(r::AbstractArray, a::PDiagMat, x::StridedMatrix) = At_mul_B!(r, @compat(abs2.(x)), a.inv_diag)
 
 
 ### tri products

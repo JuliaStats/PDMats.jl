@@ -5,6 +5,7 @@
 #
 
 import Base.Test: @test
+using Compat: view
 
 ## driver function
 function test_pdmat(C::AbstractPDMat, Cmat::Matrix;
@@ -182,6 +183,7 @@ function pdtest_quad(C::AbstractPDMat, Cmat::Matrix, Imat::Matrix, X::Matrix, ve
         xi = vec(X[:,i])
         r_quad[i] = dot(xi, Cmat * xi)
         @test quad(C, xi) ≈ r_quad[i]
+        @test quad(C, view(X,:,i)) ≈ r_quad[i]
     end
     @test quad(C, X) ≈ r_quad
 
@@ -191,6 +193,7 @@ function pdtest_quad(C::AbstractPDMat, Cmat::Matrix, Imat::Matrix, X::Matrix, ve
         xi = vec(X[:,i])
         r_invquad[i] = dot(xi, Imat * xi)
         @test invquad(C, xi) ≈ r_invquad[i]
+        @test invquad(C, view(X,:,i)) ≈ r_invquad[i]
     end
     @test invquad(C, X) ≈ r_invquad
 end
