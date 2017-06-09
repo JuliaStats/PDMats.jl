@@ -4,8 +4,8 @@ Uniform interface for positive definite matrices of various structures.
 
 [![Build Status](https://travis-ci.org/JuliaStats/PDMats.jl.svg?branch=master)](https://travis-ci.org/JuliaStats/PDMats.jl)
 [![Coverage Status](https://img.shields.io/coveralls/JuliaStats/PDMats.jl.svg)](https://coveralls.io/r/JuliaStats/PDMats.jl?branch=master)
-[![PDMats](http://pkg.julialang.org/badges/PDMats_0.3.svg)](http://pkg.julialang.org/?pkg=PDMats&ver=0.3)
-[![PDMats](http://pkg.julialang.org/badges/PDMats_0.4.svg)](http://pkg.julialang.org/?pkg=PDMats&ver=0.4)
+[![PDMats](http://pkg.julialang.org/badges/PDMats_0.3.svg)](http://pkg.julialang.org/?pkg=PDMats&ver=0.5)
+[![PDMats](http://pkg.julialang.org/badges/PDMats_0.4.svg)](http://pkg.julialang.org/?pkg=PDMats&ver=0.6)
 
 --------------
 

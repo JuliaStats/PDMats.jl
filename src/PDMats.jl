@@ -51,7 +51,9 @@ module PDMats
     include("utils.jl")
 
     include("pdmat.jl")
-    include("pdsparsemat.jl")
+    if isdefined(Base.SparseArrays, :CHOLMOD)
+        include("pdsparsemat.jl")
+    end
     include("pdiagmat.jl")
     include("scalmat.jl")
 
