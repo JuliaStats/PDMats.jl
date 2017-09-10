@@ -3,6 +3,7 @@
 ## Basic functions
 
 Base.eltype{T<:Real}(a::AbstractPDMat{T}) = T
+Base.eltype{T<:Real}(::Type{AbstractPDMat{T}}) = T
 Base.ndims(a::AbstractPDMat) = 2
 Base.size(a::AbstractPDMat) = (dim(a), dim(a))
 Base.size(a::AbstractPDMat, i::Integer) = 1 <= i <= 2 ? dim(a) : 1
