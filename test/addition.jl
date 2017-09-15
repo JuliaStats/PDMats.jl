@@ -14,19 +14,18 @@ for T in [Float64,Float32]
   pm2 = PDiagMat(V)
   pm3 = ScalMat(3,X)
   pm4 = X*I
-  #do not test PDSparseMat for Float32 on Julia 0.3 - impossible because of issue #14076
-  pm5 = (T==Float64 || VERSION > v"0.4.2")?PDSparseMat(sparse(M)):PDMat(M)
+  pm5 = PDSparseMat(sparse(M))
 
   pmats = Any[pm1, pm2, pm3, pm5]
 
   for p1 in pmats, p2 in pmats
-	  pr = p1 + p2
-	  @test size(pr) == size(p1)
-	  @test full(pr) ≈ full(p1) + full(p2)
+      pr = p1 + p2
+      @test size(pr) == size(p1)
+      @test full(pr) ≈ full(p1) + full(p2)
 
-	  pr = pdadd(p1, p2, convert(T,1.5))
-	  @test size(pr) == size(p1)
-	  @test full(pr) ≈ full(p1) + full(p2) * convert(T,1.5)
+      pr = pdadd(p1, p2, convert(T,1.5))
+      @test size(pr) == size(p1)
+      @test full(pr) ≈ full(p1) + full(p2) * convert(T,1.5)
   end
 
   for p1 in pmats
@@ -35,5 +34,3 @@ for T in [Float64,Float32]
         @test full(pr) ≈ full(p1) + pm4
   end
 end
-
-
