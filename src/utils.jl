@@ -10,7 +10,7 @@ end
 _rcopy!(r::StridedVecOrMat, x::StridedVecOrMat) = (r === x || copy!(r, x); r)
 
 
-@compat function _addscal!(r::Matrix, a::Matrix, b::Union{Matrix, SparseMatrixCSC}, c::Real)
+function _addscal!(r::Matrix, a::Matrix, b::Union{Matrix, SparseMatrixCSC}, c::Real)
     if c == one(c)
         for i = 1:length(a)
             @inbounds r[i] = a[i] + b[i]
@@ -23,7 +23,7 @@ _rcopy!(r::StridedVecOrMat, x::StridedVecOrMat) = (r === x || copy!(r, x); r)
     return r
 end
 
-@compat function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::Real)
+function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::Real)
     n = size(a, 1)
     for i = 1:n
         @inbounds a[i,i] += v
@@ -31,7 +31,7 @@ end
     return a
 end
 
-@compat function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::Vector, c::Real)
+function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::Vector, c::Real)
     n = size(a, 1)
     @check_argdims length(v) == n
     if c == one(c)
@@ -46,9 +46,9 @@ end
     return a
 end
 
-@compat _adddiag(a::Union{Matrix, SparseMatrixCSC}, v::Real) = _adddiag!(copy(a), v)
-@compat _adddiag(a::Union{Matrix, SparseMatrixCSC}, v::Vector, c::Real) = _adddiag!(copy(a), v, c)
-@compat _adddiag{T<:Real}(a::Union{Matrix, SparseMatrixCSC}, v::Vector{T}) = _adddiag!(copy(a), v, one(T))
+_adddiag(a::Union{Matrix, SparseMatrixCSC}, v::Real) = _adddiag!(copy(a), v)
+_adddiag(a::Union{Matrix, SparseMatrixCSC}, v::Vector, c::Real) = _adddiag!(copy(a), v, c)
+_adddiag{T<:Real}(a::Union{Matrix, SparseMatrixCSC}, v::Vector{T}) = _adddiag!(copy(a), v, one(T))
 
 function wsumsq(w::AbstractVector, a::AbstractVector)
     @check_argdims(length(a) == length(w))

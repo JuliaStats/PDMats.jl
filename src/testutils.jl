@@ -38,7 +38,7 @@ function test_pdmat(C::AbstractPDMat, Cmat::Matrix;
     Imat = inv(Cmat)
 
     n = 5
-    X = rand(eltype(C),d,n) - convert(eltype(C),0.5)
+    X = rand(eltype(C),d,n) .- convert(eltype(C),0.5)
 
     t_mul && pdtest_mul(C, Cmat, X, verbose)
     t_rdiv && pdtest_rdiv(C, Imat, X, verbose)

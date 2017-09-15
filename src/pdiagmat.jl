@@ -1,6 +1,6 @@
 # positive diagonal matrix
 
-@compat immutable PDiagMat{T<:Real,V<:AbstractVector} <: AbstractPDMat{T}
+immutable PDiagMat{T<:Real,V<:AbstractVector} <: AbstractPDMat{T}
   dim::Int
   diag::V
   inv_diag::V
@@ -73,10 +73,10 @@ function unwhiten!(r::StridedVector, a::PDiagMat, x::StridedVector)
 end
 
 whiten!(r::StridedMatrix, a::PDiagMat, x::StridedMatrix) =
-    broadcast!(*, r, x, @compat(sqrt.(a.inv_diag)))
+    broadcast!(*, r, x, sqrt.(a.inv_diag))
 
 unwhiten!(r::StridedMatrix, a::PDiagMat, x::StridedMatrix) =
-    broadcast!(*, r, x, @compat(sqrt.(a.diag)))
+    broadcast!(*, r, x, sqrt.(a.diag))
 
 
 ### quadratic forms
@@ -84,28 +84,28 @@ unwhiten!(r::StridedMatrix, a::PDiagMat, x::StridedMatrix) =
 quad(a::PDiagMat, x::StridedVector) = wsumsq(a.diag, x)
 invquad(a::PDiagMat, x::StridedVector) = wsumsq(a.inv_diag, x)
 
-quad!(r::AbstractArray, a::PDiagMat, x::StridedMatrix) = At_mul_B!(r, @compat(abs2.(x)), a.diag)
-invquad!(r::AbstractArray, a::PDiagMat, x::StridedMatrix) = At_mul_B!(r, @compat(abs2.(x)), a.inv_diag)
+quad!(r::AbstractArray, a::PDiagMat, x::StridedMatrix) = At_mul_B!(r, abs2.(x), a.diag)
+invquad!(r::AbstractArray, a::PDiagMat, x::StridedMatrix) = At_mul_B!(r, abs2.(x), a.inv_diag)
 
 
 ### tri products
 
 function X_A_Xt(a::PDiagMat, x::StridedMatrix)
-    z = x .* reshape(@compat(sqrt.(a.diag)), 1, dim(a))
+    z = x .* reshape(sqrt.(a.diag), 1, dim(a))
     A_mul_Bt(z, z)
 end
 
 function Xt_A_X(a::PDiagMat, x::StridedMatrix)
-    z = x .* @compat(sqrt.(a.diag))
+    z = x .* sqrt.(a.diag)
     At_mul_B(z, z)
 end
 
 function X_invA_Xt(a::PDiagMat, x::StridedMatrix)
-    z = x .* reshape(@compat(sqrt.(a.inv_diag)), 1, dim(a))
+    z = x .* reshape(sqrt.(a.inv_diag), 1, dim(a))
     A_mul_Bt(z, z)
 end
 
 function Xt_invA_X(a::PDiagMat, x::StridedMatrix)
-    z = x .* @compat(sqrt.(a.inv_diag))
+    z = x .* sqrt.(a.inv_diag)
     At_mul_B(z, z)
 end

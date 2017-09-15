@@ -1,5 +1,5 @@
 # Sparse positive definite matrix together with a Cholesky factorization object
-@compat immutable PDSparseMat{T<:Real,S<:AbstractSparseMatrix} <: AbstractPDMat{T}
+immutable PDSparseMat{T<:Real,S<:AbstractSparseMatrix} <: AbstractPDMat{T}
   dim::Int
   mat::S
   chol::CholTypeSparse

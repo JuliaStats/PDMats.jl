@@ -1,5 +1,5 @@
 # Full positive definite matrix together with a Cholesky factorization object
-@compat immutable PDMat{T<:Real,S<:AbstractMatrix} <: AbstractPDMat{T}
+immutable PDMat{T<:Real,S<:AbstractMatrix} <: AbstractPDMat{T}
     dim::Int
     mat::S
     chol::CholType{T,S}
