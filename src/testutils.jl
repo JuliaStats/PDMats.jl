@@ -4,7 +4,7 @@
 #       the implementation of a subtype of AbstractPDMat
 #
 
-import Base.Test: @test
+import Compat.Test: @test
 using Compat: view
 
 ## driver function

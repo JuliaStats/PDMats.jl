@@ -1,6 +1,6 @@
 # test pd matrix types
 using PDMats
-using Base.Test
+using Compat.Test
 
 call_test_pdmat(p::AbstractPDMat,m::Matrix) = test_pdmat(p,m,cmat_eq=true,verbose=1)
 

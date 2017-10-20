@@ -1,7 +1,7 @@
 
 # test operators with pd matrix types
 using PDMats
-using Base.Test
+using Compat.Test
 
 # test scalar multiplication 
 print_with_color(:blue, "Testing scalar multiplication\n")
