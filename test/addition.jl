@@ -1,7 +1,7 @@
 # addition of positive definite matrices
 
 using PDMats
-using Base.Test
+using Compat.Test
 
 for T in [Float64,Float32]
 
