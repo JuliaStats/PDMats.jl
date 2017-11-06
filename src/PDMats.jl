@@ -43,7 +43,7 @@ module PDMats
 
     # The abstract base type
 
-    @compat abstract type AbstractPDMat{T<:Real} end
+    abstract type AbstractPDMat{T<:Real} end
 
     # source files
 

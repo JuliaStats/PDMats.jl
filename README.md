@@ -29,7 +29,7 @@ Elemenent types are in princple all Real types, but in practice this is limited 
 * ``PDMat``: full covariance matrix, defined as
 
 ```julia
-immutable PDMat{T<:Real,S<:AbstractMatrix} <: AbstractPDMat{T}
+struct PDMat{T<:Real,S<:AbstractMatrix} <: AbstractPDMat{T}
     dim::Int                    # matrix dimension
     mat::S                      # input matrix
     chol::Cholesky{T,S}         # Cholesky factorization of mat
@@ -52,7 +52,7 @@ PDMat(chol)         # with the Cholesky factorization
 * ``PDiagMat``: diagonal matrix, defined as
 
 ```julia
-immutable {T<:Real,V<:AbstractVector} <: AbstractPDMat{T}
+struct {T<:Real,V<:AbstractVector} <: AbstractPDMat{T}
     dim::Int                    # matrix dimension
     diag::V                     # the vector of diagonal elements
     inv_diag::V                 # the element-wise inverse of diag
@@ -69,7 +69,7 @@ PDiagMat(v)         # with the vector of diagonal elements
 * ``ScalMat``: uniform scaling matrix, as ``v * eye(d)``, defined as
 
 ```julia
-immutable ScalMat{T<:Real} <: AbstractPDMat{T}
+struct ScalMat{T<:Real} <: AbstractPDMat{T}
     dim::Int         # matrix dimension
     value::T         # diagonal value (shared by all diagonal elements)
     inv_value::T     # inv(value)
@@ -86,7 +86,7 @@ ScalMat(d, v)        # with dimension d and diagonal value v
 * ``PDSparseMat``: sparse covariance matrix, defined as
 
 ```julia
-immutable PDSparseMat{T<:Real,S<:AbstractSparseMatrix} <: AbstractPDMat{T}
+struct PDSparseMat{T<:Real,S<:AbstractSparseMatrix} <: AbstractPDMat{T}
     dim::Int                       # matrix dimension
     mat::SparseMatrixCSC           # input matrix
     chol::CholTypeSparse           # Cholesky factorization of mat

@@ -1,10 +1,10 @@
 # positive diagonal matrix
 
-immutable PDiagMat{T<:Real,V<:AbstractVector} <: AbstractPDMat{T}
+struct PDiagMat{T<:Real,V<:AbstractVector} <: AbstractPDMat{T}
   dim::Int
   diag::V
   inv_diag::V
-  (::Type{PDiagMat{T,S}}){T,S}(d::Int,v::AbstractVector{T},inv_v::AbstractVector{T}) = new{T,S}(d,v,inv_v)
+  PDiagMat{T,S}(d::Int,v::AbstractVector{T},inv_v::AbstractVector{T}) where {T,S} = new{T,S}(d,v,inv_v)
 end
 
 function PDiagMat(v::AbstractVector,inv_v::AbstractVector)
@@ -15,8 +15,8 @@ end
 PDiagMat(v::Vector) = PDiagMat(v, ones(v)./v)
 
 ### Conversion
-convert{T<:Real}(::Type{PDiagMat{T}},      a::PDiagMat) = PDiagMat(convert(AbstractArray{T}, a.diag))
-convert{T<:Real}(::Type{AbstractArray{T}}, a::PDiagMat) = convert(PDiagMat{T}, a)
+convert(::Type{PDiagMat{T}},      a::PDiagMat) where {T<:Real} = PDiagMat(convert(AbstractArray{T}, a.diag))
+convert(::Type{AbstractArray{T}}, a::PDiagMat) where {T<:Real} = convert(PDiagMat{T}, a)
 
 ### Basics
 
@@ -37,7 +37,7 @@ function pdadd!(r::Matrix, a::Matrix, b::PDiagMat, c)
     return r
 end
 
-*{T<:Real}(a::PDiagMat, c::T) = PDiagMat(a.diag * c)
+*(a::PDiagMat, c::T) where {T<:Real} = PDiagMat(a.diag * c)
 *(a::PDiagMat, x::StridedVecOrMat) = a.diag .* x
 \(a::PDiagMat, x::StridedVecOrMat) = a.inv_diag .* x
 
