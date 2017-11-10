@@ -1,9 +1,9 @@
 # Full positive definite matrix together with a Cholesky factorization object
-immutable PDMat{T<:Real,S<:AbstractMatrix} <: AbstractPDMat{T}
+struct PDMat{T<:Real,S<:AbstractMatrix} <: AbstractPDMat{T}
     dim::Int
     mat::S
     chol::CholType{T,S}
-    (::Type{PDMat{T,S}}){T,S}(d::Int,m::AbstractMatrix{T},c::CholType{T,S}) = new{T,S}(d,m,c)
+    PDMat{T,S}(d::Int,m::AbstractMatrix{T},c::CholType{T,S}) where {T,S} = new{T,S}(d,m,c)
 end
 
 function PDMat(mat::AbstractMatrix,chol::CholType)
@@ -18,8 +18,8 @@ PDMat(mat::Symmetric) = PDMat(full(mat))
 PDMat(fac::CholType) = PDMat(full(fac),fac)
 
 ### Conversion
-convert{T<:Real}(::Type{PDMat{T}},         a::PDMat) = PDMat(convert(AbstractArray{T}, a.mat))
-convert{T<:Real}(::Type{AbstractArray{T}}, a::PDMat) = convert(PDMat{T}, a)
+convert(::Type{PDMat{T}},         a::PDMat) where {T<:Real} = PDMat(convert(AbstractArray{T}, a.mat))
+convert(::Type{AbstractArray{T}}, a::PDMat) where {T<:Real} = convert(PDMat{T}, a)
 
 ### Basics
 
@@ -35,7 +35,7 @@ function pdadd!(r::Matrix, a::Matrix, b::PDMat, c)
     _addscal!(r, a, b.mat, c)
 end
 
-*{S<:Real, T<:Real}(a::PDMat{S}, c::T) = PDMat(a.mat * c)
+*(a::PDMat{S}, c::T) where {S<:Real, T<:Real} = PDMat(a.mat * c)
 *(a::PDMat, x::StridedVecOrMat) = a.mat * x
 \(a::PDMat, x::StridedVecOrMat) = a.chol \ x
 

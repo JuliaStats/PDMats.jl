@@ -2,8 +2,8 @@
 
 ## Basic functions
 
-Base.eltype{T<:Real}(a::AbstractPDMat{T}) = T
-Base.eltype{T<:Real}(::Type{AbstractPDMat{T}}) = T
+Base.eltype(a::AbstractPDMat{T}) where {T<:Real} = T
+Base.eltype(::Type{AbstractPDMat{T}}) where {T<:Real} = T
 Base.ndims(a::AbstractPDMat) = 2
 Base.size(a::AbstractPDMat) = (dim(a), dim(a))
 Base.size(a::AbstractPDMat, i::Integer) = 1 <= i <= 2 ? dim(a) : 1
@@ -11,20 +11,20 @@ Base.length(a::AbstractPDMat) = abs2(dim(a))
 
 ## arithmetics
 
-pdadd!{T<:Real}(r::Matrix, a::Matrix, b::AbstractPDMat{T}) = pdadd!(r, a, b, one(T))
+pdadd!(r::Matrix, a::Matrix, b::AbstractPDMat{T}) where {T<:Real} = pdadd!(r, a, b, one(T))
 
 pdadd!(a::Matrix, b::AbstractPDMat, c) = pdadd!(a, a, b, c)
-pdadd!{T<:Real}(a::Matrix, b::AbstractPDMat{T}) = pdadd!(a, a, b, one(T))
+pdadd!(a::Matrix, b::AbstractPDMat{T}) where {T<:Real} = pdadd!(a, a, b, one(T))
 
-pdadd{T<:Real, S<:Real, R<:Real}(a::Matrix{T}, b::AbstractPDMat{S}, c::R) = pdadd!(similar(a, promote_type(T, S, R)), a, b, c)
-pdadd{T<:Real, S<:Real}(a::Matrix{T}, b::AbstractPDMat{S}) = pdadd!(similar(a, promote_type(T, S)), a, b, one(T))
+pdadd(a::Matrix{T}, b::AbstractPDMat{S}, c::R) where {T<:Real, S<:Real, R<:Real} = pdadd!(similar(a, promote_type(T, S, R)), a, b, c)
+pdadd(a::Matrix{T}, b::AbstractPDMat{S}) where {T<:Real, S<:Real} = pdadd!(similar(a, promote_type(T, S)), a, b, one(T))
 
 +(a::Matrix, b::AbstractPDMat) = pdadd(a, b)
 +(a::AbstractPDMat, b::Matrix) = pdadd(b, a)
 
-*{T<:Real}(a::AbstractPDMat, c::T) = a * c
-*{T<:Real}(c::T, a::AbstractPDMat) = a * c
-/{T<:Real}(a::AbstractPDMat, c::T) = a * inv(c)
+*(a::AbstractPDMat, c::T) where {T<:Real} = a * c
+*(c::T, a::AbstractPDMat) where {T<:Real} = a * c
+/(a::AbstractPDMat, c::T) where {T<:Real} = a * inv(c)
 
 
 ## whiten and unwhiten
@@ -38,12 +38,12 @@ unwhiten(a::AbstractPDMat, x::StridedVecOrMat) = unwhiten!(similar(x), a, x)
 
 ## quad
 
-function quad{T<:Real, S<:Real}(a::AbstractPDMat{T}, x::StridedMatrix{S})
+function quad(a::AbstractPDMat{T}, x::StridedMatrix{S}) where {T<:Real, S<:Real}
     @check_argdims dim(a) == size(x, 1)
     quad!(Array{promote_type(T, S)}(size(x,2)), a, x)
 end
 
-function invquad{T<:Real, S<:Real}(a::AbstractPDMat{T}, x::StridedMatrix{S})
+function invquad(a::AbstractPDMat{T}, x::StridedMatrix{S}) where {T<:Real, S<:Real}
     @check_argdims dim(a) == size(x, 1)
     invquad!(Array{promote_type(T, S)}(size(x,2)), a, x)
 end

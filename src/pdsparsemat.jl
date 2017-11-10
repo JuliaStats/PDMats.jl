@@ -1,9 +1,9 @@
 # Sparse positive definite matrix together with a Cholesky factorization object
-immutable PDSparseMat{T<:Real,S<:AbstractSparseMatrix} <: AbstractPDMat{T}
+struct PDSparseMat{T<:Real,S<:AbstractSparseMatrix} <: AbstractPDMat{T}
   dim::Int
   mat::S
   chol::CholTypeSparse
-  (::Type{PDSparseMat{T,S}}){T,S}(d::Int,m::AbstractSparseMatrix{T},c::CholTypeSparse) = new{T,S}(d,m,c) #add {T} to CholTypeSparse argument once #14076 is implemented
+  PDSparseMat{T,S}(d::Int,m::AbstractSparseMatrix{T},c::CholTypeSparse) where {T,S} = new{T,S}(d,m,c) #add {T} to CholTypeSparse argument once #14076 is implemented
 end
 
 function PDSparseMat(mat::AbstractSparseMatrix,chol::CholTypeSparse)
@@ -17,7 +17,7 @@ PDSparseMat(mat::SparseMatrixCSC) = PDSparseMat(mat, cholfact(mat))
 PDSparseMat(fac::CholTypeSparse) = PDSparseMat(sparse(fac) |> x -> x*x', fac)
 
 ### Conversion
-convert{T<:Real}(::Type{PDSparseMat{T}}, a::PDSparseMat) = PDSparseMat(convert(SparseMatrixCSC{T}, a.mat))
+convert(::Type{PDSparseMat{T}}, a::PDSparseMat) where {T<:Real} = PDSparseMat(convert(SparseMatrixCSC{T}, a.mat))
 
 ### Basics
 
@@ -34,17 +34,17 @@ function pdadd!(r::Matrix, a::Matrix, b::PDSparseMat, c)
     _addscal!(r, a, b.mat, c)
 end
 
-*{T<:Real}(a::PDSparseMat, c::T) = PDSparseMat(a.mat * c)
+*(a::PDSparseMat, c::T) where {T<:Real} = PDSparseMat(a.mat * c)
 *(a::PDSparseMat, x::StridedVecOrMat) = a.mat * x
-\{T<:Real}(a::PDSparseMat{T}, x::StridedVecOrMat{T}) = convert(Array{T},a.chol \ convert(Array{Float64},x)) #to avoid limitations in sparse factorization library CHOLMOD, see e.g., julia issue #14076
+\(a::PDSparseMat{T}, x::StridedVecOrMat{T}) where {T<:Real} = convert(Array{T},a.chol \ convert(Array{Float64},x)) #to avoid limitations in sparse factorization library CHOLMOD, see e.g., julia issue #14076
 
 
 ### Algebra
 
-inv{T<:Real}(a::PDSparseMat{T}) = PDMat( a\eye(T,a.dim) )
+inv(a::PDSparseMat{T}) where {T<:Real} = PDMat( a\eye(T,a.dim) )
 logdet(a::PDSparseMat) = logdet(a.chol)
-eigmax{T<:Real}(a::PDSparseMat{T}) = convert(T,eigs(convert(SparseMatrixCSC{Float64,Int},a.mat), which=:LM, nev=1, ritzvec=false)[1][1]) #to avoid type instability issues in eigs, see e.g., julia issue #13929
-eigmin{T<:Real}(a::PDSparseMat{T}) = convert(T,eigs(convert(SparseMatrixCSC{Float64,Int},a.mat), which=:SM, nev=1, ritzvec=false)[1][1]) #to avoid type instability issues in eigs, see e.g., julia issue #13929
+eigmax(a::PDSparseMat{T}) where {T<:Real} = convert(T,eigs(convert(SparseMatrixCSC{Float64,Int},a.mat), which=:LM, nev=1, ritzvec=false)[1][1]) #to avoid type instability issues in eigs, see e.g., julia issue #13929
+eigmin(a::PDSparseMat{T}) where {T<:Real} = convert(T,eigs(convert(SparseMatrixCSC{Float64,Int},a.mat), which=:SM, nev=1, ritzvec=false)[1][1]) #to avoid type instability issues in eigs, see e.g., julia issue #13929
 
 
 ### whiten and unwhiten
