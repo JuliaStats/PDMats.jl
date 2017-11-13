@@ -1,6 +1,6 @@
 # Scaling matrix
 
-immutable ScalMat{T<:Real} <: AbstractPDMat{T}
+struct ScalMat{T<:Real} <: AbstractPDMat{T}
   dim::Int
   value::T
   inv_value::T
@@ -9,8 +9,8 @@ end
 ScalMat(d::Int,v::Real) = ScalMat{typeof(one(v)/v)}(d, v, one(v) / v)
 
 ### Conversion
-convert{T<:Real}(::Type{ScalMat{T}}, a::ScalMat) = ScalMat(a.dim, T(a.value), T(a.inv_value))
-convert{T<:Real}(::Type{AbstractArray{T}}, a::ScalMat) = convert(ScalMat{T}, a)
+convert(::Type{ScalMat{T}}, a::ScalMat) where {T<:Real} = ScalMat(a.dim, T(a.value), T(a.inv_value))
+convert(::Type{AbstractArray{T}}, a::ScalMat) where {T<:Real} = convert(ScalMat{T}, a)
 
 ### Basics
 
@@ -31,8 +31,8 @@ function pdadd!(r::Matrix, a::Matrix, b::ScalMat, c)
     return r
 end
 
-*{T<:Real}(a::ScalMat, c::T) = ScalMat(a.dim, a.value * c)
-/{T<:Real}(a::ScalMat{T}, c::T) = ScalMat(a.dim, a.value / c)
+*(a::ScalMat, c::T) where {T<:Real} = ScalMat(a.dim, a.value * c)
+/(a::ScalMat{T}, c::T) where {T<:Real} = ScalMat(a.dim, a.value / c)
 *(a::ScalMat, x::StridedVecOrMat) = a.value * x
 \(a::ScalMat, x::StridedVecOrMat) = a.inv_value * x
 

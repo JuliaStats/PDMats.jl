@@ -1,8 +1,8 @@
-@compat CholType{T,S<:AbstractMatrix} = Cholesky{T,S}
+CholType{T,S<:AbstractMatrix} = Cholesky{T,S}
 chol_lower(a::Matrix) = chol(a)'
 
 if isdefined(Base.SparseArrays, :CHOLMOD)
-    @compat CholTypeSparse{T} = SparseArrays.CHOLMOD.Factor{T}
+    CholTypeSparse{T} = SparseArrays.CHOLMOD.Factor{T}
 
     chol_lower(cf::CholTypeSparse) = cf[:L]
 end

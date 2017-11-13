@@ -48,7 +48,7 @@ end
 
 _adddiag(a::Union{Matrix, SparseMatrixCSC}, v::Real) = _adddiag!(copy(a), v)
 _adddiag(a::Union{Matrix, SparseMatrixCSC}, v::Vector, c::Real) = _adddiag!(copy(a), v, c)
-_adddiag{T<:Real}(a::Union{Matrix, SparseMatrixCSC}, v::Vector{T}) = _adddiag!(copy(a), v, one(T))
+_adddiag(a::Union{Matrix, SparseMatrixCSC}, v::Vector{T}) where {T<:Real} = _adddiag!(copy(a), v, one(T))
 
 function wsumsq(w::AbstractVector, a::AbstractVector)
     @check_argdims(length(a) == length(w))
