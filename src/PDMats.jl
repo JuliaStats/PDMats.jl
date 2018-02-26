@@ -2,10 +2,14 @@ __precompile__()
 
 module PDMats
 
-    using Compat
+    using LinearAlgebra
+    using SparseArrays
+    using SuiteSparse
 
-    import Base: +, *, \, /, ==
-    import Base: full, logdet, inv, diag, diagm, eigmax, eigmin, convert
+    import Base: +, *, \, /, ==, convert
+    import LinearAlgebra: logdet, inv, diag, diagm, eigmax, eigmin, Cholesky
+    import LinearAlgebra.BLAS: nrm2, axpy!, gemv!, gemm, gemm!, trmv, trmv!, trmm, trmm!
+    import LinearAlgebra.LAPACK: trtrs!
 
     export
         # Types
@@ -17,7 +21,6 @@ module PDMats
 
         # Functions
         dim,
-        full,
         whiten,
         whiten!,
         unwhiten,
@@ -36,14 +39,11 @@ module PDMats
         Xt_invA_X,
         test_pdmat
 
-    import Base.BLAS: nrm2, axpy!, gemv!, gemm, gemm!, trmv, trmv!, trmm, trmm!
-    import Base.LAPACK: trtrs!
-    import Base.LinAlg: A_ldiv_B!, A_mul_B!, A_mul_Bc!, A_rdiv_B!, A_rdiv_Bc!, Ac_ldiv_B!, Cholesky
-
-
     # The abstract base type
 
     abstract type AbstractPDMat{T<:Real} end
+
+    const HAVE_CHOLMOD = isdefined(SuiteSparse, :CHOLMOD)
 
     # source files
 
@@ -51,7 +51,7 @@ module PDMats
     include("utils.jl")
 
     include("pdmat.jl")
-    if isdefined(Base.SparseArrays, :CHOLMOD)
+    if HAVE_CHOLMOD
         include("pdsparsemat.jl")
     end
     include("pdiagmat.jl")
@@ -59,8 +59,6 @@ module PDMats
 
     include("generics.jl")
     include("addition.jl")
-
-    include("testutils.jl")
 
     include("deprecates.jl")
 

@@ -1,9 +1,9 @@
 # Sparse positive definite matrix together with a Cholesky factorization object
 struct PDSparseMat{T<:Real,S<:AbstractSparseMatrix} <: AbstractPDMat{T}
-  dim::Int
-  mat::S
-  chol::CholTypeSparse
-  PDSparseMat{T,S}(d::Int,m::AbstractSparseMatrix{T},c::CholTypeSparse) where {T,S} = new{T,S}(d,m,c) #add {T} to CholTypeSparse argument once #14076 is implemented
+    dim::Int
+    mat::S
+    chol::CholTypeSparse
+    PDSparseMat{T,S}(d::Int,m::AbstractSparseMatrix{T},c::CholTypeSparse) where {T,S} = new{T,S}(d,m,c) #add {T} to CholTypeSparse argument once #14076 is implemented
 end
 
 function PDSparseMat(mat::AbstractSparseMatrix,chol::CholTypeSparse)
@@ -22,7 +22,7 @@ convert(::Type{PDSparseMat{T}}, a::PDSparseMat) where {T<:Real} = PDSparseMat(co
 ### Basics
 
 dim(a::PDSparseMat) = a.dim
-full(a::PDSparseMat) = full(a.mat)
+Base.Matrix(a::PDSparseMat) = Matrix(a.mat)
 diag(a::PDSparseMat) = diag(a.mat)
 
 
@@ -84,13 +84,13 @@ end
 
 function X_A_Xt(a::PDSparseMat, x::StridedMatrix)
     z = x*sparse(chol_lower(a.chol))
-    A_mul_Bt(z, z)
+    z * transpose(z)
 end
 
 
 function Xt_A_X(a::PDSparseMat, x::StridedMatrix)
-    z = At_mul_B(x, sparse(chol_lower(a.chol)))
-    A_mul_Bt(z, z)
+    z = transpose(x) * sparse(chol_lower(a.chol))
+    z * transpose(z)
 end
 
 
@@ -101,5 +101,5 @@ end
 
 function Xt_invA_X(a::PDSparseMat, x::StridedMatrix)
     z = a \ x
-    At_mul_B(x, z)
+    transpose(x) * z
 end

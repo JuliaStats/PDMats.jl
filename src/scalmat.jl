@@ -1,9 +1,9 @@
 # Scaling matrix
 
 struct ScalMat{T<:Real} <: AbstractPDMat{T}
-  dim::Int
-  value::T
-  inv_value::T
+    dim::Int
+    value::T
+    inv_value::T
 end
 
 ScalMat(d::Int,v::Real) = ScalMat{typeof(one(v)/v)}(d, v, one(v) / v)
@@ -15,7 +15,7 @@ convert(::Type{AbstractArray{T}}, a::ScalMat) where {T<:Real} = convert(ScalMat{
 ### Basics
 
 dim(a::ScalMat) = a.dim
-full(a::ScalMat) = diagm(fill(a.value, a.dim))
+Base.Matrix(a::ScalMat) = diagm(0=>fill(a.value, a.dim))
 diag(a::ScalMat) = fill(a.value, a.dim)
 
 
