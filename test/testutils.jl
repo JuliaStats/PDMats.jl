@@ -4,13 +4,13 @@
 #       the implementation of a subtype of AbstractPDMat
 #
 
-import Compat.Test: @test
-using Compat: view
+using Test
+using PDMats
 
 ## driver function
 function test_pdmat(C::AbstractPDMat, Cmat::Matrix;
                     verbose::Int=2,             # the level to display intermediate steps
-                    cmat_eq::Bool=false,        # require Cmat and full(C) to be exactly equal
+                    cmat_eq::Bool=false,        # require Cmat and Matrix(C) to be exactly equal
                     t_diag::Bool=true,          # whethet to test diag method
                     t_scale::Bool=true,         # whether to test scaling
                     t_add::Bool=true,           # whether to test pdadd
@@ -24,7 +24,7 @@ function test_pdmat(C::AbstractPDMat, Cmat::Matrix;
                     )
 
     d = size(Cmat, 1)
-    verbose >= 1 && print_with_color(:blue, "Testing $(typeof(C)) with dim = $d\n")
+    verbose >= 1 && printstyled("Testing $(typeof(C)) with dim = $d\n", color=:blue)
 
     pdtest_basics(C, Cmat, d, verbose)
     pdtest_cmat(C, Cmat, cmat_eq, verbose)
@@ -53,7 +53,7 @@ end
 
 ## core testing functions
 
-_pdt(vb::Int, s) = (vb >= 2 && print_with_color(:green, "    .. testing $s\n"))
+_pdt(vb::Int, s) = (vb >= 2 && printstyled("    .. testing $s\n", color=:green))
 
 
 function pdtest_basics(C::AbstractPDMat, Cmat::Matrix, d::Int, verbose::Int)
@@ -79,11 +79,11 @@ end
 
 
 function pdtest_cmat(C::AbstractPDMat, Cmat::Matrix, cmat_eq::Bool, verbose::Int)
-    _pdt(verbose, "full")
+    _pdt(verbose, "Matrix")
     if cmat_eq
-        @test full(C) == Cmat
+        @test Matrix(C) == Cmat
     else
-        @test full(C) ≈ Cmat
+        @test Matrix(C) ≈ Cmat
     end
 end
 
@@ -100,8 +100,8 @@ end
 
 function pdtest_scale(C::AbstractPDMat, Cmat::Matrix, verbose::Int)
     _pdt(verbose, "scale")
-    @test full(C * convert(eltype(C),2)) ≈ Cmat * convert(eltype(C),2)
-    @test full(convert(eltype(C),2) * C) ≈ convert(eltype(C),2) * Cmat
+    @test Matrix(C * convert(eltype(C),2)) ≈ Cmat * convert(eltype(C),2)
+    @test Matrix(convert(eltype(C),2) * C) ≈ convert(eltype(C),2) * Cmat
 end
 
 

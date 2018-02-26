@@ -1,9 +1,13 @@
-tests = ["pdmtypes", "addition", "generics"]
+using Test
+using PDMats
+using LinearAlgebra
+using SparseArrays
+using SuiteSparse
+
+include("testutils.jl")
+
 println("Running tests ...")
-
-for t in tests
-	println("* $t ")
-	include("$t.jl")
+for t in ["pdmtypes", "addition", "generics"]
+    println("* $t ")
+    include("$t.jl")
 end
-
-

@@ -14,8 +14,8 @@ function PDMat(mat::AbstractMatrix,chol::CholType)
 end
 
 PDMat(mat::Matrix) = PDMat(mat,cholfact(mat))
-PDMat(mat::Symmetric) = PDMat(full(mat))
-PDMat(fac::CholType) = PDMat(full(fac),fac)
+PDMat(mat::Symmetric) = PDMat(Matrix(mat))
+PDMat(fac::CholType) = PDMat(Matrix(fac),fac)
 
 ### Conversion
 convert(::Type{PDMat{T}},         a::PDMat) where {T<:Real} = PDMat(convert(AbstractArray{T}, a.mat))
@@ -24,7 +24,7 @@ convert(::Type{AbstractArray{T}}, a::PDMat) where {T<:Real} = convert(PDMat{T}, 
 ### Basics
 
 dim(a::PDMat) = a.dim
-full(a::PDMat) = copy(a.mat)
+Base.Matrix(a::PDMat) = Matrix(a.mat)
 diag(a::PDMat) = diag(a.mat)
 
 
@@ -52,13 +52,13 @@ eigmin(a::PDMat) = eigmin(a.mat)
 
 function whiten!(r::StridedVecOrMat, a::PDMat, x::StridedVecOrMat)
     cf = a.chol[:UL]
-    istriu(cf) ? Ac_ldiv_B!(cf, _rcopy!(r, x)) : A_ldiv_B!(cf, _rcopy!(r, x))
+    istriu(cf) ? ldiv!(cf', _rcopy!(r, x)) : ldiv!(cf, _rcopy!(r, x))
     return r
 end
 
 function unwhiten!(r::StridedVecOrMat, a::PDMat, x::StridedVecOrMat)
     cf = a.chol[:UL]
-    istriu(cf) ? Ac_mul_B!(cf, _rcopy!(r, x)) : A_mul_B!(cf, _rcopy!(r, x))
+    istriu(cf) ? mul!(cf, cf', _rcopy!(r, x)) : mul!(cf, cf, _rcopy!(r, x))
     return r
 end
 
@@ -77,27 +77,27 @@ invquad!(r::AbstractArray, a::PDMat, x::StridedMatrix) = colwise_dot!(r, x, a.ma
 function X_A_Xt(a::PDMat, x::StridedMatrix)
     z = copy(x)
     cf = a.chol[:UL]
-    istriu(cf) ? A_mul_Bc!(z, cf) : A_mul_B!(z, cf)
-    A_mul_Bt(z, z)
+    istriu(cf) ? mul!(z, z, cf') : mul!(z, z, cf)
+    z * transpose(z)
 end
 
 function Xt_A_X(a::PDMat, x::StridedMatrix)
     z = copy(x)
     cf = a.chol[:UL]
-    istriu(cf) ? A_mul_B!(cf, z) : Ac_mul_B!(cf, z)
-    At_mul_B(z, z)
+    istriu(cf) ? mul!(cf, cf, z) : mul!(cf, cf', z)
+    transpose(z) * z
 end
 
 function X_invA_Xt(a::PDMat, x::StridedMatrix)
     z = copy(x)
     cf = a.chol[:UL]
-    istriu(cf) ? A_rdiv_B!(z, cf) : A_rdiv_Bc!(z, cf)
-    A_mul_Bt(z, z)
+    istriu(cf) ? rdiv!(z, cf) : rdiv!(z, cf')
+    z * transpose(z)
 end
 
 function Xt_invA_X(a::PDMat, x::StridedMatrix)
     z = copy(x)
     cf = a.chol[:UL]
-    istriu(cf) ? Ac_ldiv_B!(cf, z) : A_ldiv_B!(cf, z)
-    At_mul_B(z, z)
+    istriu(cf) ? ldiv!(cf', z) : ldiv!(cf, z)
+    transpose(z) * z
 end
