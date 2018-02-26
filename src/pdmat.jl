@@ -13,19 +13,19 @@ function PDMat(mat::AbstractMatrix,chol::CholType)
     PDMat{eltype(mat),typeof(mat)}(d, mat, chol)
 end
 
-PDMat(mat::Matrix) = PDMat(mat,cholfact(mat))
-PDMat(mat::Symmetric) = PDMat(full(mat))
-PDMat(fac::CholType) = PDMat(full(fac),fac)
+PDMat(mat::Matrix) = PDMat(mat, cholfact(mat))
+PDMat(mat::Symmetric) = PDMat(Matrix(mat))
+PDMat(fac::CholType) = PDMat(Matrix(fac),fac)
 
 ### Conversion
-convert(::Type{PDMat{T}},         a::PDMat) where {T<:Real} = PDMat(convert(AbstractArray{T}, a.mat))
-convert(::Type{AbstractArray{T}}, a::PDMat) where {T<:Real} = convert(PDMat{T}, a)
+Base.convert(::Type{PDMat{T}},         a::PDMat) where {T<:Real} = PDMat(convert(AbstractArray{T}, a.mat))
+Base.convert(::Type{AbstractArray{T}}, a::PDMat) where {T<:Real} = convert(PDMat{T}, a)
 
 ### Basics
 
 dim(a::PDMat) = a.dim
-full(a::PDMat) = copy(a.mat)
-diag(a::PDMat) = diag(a.mat)
+Base.Matrix(a::PDMat) = copy(a.mat)
+LinearAlgebra.diag(a::PDMat) = diag(a.mat)
 
 
 ### Arithmetics
@@ -42,10 +42,10 @@ end
 
 ### Algebra
 
-inv(a::PDMat) = PDMat(inv(a.chol))
-logdet(a::PDMat) = logdet(a.chol)
-eigmax(a::PDMat) = eigmax(a.mat)
-eigmin(a::PDMat) = eigmin(a.mat)
+Base.inv(a::PDMat) = PDMat(inv(a.chol))
+LinearAlgebra.logdet(a::PDMat) = logdet(a.chol)
+LinearAlgebra.eigmax(a::PDMat) = eigmax(a.mat)
+LinearAlgebra.eigmin(a::PDMat) = eigmin(a.mat)
 
 
 ### whiten and unwhiten

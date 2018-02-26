@@ -6,7 +6,7 @@ struct ScalMat{T<:Real} <: AbstractPDMat{T}
   inv_value::T
 end
 
-ScalMat(d::Int,v::Real) = ScalMat{typeof(one(v)/v)}(d, v, one(v) / v)
+ScalMat(d::Int,v::Real) = ScalMat{typeof(inv(v))}(d, v, inv(v))
 
 ### Conversion
 convert(::Type{ScalMat{T}}, a::ScalMat) where {T<:Real} = ScalMat(a.dim, T(a.value), T(a.inv_value))

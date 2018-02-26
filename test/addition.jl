@@ -14,9 +14,10 @@ for T in [Float64,Float32]
   pm2 = PDiagMat(V)
   pm3 = ScalMat(3,X)
   pm4 = X*I
+#=
   pm5 = PDSparseMat(sparse(M))
-
-  pmats = Any[pm1, pm2, pm3, pm5]
+=#
+  pmats = Any[pm1, pm2, pm3] #, pm5]
 
   for p1 in pmats, p2 in pmats
       pr = p1 + p2

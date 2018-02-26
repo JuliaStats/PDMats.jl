@@ -12,17 +12,17 @@ function PDiagMat(v::AbstractVector,inv_v::AbstractVector)
   PDiagMat{eltype(v),typeof(v)}(length(v), v, inv_v)
 end
 
-PDiagMat(v::Vector) = PDiagMat(v, ones(v)./v)
+PDiagMat(v::Vector) = PDiagMat(v, inv.(v))
 
 ### Conversion
-convert(::Type{PDiagMat{T}},      a::PDiagMat) where {T<:Real} = PDiagMat(convert(AbstractArray{T}, a.diag))
-convert(::Type{AbstractArray{T}}, a::PDiagMat) where {T<:Real} = convert(PDiagMat{T}, a)
+Base.convert(::Type{PDiagMat{T}},      a::PDiagMat) where {T<:Real} = PDiagMat(convert(AbstractArray{T}, a.diag))
+Base.convert(::Type{AbstractArray{T}}, a::PDiagMat) where {T<:Real} = convert(PDiagMat{T}, a)
 
 ### Basics
 
 dim(a::PDiagMat) = a.dim
-full(a::PDiagMat) = diagm(a.diag)
-diag(a::PDiagMat) = copy(a.diag)
+Base.Matrix(a::PDiagMat) = diagm(a.diag)
+LinearAlgebra.diag(a::PDiagMat) = copy(a.diag)
 
 
 ### Arithmetics
@@ -44,10 +44,10 @@ end
 
 ### Algebra
 
-inv(a::PDiagMat) = PDiagMat(a.inv_diag, a.diag)
-logdet(a::PDiagMat) = sum(log, a.diag)
-eigmax(a::PDiagMat) = maximum(a.diag)
-eigmin(a::PDiagMat) = minimum(a.diag)
+Base.inv(a::PDiagMat) = PDiagMat(a.inv_diag, a.diag)
+LinearAlgebra.logdet(a::PDiagMat) = sum(log, a.diag)
+LinearAlgebra.eigmax(a::PDiagMat) = maximum(a.diag)
+LinearAlgebra.eigmin(a::PDiagMat) = minimum(a.diag)
 
 
 ### whiten and unwhiten

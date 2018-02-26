@@ -3,9 +3,10 @@ __precompile__()
 module PDMats
 
     using Compat
+    using LinearAlgebra, SparseArrays
 
-    import Base: +, *, \, /, ==
-    import Base: full, logdet, inv, diag, diagm, eigmax, eigmin, convert
+    import Base: +, *, \, /, ==, convert, inv, Matrix
+    import LinearAlgebra: logdet, diag, diagm, eigmax, eigmin
 
     export
         # Types
@@ -36,9 +37,9 @@ module PDMats
         Xt_invA_X,
         test_pdmat
 
-    import Base.BLAS: nrm2, axpy!, gemv!, gemm, gemm!, trmv, trmv!, trmm, trmm!
-    import Base.LAPACK: trtrs!
-    import Base.LinAlg: A_ldiv_B!, A_mul_B!, A_mul_Bc!, A_rdiv_B!, A_rdiv_Bc!, Ac_ldiv_B!, Cholesky
+#    import Base.BLAS: nrm2, axpy!, gemv!, gemm, gemm!, trmv, trmv!, trmm, trmm!
+#    import Base.LAPACK: trtrs!
+    import LinearAlgebra: A_ldiv_B!, A_mul_B!, A_mul_Bc!, A_rdiv_B!, A_rdiv_Bc!, Ac_ldiv_B!
 
 
     # The abstract base type
@@ -51,9 +52,11 @@ module PDMats
     include("utils.jl")
 
     include("pdmat.jl")
+#=
     if isdefined(Base.SparseArrays, :CHOLMOD)
         include("pdsparsemat.jl")
     end
+=#
     include("pdiagmat.jl")
     include("scalmat.jl")
 
