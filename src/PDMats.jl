@@ -6,7 +6,7 @@ module PDMats
     using LinearAlgebra, SparseArrays
 
     import Base: +, *, \, /, ==, convert, inv, Matrix
-    import LinearAlgebra: logdet, diag, diagm, eigmax, eigmin
+    import LinearAlgebra: logdet, diag, eigmax, eigmin
 
     export
         # Types

@@ -21,7 +21,7 @@ Base.convert(::Type{AbstractArray{T}}, a::PDiagMat) where {T<:Real} = convert(PD
 ### Basics
 
 dim(a::PDiagMat) = a.dim
-Base.Matrix(a::PDiagMat) = diagm(a.diag)
+Base.Matrix(a::PDiagMat) = Matrix(Diagonal(a.diag))
 LinearAlgebra.diag(a::PDiagMat) = copy(a.diag)
 
 
@@ -32,7 +32,7 @@ function pdadd!(r::Matrix, a::Matrix, b::PDiagMat, c)
     if r === a
         _adddiag!(r, b.diag, c)
     else
-        _adddiag!(copy!(r, a), b.diag, c)
+        _adddiag!(copyto!(r, a), b.diag, c)
     end
     return r
 end
@@ -84,28 +84,53 @@ unwhiten!(r::StridedMatrix, a::PDiagMat, x::StridedMatrix) =
 quad(a::PDiagMat, x::StridedVector) = wsumsq(a.diag, x)
 invquad(a::PDiagMat, x::StridedVector) = wsumsq(a.inv_diag, x)
 
-quad!(r::AbstractArray, a::PDiagMat, x::StridedMatrix) = At_mul_B!(r, abs2.(x), a.diag)
-invquad!(r::AbstractArray, a::PDiagMat, x::StridedMatrix) = At_mul_B!(r, abs2.(x), a.inv_diag)
+function quad!(r::AbstractArray, a::PDiagMat, x::StridedMatrix)
+    m, n = size(x)
+    ad = a.diag
+    @check_argdims m == length(ad) && length(r) == n
+    @inbounds for j = 1:n
+        s = zero(promote_type(eltype(ad), eltype(x)))
+        for i in 1:m
+            s += ad[i] * abs2(x[i,j])
+        end
+        r[j] = s
+    end
+    r
+end
+
+function invquad!(r::AbstractArray, a::PDiagMat, x::StridedMatrix)
+    m, n = size(x)
+    ainvd = a.inv_diag
+    @check_argdims m == length(ainvd) && length(r) == n
+    @inbounds for j = 1:n
+        s = zero(promote_type(eltype(ainvd), eltype(x)))
+        for i in 1:m
+            s += ainvd[i] * abs2(x[i,j])
+        end
+        r[j] = s
+    end
+    r
+end
 
 
 ### tri products
 
 function X_A_Xt(a::PDiagMat, x::StridedMatrix)
     z = x .* reshape(sqrt.(a.diag), 1, dim(a))
-    A_mul_Bt(z, z)
+    z * transpose(z)
 end
 
 function Xt_A_X(a::PDiagMat, x::StridedMatrix)
     z = x .* sqrt.(a.diag)
-    At_mul_B(z, z)
+    transpose(z) * z
 end
 
 function X_invA_Xt(a::PDiagMat, x::StridedMatrix)
     z = x .* reshape(sqrt.(a.inv_diag), 1, dim(a))
-    A_mul_Bt(z, z)
+    z * transpose(z)
 end
 
 function Xt_invA_X(a::PDiagMat, x::StridedMatrix)
     z = x .* sqrt.(a.inv_diag)
-    At_mul_B(z, z)
+    transpose(z) * z
 end

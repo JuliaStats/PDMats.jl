@@ -22,16 +22,16 @@ for T in [Float64,Float32]
   for p1 in pmats, p2 in pmats
       pr = p1 + p2
       @test size(pr) == size(p1)
-      @test full(pr) ≈ full(p1) + full(p2)
+      @test Matrix(pr) ≈ Matrix(p1) + Matrix(p2)
 
       pr = pdadd(p1, p2, convert(T,1.5))
       @test size(pr) == size(p1)
-      @test full(pr) ≈ full(p1) + full(p2) * convert(T,1.5)
+      @test Matrix(pr) ≈ Matrix(p1) + Matrix(p2) * convert(T,1.5)
   end
 
   for p1 in pmats
         pr = p1 + pm4
         @test size(pr) == size(p1)
-        @test full(pr) ≈ full(p1) + pm4
+        @test Matrix(pr) ≈ Matrix(p1) + pm4
   end
 end

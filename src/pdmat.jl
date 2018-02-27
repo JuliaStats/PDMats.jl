@@ -15,7 +15,7 @@ end
 
 PDMat(mat::Matrix) = PDMat(mat, cholfact(mat))
 PDMat(mat::Symmetric) = PDMat(Matrix(mat))
-PDMat(fac::CholType) = PDMat(Matrix(fac),fac)
+PDMat(fac::CholType) = PDMat(Matrix(fac), fac)
 
 ### Conversion
 Base.convert(::Type{PDMat{T}},         a::PDMat) where {T<:Real} = PDMat(convert(AbstractArray{T}, a.mat))
@@ -51,15 +51,13 @@ LinearAlgebra.eigmin(a::PDMat) = eigmin(a.mat)
 ### whiten and unwhiten
 
 function whiten!(r::StridedVecOrMat, a::PDMat, x::StridedVecOrMat)
-    cf = a.chol[:UL]
-    istriu(cf) ? Ac_ldiv_B!(cf, _rcopy!(r, x)) : A_ldiv_B!(cf, _rcopy!(r, x))
-    return r
+    cf = a.chol.UL
+    ldiv!(istriu(cf) ? transpose(cf) : cf, _rcopy!(r, x))
 end
 
 function unwhiten!(r::StridedVecOrMat, a::PDMat, x::StridedVecOrMat)
-    cf = a.chol[:UL]
-    istriu(cf) ? Ac_mul_B!(cf, _rcopy!(r, x)) : A_mul_B!(cf, _rcopy!(r, x))
-    return r
+    cf = a.chol.UL
+    lmul!(istriu(cf) ? transpose(cf) : cf, _rcopy!(r, x))
 end
 
 
@@ -76,28 +74,25 @@ invquad!(r::AbstractArray, a::PDMat, x::StridedMatrix) = colwise_dot!(r, x, a.ma
 
 function X_A_Xt(a::PDMat, x::StridedMatrix)
     z = copy(x)
-    cf = a.chol[:UL]
-    istriu(cf) ? A_mul_Bc!(z, cf) : A_mul_B!(z, cf)
-    A_mul_Bt(z, z)
+    cf = a.chol.UL
+    rmul!(z, istriu(cf) ? transpose(cf) : cf)
+    z * transpose(z)
 end
 
 function Xt_A_X(a::PDMat, x::StridedMatrix)
-    z = copy(x)
-    cf = a.chol[:UL]
-    istriu(cf) ? A_mul_B!(cf, z) : Ac_mul_B!(cf, z)
-    At_mul_B(z, z)
+    cf = a.chol.UL
+    z = lmul!(istriu(cf) ? cf : transpose(cf), copy(x))
+    transpose(z) * z
 end
 
 function X_invA_Xt(a::PDMat, x::StridedMatrix)
-    z = copy(x)
-    cf = a.chol[:UL]
-    istriu(cf) ? A_rdiv_B!(z, cf) : A_rdiv_Bc!(z, cf)
-    A_mul_Bt(z, z)
+    cf = a.chol.UL
+    z = rdiv!(copy(x), istriu(cf) ? cf : transpose(cf))
+    z * transpose(z)
 end
 
 function Xt_invA_X(a::PDMat, x::StridedMatrix)
-    z = copy(x)
-    cf = a.chol[:UL]
-    istriu(cf) ? Ac_ldiv_B!(cf, z) : A_ldiv_B!(cf, z)
-    At_mul_B(z, z)
+    cf = a.chol.UL
+    z = ldiv!(istriu(cf) ? transpose(cf) : cf, copy(x))
+    transpose(z) * z
 end

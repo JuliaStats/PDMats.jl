@@ -4,8 +4,7 @@
 #       the implementation of a subtype of AbstractPDMat
 #
 
-import Compat.Test: @test
-using Compat: view
+using Test: @test
 
 ## driver function
 function test_pdmat(C::AbstractPDMat, Cmat::Matrix;

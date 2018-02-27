@@ -15,8 +15,8 @@ convert(::Type{AbstractArray{T}}, a::ScalMat) where {T<:Real} = convert(ScalMat{
 ### Basics
 
 dim(a::ScalMat) = a.dim
-full(a::ScalMat) = diagm(fill(a.value, a.dim))
-diag(a::ScalMat) = fill(a.value, a.dim)
+Base.Matrix(a::ScalMat) = Matrix(Diagonal(fill(a.value, a.dim)))
+LinearAlgebra.diag(a::ScalMat) = fill(a.value, a.dim)
 
 
 ### Arithmetics
@@ -26,7 +26,7 @@ function pdadd!(r::Matrix, a::Matrix, b::ScalMat, c)
     if r === a
         _adddiag!(r, b.value * c)
     else
-        _adddiag!(copy!(r, a), b.value * c)
+        _adddiag!(copyto!(r, a), b.value * c)
     end
     return r
 end
@@ -39,30 +39,22 @@ end
 
 ### Algebra
 
-inv(a::ScalMat) = ScalMat(a.dim, a.inv_value, a.value)
-logdet(a::ScalMat) = a.dim * log(a.value)
-eigmax(a::ScalMat) = a.value
-eigmin(a::ScalMat) = a.value
+Base.inv(a::ScalMat) = ScalMat(a.dim, a.inv_value, a.value)
+LinearAlgebra.logdet(a::ScalMat) = a.dim * log(a.value)
+LinearAlgebra.eigmax(a::ScalMat) = a.value
+LinearAlgebra.eigmin(a::ScalMat) = a.value
 
 
 ### whiten and unwhiten
 
 function whiten!(r::StridedVecOrMat, a::ScalMat, x::StridedVecOrMat)
     @check_argdims dim(a) == size(x, 1)
-    c = sqrt(a.inv_value)
-    for i = 1:length(x)
-        @inbounds r[i] = x[i] * c
-    end
-    return r
+    mul!(r, x, sqrt(a.inv_value))
 end
 
 function unwhiten!(r::StridedVecOrMat, a::ScalMat, x::StridedVecOrMat)
     @check_argdims dim(a) == size(x, 1)
-    c = sqrt(a.value)
-    for i = 1:length(x)
-        @inbounds r[i] = x[i] * c
-    end
-    return r
+    mul!(r, x, sqrt(a.value))
 end
 
 
@@ -79,20 +71,20 @@ invquad!(r::AbstractArray, a::ScalMat, x::StridedMatrix) = colwise_sumsq!(r, x, 
 
 function X_A_Xt(a::ScalMat, x::StridedMatrix)
     @check_argdims dim(a) == size(x, 2)
-    gemm('N', 'T', a.value, x, x)
+    lmul!(a.value, x * transpose(x))
 end
 
 function Xt_A_X(a::ScalMat, x::StridedMatrix)
     @check_argdims dim(a) == size(x, 1)
-    gemm('T', 'N', a.value, x, x)
+    lmul!(a.value, transpose(x) * x)
 end
 
 function X_invA_Xt(a::ScalMat, x::StridedMatrix)
     @check_argdims dim(a) == size(x, 2)
-    gemm('N', 'T', a.inv_value, x, x)
+    lmul!(a.inv_value, x * transpose(x))
 end
 
 function Xt_invA_X(a::ScalMat, x::StridedMatrix)
     @check_argdims dim(a) == size(x, 1)
-    gemm('T', 'N', a.inv_value, x, x)
+    lmul!(a.inv_value, transpose(x) * x)
 end

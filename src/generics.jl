@@ -40,10 +40,10 @@ unwhiten(a::AbstractPDMat, x::StridedVecOrMat) = unwhiten!(similar(x), a, x)
 
 function quad(a::AbstractPDMat{T}, x::StridedMatrix{S}) where {T<:Real, S<:Real}
     @check_argdims dim(a) == size(x, 1)
-    quad!(Array{promote_type(T, S)}(size(x,2)), a, x)
+    quad!(Array{promote_type(T, S)}(uninitialized, size(x,2)), a, x)
 end
 
 function invquad(a::AbstractPDMat{T}, x::StridedMatrix{S}) where {T<:Real, S<:Real}
     @check_argdims dim(a) == size(x, 1)
-    invquad!(Array{promote_type(T, S)}(size(x,2)), a, x)
+    invquad!(Array{promote_type(T, S)}(uninitialized, size(x,2)), a, x)
 end

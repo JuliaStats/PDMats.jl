@@ -23,7 +23,7 @@ for T in [Float64, Float32]
     X = convert(T,2.0)
 
     call_test_pdmat(PDMat(M), M) #tests of PDMat
-    call_test_pdmat(PDiagMat(V), diagm(V)) #tests of PDiagMat
+    call_test_pdmat(PDiagMat(V), Matrix(Diagonal(V))) #tests of PDiagMat
     call_test_pdmat(ScalMat(3,x), x*Matrix{T}(I, 3, 3)) #tests of ScalMat
 #=
     call_test_pdmat(PDSparseMat(sparse(M)), M)
