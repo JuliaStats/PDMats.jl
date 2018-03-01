@@ -28,16 +28,59 @@ pdadd(a::Matrix{T}, b::AbstractPDMat{S}) where {T<:Real, S<:Real} = pdadd!(simil
 
 
 ## whiten and unwhiten
-
 whiten!(a::AbstractPDMat, x::StridedVecOrMat) = whiten!(x, a, x)
 unwhiten!(a::AbstractPDMat, x::StridedVecOrMat) = unwhiten!(x, a, x)
 
+"""
+    whiten(a::AbstractPDMat, x::StridedVecOrMat)
+    whiten!(a::AbstractPDMat, x::StridedVecOrMat)
+    whiten!(r::StridedVecOrMat, a::AbstractPDMat, x::StridedVecOrMat)
+    unwhiten(a::AbstractPDMat, x::StridedVecOrMat)
+    unwhiten!(a::AbstractPDMat, x::StridedVecOrMat)
+    unwhiten!(r::StridedVecOrMat, a::AbstractPDMat, x::StridedVecOrMat)
+
+Allocating and in-place versions of the `whiten`ing transform (or its inverse) defined by `a` applied to `x`
+
+If the covariance of `x` is `a` then the covariance of the result will be `I`.
+The name `whiten` indicates that this function transforms a correlated multivariate random
+variable to "white noise".
+
+```jldoctest
+julia> using PDMats
+
+julia> X = vcat(ones(4)', (1:4)')
+2×4 Array{Float64,2}:
+ 1.0  1.0  1.0  1.0
+ 1.0  2.0  3.0  4.0
+
+julia> a = PDMat(X * X')
+PDMat{Float64,Array{Float64,2}}(2, [4.0 10.0; 10.0 30.0], Cholesky{Float64,Array{Float64,2}}([2.0 5.0; 10.0 2.23607], 'U', 0))
+
+julia> W = whiten(a, X)
+2×4 Array{Float64,2}:
+  0.5       0.5       0.5       0.5    
+ -0.67082  -0.223607  0.223607  0.67082
+
+julia> W * W'
+2×2 Array{Float64,2}:
+ 1.0  0.0
+ 0.0  1.0
+```
+"""
 whiten(a::AbstractPDMat, x::StridedVecOrMat) = whiten!(similar(x), a, x)
 unwhiten(a::AbstractPDMat, x::StridedVecOrMat) = unwhiten!(similar(x), a, x)
 
 
 ## quad
 
+"""
+    quad(a::AbstractPDMat, x::StridedVecOrMat)
+
+Return the value of the quadratic form defined by `a` applied to `x`
+
+If `x` is a vector the quadratic form is `x' * a * x`.  If `x` is a matrix
+the quadratic form is applied column-wise.
+"""
 function quad(a::AbstractPDMat{T}, x::StridedMatrix{S}) where {T<:Real, S<:Real}
     @check_argdims dim(a) == size(x, 1)
     quad!(Array{promote_type(T, S)}(uninitialized, size(x,2)), a, x)
