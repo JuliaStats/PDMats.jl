@@ -5,7 +5,7 @@ using Compat.Test
 
 for T in [Float64,Float32]
 
-  print_with_color(:blue, "Testing addition with eltype = $T\n")
+  printstyled("Testing addition with eltype = $T\n", color=:blue)
   M = convert(Array{T,2},[4. -2. -1.; -2. 5. -1.; -1. -1. 6.])
   V = convert(Array{T,1},[1.5, 2.5, 2.0])
   X = convert(T,2.0)
@@ -14,9 +14,8 @@ for T in [Float64,Float32]
   pm2 = PDiagMat(V)
   pm3 = ScalMat(3,X)
   pm4 = X*I
-#=
   pm5 = PDSparseMat(sparse(M))
-=#
+
   pmats = Any[pm1, pm2, pm3] #, pm5]
 
   for p1 in pmats, p2 in pmats

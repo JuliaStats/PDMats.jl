@@ -4,7 +4,7 @@ using LinearAlgebra, PDMats
 using Test
 
 # test scalar multiplication 
-print_with_color(:blue, "Testing scalar multiplication\n")
+printstyled("Testing scalar multiplication\n", color=:blue)
 pm1 = PDMat(Matrix(1.0I, 3, 3))
 pm2 = PDiagMat(ones(3))
 pm3 = ScalMat(3,1)

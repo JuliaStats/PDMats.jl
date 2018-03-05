@@ -23,7 +23,7 @@ function test_pdmat(C::AbstractPDMat, Cmat::Matrix;
                     )
 
     d = size(Cmat, 1)
-    verbose >= 1 && print_with_color(:blue, "Testing $(typeof(C)) with dim = $d\n")
+    verbose >= 1 && printstyled("Testing $(typeof(C)) with dim = $d\n", color=:blue)
 
     pdtest_basics(C, Cmat, d, verbose)
     pdtest_cmat(C, Cmat, cmat_eq, verbose)
@@ -52,7 +52,7 @@ end
 
 ## core testing functions
 
-_pdt(vb::Int, s) = (vb >= 2 && print_with_color(:green, "    .. testing $s\n"))
+_pdt(vb::Int, s) = (vb >= 2 && printstyled("    .. testing $s\n", color=:green))
 
 
 function pdtest_basics(C::AbstractPDMat, Cmat::Matrix, d::Int, verbose::Int)
