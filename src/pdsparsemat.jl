@@ -17,12 +17,12 @@ PDSparseMat(mat::SparseMatrixCSC) = PDSparseMat(mat, cholfact(mat))
 PDSparseMat(fac::CholTypeSparse) = PDSparseMat(sparse(fac) |> x -> x*x', fac)
 
 ### Conversion
-convert(::Type{PDSparseMat{T}}, a::PDSparseMat) where {T<:Real} = PDSparseMat(convert(SparseMatrixCSC{T}, a.mat))
+Base.convert(::Type{PDSparseMat{T}}, a::PDSparseMat) where {T<:Real} = PDSparseMat(convert(SparseMatrixCSC{T}, a.mat))
 
 ### Basics
 
 dim(a::PDSparseMat) = a.dim
-Matrix(a::PDSparseMat) = Matrix(a.mat)
+Base.Matrix(a::PDSparseMat) = Matrix(a.mat)
 LinearAlgebra.diag(a::PDSparseMat) = diag(a.mat)
 
 
