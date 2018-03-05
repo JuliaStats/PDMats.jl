@@ -6,7 +6,6 @@ module PDMats
     using IterativeEigensolvers, LinearAlgebra, SparseArrays, SuiteSparse
 
     import Base: +, *, \, /, ==, convert, inv, Matrix
-    import LinearAlgebra: logdet, diag, eigmax, eigmin
 
     export
         # Types
@@ -46,7 +45,7 @@ module PDMats
 
     # source files
 
-    include("chol.jl")   # make Cholesky compatible with both Julia 0.3 & 0.4
+    include("chol.jl")
     include("utils.jl")
 
     include("pdmat.jl")
