@@ -86,6 +86,17 @@ function quad(a::AbstractPDMat{T}, x::StridedMatrix{S}) where {T<:Real, S<:Real}
     quad!(Array{promote_type(T, S)}(uninitialized, size(x,2)), a, x)
 end
 
+
+"""
+    invquad(a::AbstractPDMat, x::StridedVecOrMat)
+
+Return the value of the quadratic form defined by `inv(a)` applied to `x`.
+
+For most `PDMat` types this is done in a way that does not require evaluation of `inv(a)`.
+
+If `x` is a vector the quadratic form is `x' * a * x`.  If `x` is a matrix
+the quadratic form is applied column-wise.
+"""
 function invquad(a::AbstractPDMat{T}, x::StridedMatrix{S}) where {T<:Real, S<:Real}
     @check_argdims dim(a) == size(x, 1)
     invquad!(Array{promote_type(T, S)}(uninitialized, size(x,2)), a, x)
