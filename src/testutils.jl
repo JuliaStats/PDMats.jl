@@ -9,7 +9,7 @@ using Test: @test
 ## driver function
 function test_pdmat(C::AbstractPDMat, Cmat::Matrix;
                     verbose::Int=2,             # the level to display intermediate steps
-                    cmat_eq::Bool=false,        # require Cmat and full(C) to be exactly equal
+                    cmat_eq::Bool=false,        # require Cmat and Matrix(C) to be exactly equal
                     t_diag::Bool=true,          # whether to test diag method
                     t_scale::Bool=true,         # whether to test scaling
                     t_add::Bool=true,           # whether to test pdadd
