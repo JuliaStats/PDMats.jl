@@ -83,23 +83,23 @@ end
 ### tri products
 
 function X_A_Xt(a::PDSparseMat, x::StridedMatrix)
-    z = x*sparse(chol_lower(a.chol))
-    z * z'
+    z = x * sparse(chol_lower(a.chol))
+    z * transpose(z)
 end
 
 
 function Xt_A_X(a::PDSparseMat, x::StridedMatrix)
-    z = x' * sparse(chol_lower(a.chol))
-    z * z'
+    z = transpose(x) * sparse(chol_lower(a.chol))
+    z * transpose(z)
 end
 
 
 function X_invA_Xt(a::PDSparseMat, x::StridedMatrix)
-    z = a.chol \ collect(x')
+    z = a.chol \ collect(transpose(x))
     x * z
 end
 
 function Xt_invA_X(a::PDSparseMat, x::StridedMatrix)
     z = a.chol \ x
-    x' * z
+    transpose(x) * z
 end
