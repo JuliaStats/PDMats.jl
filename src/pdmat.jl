@@ -13,19 +13,19 @@ function PDMat(mat::AbstractMatrix,chol::CholType)
     PDMat{eltype(mat),typeof(mat)}(d, mat, chol)
 end
 
-PDMat(mat::Matrix) = PDMat(mat,cholfact(mat))
-PDMat(mat::Symmetric) = PDMat(full(mat))
-PDMat(fac::CholType) = PDMat(full(fac),fac)
+PDMat(mat::Matrix) = PDMat(mat, cholfact(mat))
+PDMat(mat::Symmetric) = PDMat(Matrix(mat))
+PDMat(fac::CholType) = PDMat(Matrix(fac), fac)
 
 ### Conversion
-convert(::Type{PDMat{T}},         a::PDMat) where {T<:Real} = PDMat(convert(AbstractArray{T}, a.mat))
-convert(::Type{AbstractArray{T}}, a::PDMat) where {T<:Real} = convert(PDMat{T}, a)
+Base.convert(::Type{PDMat{T}},         a::PDMat) where {T<:Real} = PDMat(convert(AbstractArray{T}, a.mat))
+Base.convert(::Type{AbstractArray{T}}, a::PDMat) where {T<:Real} = convert(PDMat{T}, a)
 
 ### Basics
 
 dim(a::PDMat) = a.dim
-full(a::PDMat) = copy(a.mat)
-diag(a::PDMat) = diag(a.mat)
+Base.Matrix(a::PDMat) = copy(a.mat)
+LinearAlgebra.diag(a::PDMat) = diag(a.mat)
 
 
 ### Arithmetics
@@ -42,24 +42,22 @@ end
 
 ### Algebra
 
-inv(a::PDMat) = PDMat(inv(a.chol))
-logdet(a::PDMat) = logdet(a.chol)
-eigmax(a::PDMat) = eigmax(a.mat)
-eigmin(a::PDMat) = eigmin(a.mat)
+Base.inv(a::PDMat) = PDMat(inv(a.chol))
+LinearAlgebra.logdet(a::PDMat) = logdet(a.chol)
+LinearAlgebra.eigmax(a::PDMat) = eigmax(a.mat)
+LinearAlgebra.eigmin(a::PDMat) = eigmin(a.mat)
 
 
 ### whiten and unwhiten
 
 function whiten!(r::StridedVecOrMat, a::PDMat, x::StridedVecOrMat)
-    cf = a.chol[:UL]
-    istriu(cf) ? Ac_ldiv_B!(cf, _rcopy!(r, x)) : A_ldiv_B!(cf, _rcopy!(r, x))
-    return r
+    cf = a.chol.UL
+    ldiv!(istriu(cf) ? transpose(cf) : cf, _rcopy!(r, x))
 end
 
 function unwhiten!(r::StridedVecOrMat, a::PDMat, x::StridedVecOrMat)
-    cf = a.chol[:UL]
-    istriu(cf) ? Ac_mul_B!(cf, _rcopy!(r, x)) : A_mul_B!(cf, _rcopy!(r, x))
-    return r
+    cf = a.chol.UL
+    lmul!(istriu(cf) ? transpose(cf) : cf, _rcopy!(r, x))
 end
 
 
@@ -68,7 +66,18 @@ end
 quad(a::PDMat, x::StridedVector) = dot(x, a * x)
 invquad(a::PDMat, x::StridedVector) = dot(x, a \ x)
 
+"""
+    quad!(r::AbstractArray, a::AbstractPDMat, x::StridedMatrix)
+
+Overwrite `r` with the value of the quadratic form defined by `a` applied columnwise to `x`
+"""
 quad!(r::AbstractArray, a::PDMat, x::StridedMatrix) = colwise_dot!(r, x, a.mat * x)
+
+"""
+    invquad!(r::AbstractArray, a::AbstractPDMat, x::StridedMatrix)
+
+Overwrite `r` with the value of the quadratic form defined by `inv(a)` applied columnwise to `x`
+"""
 invquad!(r::AbstractArray, a::PDMat, x::StridedMatrix) = colwise_dot!(r, x, a.mat \ x)
 
 
@@ -76,28 +85,25 @@ invquad!(r::AbstractArray, a::PDMat, x::StridedMatrix) = colwise_dot!(r, x, a.ma
 
 function X_A_Xt(a::PDMat, x::StridedMatrix)
     z = copy(x)
-    cf = a.chol[:UL]
-    istriu(cf) ? A_mul_Bc!(z, cf) : A_mul_B!(z, cf)
-    A_mul_Bt(z, z)
+    cf = a.chol.UL
+    rmul!(z, istriu(cf) ? transpose(cf) : cf)
+    z * transpose(z)
 end
 
 function Xt_A_X(a::PDMat, x::StridedMatrix)
-    z = copy(x)
-    cf = a.chol[:UL]
-    istriu(cf) ? A_mul_B!(cf, z) : Ac_mul_B!(cf, z)
-    At_mul_B(z, z)
+    cf = a.chol.UL
+    z = lmul!(istriu(cf) ? cf : transpose(cf), copy(x))
+    transpose(z) * z
 end
 
 function X_invA_Xt(a::PDMat, x::StridedMatrix)
-    z = copy(x)
-    cf = a.chol[:UL]
-    istriu(cf) ? A_rdiv_B!(z, cf) : A_rdiv_Bc!(z, cf)
-    A_mul_Bt(z, z)
+    cf = a.chol.UL
+    z = rdiv!(copy(x), istriu(cf) ? cf : transpose(cf))
+    z * transpose(z)
 end
 
 function Xt_invA_X(a::PDMat, x::StridedMatrix)
-    z = copy(x)
-    cf = a.chol[:UL]
-    istriu(cf) ? Ac_ldiv_B!(cf, z) : A_ldiv_B!(cf, z)
-    At_mul_B(z, z)
+    cf = a.chol.UL
+    z = ldiv!(istriu(cf) ? transpose(cf) : cf, copy(x))
+    transpose(z) * z
 end

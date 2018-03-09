@@ -18,15 +18,15 @@ Positive definite matrices are widely used in machine learning and probabilistic
 
 ## Positive definite matrix types
 
-This package defines an abstract type ``AbstractPDMat{T<:Real}`` as the base type for positive definite matrices with different internal representations.
+This package defines an abstract type `AbstractPDMat{T<:Real}` as the base type for positive definite matrices with different internal representations.
 
 Elemenent types are in princple all Real types, but in practice this is limited by the support for floating point types in Base.LinAlg.Cholesky.
-  - ``Float64``     Fully supported from Julia 0.3.
-  - ``Float32``     Fully supported from Julia 0.4.2. Full, diagonal and scale matrix types are supported in Julia 0.3 or higher.
-  - ``Float16``     Promoted to ``Float32`` for full, diagonal and scale matrix. Currently unsupported for sparse matrix.
-  - ``BigFloat``    Supported in Julia 0.4 for full, diagonal and scale matrix. Currently unsupported for sparse matrix.
+  - `Float64`     Fully supported from Julia 0.3.
+  - `Float32`     Fully supported from Julia 0.4.2. Full, diagonal and scale matrix types are supported in Julia 0.3 or higher.
+  - `Float16`     Promoted to `Float32` for full, diagonal and scale matrix. Currently unsupported for sparse matrix.
+  - `BigFloat`    Supported in Julia 0.4 for full, diagonal and scale matrix. Currently unsupported for sparse matrix.
 
-* ``PDMat``: full covariance matrix, defined as
+* `PDMat`: full covariance matrix, defined as
 
 ```julia
 struct PDMat{T<:Real,S<:AbstractMatrix} <: AbstractPDMat{T}
@@ -49,7 +49,7 @@ PDMat(chol)         # with the Cholesky factorization
 ```
 
 
-* ``PDiagMat``: diagonal matrix, defined as
+* `PDiagMat`: diagonal matrix, defined as
 
 ```julia
 struct {T<:Real,V<:AbstractVector} <: AbstractPDMat{T}
@@ -66,7 +66,7 @@ PDiagMat(v)         # with the vector of diagonal elements
 ```
 
 
-* ``ScalMat``: uniform scaling matrix, as ``v * eye(d)``, defined as
+* `ScalMat`: uniform scaling matrix, as `v * eye(d)`, defined as
 
 ```julia
 struct ScalMat{T<:Real} <: AbstractPDMat{T}
@@ -83,7 +83,7 @@ ScalMat(d, v)        # with dimension d and diagonal value v
 ```
 
 
-* ``PDSparseMat``: sparse covariance matrix, defined as
+* `PDSparseMat`: sparse covariance matrix, defined as
 
 ```julia
 struct PDSparseMat{T<:Real,S<:AbstractSparseMatrix} <: AbstractPDMat{T}
@@ -108,7 +108,7 @@ PDSparseMat(chol)         # with the Cholesky factorization
 
 ## Common interface
 
-All subtypes of ``AbstractPDMat`` share the same API, *i.e.* with the same set of methods to operate on their instances. These methods are introduced below, where ``a`` is an instance of a subtype of ``AbstractPDMat`` to represent a positive definite matrix, ``x`` be a column vector or a matrix with ``size(x,1) == dim(a)``, and ``c`` be a positive real value.
+All subtypes of `AbstractPDMat` share the same API, *i.e.* with the same set of methods to operate on their instances. These methods are introduced below, where `a` is an instance of a subtype of `AbstractPDMat` to represent a positive definite matrix, `x` be a column vector or a matrix with `size(x,1) == dim(a)`, and `c` be a positive real value.
 
 ```julia
 
@@ -123,7 +123,7 @@ ndims(a)    # the number of dimensions, which is always 2.
 
 eltype(a)   # the element type
 
-full(a)     # return a copy of the matrix in full form.
+Matrix(a)   # return a copy of the matrix in full form.
 
 diag(a)     # return a vector of diagonal elements.
 
@@ -235,11 +235,11 @@ In some situation, it is useful to define a customized subtype of `AbstractPDMat
 
 dim(a::M)       # return the dimension of `a`
 
-full(a::M)      # return a copy of the matrix in full form, of type
-                # ``Matrix{eltype(M)}``.
+Matrix(a::M)    # return a copy of the matrix in full form, of type
+                # `Matrix{eltype(M)}`.
 
 diag(a::M)      # return the vector of diagonal elements, of type
-                # ``Vector{eltype(M)}``.
+                # `Vector{eltype(M)}`.
 
 pdadd!(m, a, c)     # add `a * c` to a dense matrix `m` of the same size
                     # inplace.

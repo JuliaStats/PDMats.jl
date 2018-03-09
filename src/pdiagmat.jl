@@ -12,17 +12,17 @@ function PDiagMat(v::AbstractVector,inv_v::AbstractVector)
   PDiagMat{eltype(v),typeof(v)}(length(v), v, inv_v)
 end
 
-PDiagMat(v::Vector) = PDiagMat(v, ones(v)./v)
+PDiagMat(v::Vector) = PDiagMat(v, inv.(v))
 
 ### Conversion
-convert(::Type{PDiagMat{T}},      a::PDiagMat) where {T<:Real} = PDiagMat(convert(AbstractArray{T}, a.diag))
-convert(::Type{AbstractArray{T}}, a::PDiagMat) where {T<:Real} = convert(PDiagMat{T}, a)
+Base.convert(::Type{PDiagMat{T}},      a::PDiagMat) where {T<:Real} = PDiagMat(convert(AbstractArray{T}, a.diag))
+Base.convert(::Type{AbstractArray{T}}, a::PDiagMat) where {T<:Real} = convert(PDiagMat{T}, a)
 
 ### Basics
 
 dim(a::PDiagMat) = a.dim
-full(a::PDiagMat) = diagm(a.diag)
-diag(a::PDiagMat) = copy(a.diag)
+Base.Matrix(a::PDiagMat) = Matrix(Diagonal(a.diag))
+LinearAlgebra.diag(a::PDiagMat) = copy(a.diag)
 
 
 ### Arithmetics
@@ -32,7 +32,7 @@ function pdadd!(r::Matrix, a::Matrix, b::PDiagMat, c)
     if r === a
         _adddiag!(r, b.diag, c)
     else
-        _adddiag!(copy!(r, a), b.diag, c)
+        _adddiag!(copyto!(r, a), b.diag, c)
     end
     return r
 end
@@ -44,10 +44,10 @@ end
 
 ### Algebra
 
-inv(a::PDiagMat) = PDiagMat(a.inv_diag, a.diag)
-logdet(a::PDiagMat) = sum(log, a.diag)
-eigmax(a::PDiagMat) = maximum(a.diag)
-eigmin(a::PDiagMat) = minimum(a.diag)
+Base.inv(a::PDiagMat) = PDiagMat(a.inv_diag, a.diag)
+LinearAlgebra.logdet(a::PDiagMat) = sum(log, a.diag)
+LinearAlgebra.eigmax(a::PDiagMat) = maximum(a.diag)
+LinearAlgebra.eigmin(a::PDiagMat) = minimum(a.diag)
 
 
 ### whiten and unwhiten
@@ -84,28 +84,53 @@ unwhiten!(r::StridedMatrix, a::PDiagMat, x::StridedMatrix) =
 quad(a::PDiagMat, x::StridedVector) = wsumsq(a.diag, x)
 invquad(a::PDiagMat, x::StridedVector) = wsumsq(a.inv_diag, x)
 
-quad!(r::AbstractArray, a::PDiagMat, x::StridedMatrix) = At_mul_B!(r, abs2.(x), a.diag)
-invquad!(r::AbstractArray, a::PDiagMat, x::StridedMatrix) = At_mul_B!(r, abs2.(x), a.inv_diag)
+function quad!(r::AbstractArray, a::PDiagMat, x::StridedMatrix)
+    m, n = size(x)
+    ad = a.diag
+    @check_argdims m == length(ad) && length(r) == n
+    @inbounds for j = 1:n
+        s = zero(promote_type(eltype(ad), eltype(x)))
+        for i in 1:m
+            s += ad[i] * abs2(x[i,j])
+        end
+        r[j] = s
+    end
+    r
+end
+
+function invquad!(r::AbstractArray, a::PDiagMat, x::StridedMatrix)
+    m, n = size(x)
+    ainvd = a.inv_diag
+    @check_argdims m == length(ainvd) && length(r) == n
+    @inbounds for j = 1:n
+        s = zero(promote_type(eltype(ainvd), eltype(x)))
+        for i in 1:m
+            s += ainvd[i] * abs2(x[i,j])
+        end
+        r[j] = s
+    end
+    r
+end
 
 
 ### tri products
 
 function X_A_Xt(a::PDiagMat, x::StridedMatrix)
     z = x .* reshape(sqrt.(a.diag), 1, dim(a))
-    A_mul_Bt(z, z)
+    z * transpose(z)
 end
 
 function Xt_A_X(a::PDiagMat, x::StridedMatrix)
     z = x .* sqrt.(a.diag)
-    At_mul_B(z, z)
+    transpose(z) * z
 end
 
 function X_invA_Xt(a::PDiagMat, x::StridedMatrix)
     z = x .* reshape(sqrt.(a.inv_diag), 1, dim(a))
-    A_mul_Bt(z, z)
+    z * transpose(z)
 end
 
 function Xt_invA_X(a::PDiagMat, x::StridedMatrix)
     z = x .* sqrt.(a.inv_diag)
-    At_mul_B(z, z)
+    transpose(z) * z
 end

@@ -17,13 +17,13 @@ PDSparseMat(mat::SparseMatrixCSC) = PDSparseMat(mat, cholfact(mat))
 PDSparseMat(fac::CholTypeSparse) = PDSparseMat(sparse(fac) |> x -> x*x', fac)
 
 ### Conversion
-convert(::Type{PDSparseMat{T}}, a::PDSparseMat) where {T<:Real} = PDSparseMat(convert(SparseMatrixCSC{T}, a.mat))
+Base.convert(::Type{PDSparseMat{T}}, a::PDSparseMat) where {T<:Real} = PDSparseMat(convert(SparseMatrixCSC{T}, a.mat))
 
 ### Basics
 
 dim(a::PDSparseMat) = a.dim
-full(a::PDSparseMat) = full(a.mat)
-diag(a::PDSparseMat) = diag(a.mat)
+Base.Matrix(a::PDSparseMat) = Matrix(a.mat)
+LinearAlgebra.diag(a::PDSparseMat) = diag(a.mat)
 
 
 ### Arithmetics
@@ -41,10 +41,10 @@ end
 
 ### Algebra
 
-inv(a::PDSparseMat{T}) where {T<:Real} = PDMat( a\eye(T,a.dim) )
-logdet(a::PDSparseMat) = logdet(a.chol)
-eigmax(a::PDSparseMat{T}) where {T<:Real} = convert(T,eigs(convert(SparseMatrixCSC{Float64,Int},a.mat), which=:LM, nev=1, ritzvec=false)[1][1]) #to avoid type instability issues in eigs, see e.g., julia issue #13929
-eigmin(a::PDSparseMat{T}) where {T<:Real} = convert(T,eigs(convert(SparseMatrixCSC{Float64,Int},a.mat), which=:SM, nev=1, ritzvec=false)[1][1]) #to avoid type instability issues in eigs, see e.g., julia issue #13929
+Base.inv(a::PDSparseMat{T}) where {T<:Real} = PDMat( a\eye(T,a.dim) )
+LinearAlgebra.logdet(a::PDSparseMat) = logdet(a.chol)
+LinearAlgebra.eigmax(a::PDSparseMat{T}) where {T<:Real} = convert(T,eigs(convert(SparseMatrixCSC{Float64,Int},a.mat), which=:LM, nev=1, ritzvec=false)[1][1]) #to avoid type instability issues in eigs, see e.g., julia issue #13929
+LinearAlgebra.eigmin(a::PDSparseMat{T}) where {T<:Real} = convert(T,eigs(convert(SparseMatrixCSC{Float64,Int},a.mat), which=:SM, nev=1, ritzvec=false)[1][1]) #to avoid type instability issues in eigs, see e.g., julia issue #13929
 
 
 ### whiten and unwhiten
@@ -83,23 +83,23 @@ end
 ### tri products
 
 function X_A_Xt(a::PDSparseMat, x::StridedMatrix)
-    z = x*sparse(chol_lower(a.chol))
-    A_mul_Bt(z, z)
+    z = x * sparse(chol_lower(a.chol))
+    z * transpose(z)
 end
 
 
 function Xt_A_X(a::PDSparseMat, x::StridedMatrix)
-    z = At_mul_B(x, sparse(chol_lower(a.chol)))
-    A_mul_Bt(z, z)
+    z = transpose(x) * sparse(chol_lower(a.chol))
+    z * transpose(z)
 end
 
 
 function X_invA_Xt(a::PDSparseMat, x::StridedMatrix)
-    z = a \ x'
+    z = a.chol \ collect(transpose(x))
     x * z
 end
 
 function Xt_invA_X(a::PDSparseMat, x::StridedMatrix)
-    z = a \ x
-    At_mul_B(x, z)
+    z = a.chol \ x
+    transpose(x) * z
 end

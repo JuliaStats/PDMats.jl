@@ -3,9 +3,9 @@ __precompile__()
 module PDMats
 
     using Compat
+    using IterativeEigensolvers, LinearAlgebra, SparseArrays, SuiteSparse
 
-    import Base: +, *, \, /, ==
-    import Base: full, logdet, inv, diag, diagm, eigmax, eigmin, convert
+    import Base: +, *, \, /, ==, convert, inv, Matrix
 
     export
         # Types
@@ -36,24 +36,24 @@ module PDMats
         Xt_invA_X,
         test_pdmat
 
-    import Base.BLAS: nrm2, axpy!, gemv!, gemm, gemm!, trmv, trmv!, trmm, trmm!
-    import Base.LAPACK: trtrs!
-    import Base.LinAlg: A_ldiv_B!, A_mul_B!, A_mul_Bc!, A_rdiv_B!, A_rdiv_Bc!, Ac_ldiv_B!, Cholesky
-
 
     # The abstract base type
 
     abstract type AbstractPDMat{T<:Real} end
 
+    const HAVE_CHOLMOD = isdefined(SuiteSparse, :CHOLMOD)
+
     # source files
 
-    include("chol.jl")   # make Cholesky compatible with both Julia 0.3 & 0.4
+    include("chol.jl")
     include("utils.jl")
 
     include("pdmat.jl")
-    if isdefined(Base.SparseArrays, :CHOLMOD)
+
+    if HAVE_CHOLMOD
         include("pdsparsemat.jl")
     end
+
     include("pdiagmat.jl")
     include("scalmat.jl")
 
