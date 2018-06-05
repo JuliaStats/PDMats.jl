@@ -13,7 +13,7 @@ function PDSparseMat(mat::AbstractSparseMatrix,chol::CholTypeSparse)
     PDSparseMat{eltype(mat),typeof(mat)}(d, mat, chol)
 end
 
-PDSparseMat(mat::SparseMatrixCSC) = PDSparseMat(mat, cholfact(mat))
+PDSparseMat(mat::SparseMatrixCSC) = PDSparseMat(mat, cholesky(mat))
 PDSparseMat(fac::CholTypeSparse) = PDSparseMat(sparse(fac) |> x -> x*x', fac)
 
 ### Conversion

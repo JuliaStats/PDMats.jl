@@ -222,7 +222,7 @@ end
 
 function pdtest_whiten(C::AbstractPDMat, Cmat::Matrix, verbose::Int)
     Y = chol_lower(Cmat)
-    Q = qr(convert(Array{eltype(C),2},randn(size(Cmat))))[1]
+    Q = qr(convert(Array{eltype(C),2},randn(size(Cmat)))).Q
     Y = Y * Q'                    # generate a matrix Y such that Y * Y' = C
     @test Y * Y' ≈ Cmat
     d = dim(C)
