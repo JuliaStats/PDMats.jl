@@ -13,7 +13,7 @@ function PDMat(mat::AbstractMatrix,chol::CholType)
     PDMat{eltype(mat),typeof(mat)}(d, mat, chol)
 end
 
-PDMat(mat::Matrix) = PDMat(mat, cholfact(mat))
+PDMat(mat::Matrix) = PDMat(mat, cholesky(mat))
 PDMat(mat::Symmetric) = PDMat(Matrix(mat))
 PDMat(fac::CholType) = PDMat(Matrix(fac), fac)
 

@@ -7,13 +7,13 @@ call_test_pdmat(p::AbstractPDMat,m::Matrix) = test_pdmat(p,m,cmat_eq=true,verbos
 for T in [Float64, Float32]
     #test that all external constructors are accessible
     m = Matrix{T}(I, 2, 2)
-    @test PDMat(m, cholfact(m)).mat == PDMat(Symmetric(m)).mat == PDMat(m).mat == PDMat(cholfact(m)).mat
+    @test PDMat(m, cholesky(m)).mat == PDMat(Symmetric(m)).mat == PDMat(m).mat == PDMat(cholesky(m)).mat
     d = ones(T,2)
     @test PDiagMat(d,d).inv_diag == PDiagMat(d).inv_diag
     x = one(T)
     @test ScalMat(2,x,x).inv_value == ScalMat(2,x).inv_value
     s = SparseMatrixCSC{T}(I, 2, 2)
-    @test PDSparseMat(s, cholfact(s)).mat == PDSparseMat(s).mat == PDSparseMat(cholfact(s)).mat
+    @test PDSparseMat(s, cholesky(s)).mat == PDSparseMat(s).mat == PDSparseMat(cholesky(s)).mat
 
     #test the functionality
     M = convert(Array{T,2}, [4. -2. -1.; -2. 5. -1.; -1. -1. 6.])
