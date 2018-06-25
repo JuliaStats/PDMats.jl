@@ -3,7 +3,7 @@ __precompile__()
 module PDMats
 
     using Compat
-    using IterativeEigensolvers, LinearAlgebra, SparseArrays, SuiteSparse
+    using LinearAlgebra, SparseArrays, SuiteSparse
 
     import Base: +, *, \, /, ==, convert, inv, Matrix
 
