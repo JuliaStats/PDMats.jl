@@ -1,2 +1,4 @@
 julia 0.7.0-DEV.5190 # for cholesky function
 Compat 0.61.0
+SuiteSparse
+Arpack

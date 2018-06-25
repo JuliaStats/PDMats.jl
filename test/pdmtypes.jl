@@ -1,5 +1,5 @@
 # test pd matrix types
-using LinearAlgebra, PDMats, SparseArrays
+using LinearAlgebra, PDMats, SparseArrays, SuiteSparse
 using Test
 
 call_test_pdmat(p::AbstractPDMat,m::Matrix) = test_pdmat(p,m,cmat_eq=true,verbose=1)
