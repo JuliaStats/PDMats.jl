@@ -52,7 +52,7 @@ PDMat(chol)         # with the Cholesky factorization
 * `PDiagMat`: diagonal matrix, defined as
 
 ```julia
-struct {T<:Real,V<:AbstractVector} <: AbstractPDMat{T}
+struct PDiagMat{T<:Real,V<:AbstractVector} <: AbstractPDMat{T}
     dim::Int                    # matrix dimension
     diag::V                     # the vector of diagonal elements
     inv_diag::V                 # the element-wise inverse of diag
