@@ -1,9 +1,9 @@
 # Scaling matrix
 
 struct ScalMat{T<:Real} <: AbstractPDMat{T}
-  dim::Int
-  value::T
-  inv_value::T
+    dim::Int
+    value::T
+    inv_value::T
 end
 
 ScalMat(d::Int,v::Real) = ScalMat{typeof(inv(v))}(d, v, inv(v))

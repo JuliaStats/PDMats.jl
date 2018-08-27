@@ -1,15 +1,17 @@
 # positive diagonal matrix
 
 struct PDiagMat{T<:Real,V<:AbstractVector} <: AbstractPDMat{T}
-  dim::Int
-  diag::V
-  inv_diag::V
-  PDiagMat{T,S}(d::Int,v::AbstractVector{T},inv_v::AbstractVector{T}) where {T,S} = new{T,S}(d,v,inv_v)
+    dim::Int
+    diag::V
+    inv_diag::V
+
+    PDiagMat{T,S}(d::Int,v::AbstractVector{T},inv_v::AbstractVector{T}) where {T,S} =
+        new{T,S}(d,v,inv_v)
 end
 
 function PDiagMat(v::AbstractVector,inv_v::AbstractVector)
-  @check_argdims length(v) == length(inv_v)
-  PDiagMat{eltype(v),typeof(v)}(length(v), v, inv_v)
+    @check_argdims length(v) == length(inv_v)
+    PDiagMat{eltype(v),typeof(v)}(length(v), v, inv_v)
 end
 
 PDiagMat(v::Vector) = PDiagMat(v, inv.(v))

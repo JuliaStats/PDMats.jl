@@ -1,10 +1,12 @@
 using Arpack
 # Sparse positive definite matrix together with a Cholesky factorization object
 struct PDSparseMat{T<:Real,S<:AbstractSparseMatrix} <: AbstractPDMat{T}
-  dim::Int
-  mat::S
-  chol::CholTypeSparse
-  PDSparseMat{T,S}(d::Int,m::AbstractSparseMatrix{T},c::CholTypeSparse) where {T,S} = new{T,S}(d,m,c) #add {T} to CholTypeSparse argument once #14076 is implemented
+    dim::Int
+    mat::S
+    chol::CholTypeSparse
+
+    PDSparseMat{T,S}(d::Int,m::AbstractSparseMatrix{T},c::CholTypeSparse) where {T,S} =
+        new{T,S}(d,m,c) #add {T} to CholTypeSparse argument once #14076 is implemented
 end
 
 function PDSparseMat(mat::AbstractSparseMatrix,chol::CholTypeSparse)
