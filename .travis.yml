@@ -13,4 +13,4 @@ notifications:
   email: false
 
 after_success:
-  - julia -e 'cd(Pkg.dir("PDMats")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
+  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
