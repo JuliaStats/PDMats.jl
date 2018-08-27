@@ -1,5 +1,6 @@
-# positive diagonal matrix
-
+"""
+Positive definite diagonal matrix.
+"""
 struct PDiagMat{T<:Real,V<:AbstractVector} <: AbstractPDMat{T}
     dim::Int
     diag::V

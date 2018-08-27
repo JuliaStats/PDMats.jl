@@ -34,8 +34,9 @@ module PDMats
         test_pdmat
 
 
-    # The abstract base type
-
+    """
+    The base type for positive definite matrices.
+    """
     abstract type AbstractPDMat{T<:Real} end
 
     const HAVE_CHOLMOD = isdefined(SuiteSparse, :CHOLMOD)

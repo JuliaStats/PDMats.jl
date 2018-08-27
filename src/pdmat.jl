@@ -1,4 +1,6 @@
-# Full positive definite matrix together with a Cholesky factorization object
+"""
+Full positive definite matrix together with a Cholesky factorization object.
+"""
 struct PDMat{T<:Real,S<:AbstractMatrix} <: AbstractPDMat{T}
     dim::Int
     mat::S

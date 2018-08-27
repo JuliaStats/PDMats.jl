@@ -1,5 +1,8 @@
 using Arpack
-# Sparse positive definite matrix together with a Cholesky factorization object
+
+"""
+Sparse positive definite matrix together with a Cholesky factorization object.
+"""
 struct PDSparseMat{T<:Real,S<:AbstractSparseMatrix} <: AbstractPDMat{T}
     dim::Int
     mat::S
