@@ -55,12 +55,14 @@ LinearAlgebra.eigmin(a::PDMat) = eigmin(a.mat)
 
 function whiten!(r::StridedVecOrMat, a::PDMat, x::StridedVecOrMat)
     cf = a.chol.UL
-    ldiv!(istriu(cf) ? transpose(cf) : cf, _rcopy!(r, x))
+    v = _rcopy!(r, x)
+    istriu(cf) ? ldiv!(transpose(cf), v) : ldiv!(cf, v)
 end
 
 function unwhiten!(r::StridedVecOrMat, a::PDMat, x::StridedVecOrMat)
     cf = a.chol.UL
-    lmul!(istriu(cf) ? transpose(cf) : cf, _rcopy!(r, x))
+    v = _rcopy!(r, x)
+    istriu(cf) ? lmul!(transpose(cf), v) : lmul!(cf, v)
 end
 
 

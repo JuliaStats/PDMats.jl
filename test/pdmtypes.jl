@@ -37,3 +37,10 @@ x = one(Float32); d = 4
 @test convert(AbstractArray{Float64}, ScalMat(d, x)).value == ScalMat(d, convert(Float64, x)).value
 s = SparseMatrixCSC{Float32}(I, 2, 2)
 @test convert(PDSparseMat{Float64}, PDSparseMat(s)).mat == PDSparseMat(convert(SparseMatrixCSC{Float64}, s)).mat
+
+# type stability of whiten! and unwhiten!
+a = PDMat([1 0.5; 0.5 1])
+@inferred whiten!(ones(2), a, ones(2))
+@inferred unwhiten!(ones(2), a, ones(2))
+@inferred whiten(a, ones(2))
+@inferred unwhiten(a, ones(2))
