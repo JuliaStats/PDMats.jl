@@ -6,7 +6,7 @@ struct PDiagMat{T<:Real,V<:AbstractVector} <: AbstractPDMat{T}
     diag::V
     inv_diag::V
 
-    PDiagMat{T,S}(d::Int,v::AbstractVector{T},inv_v::AbstractVector{T}) where {T,S} =
+    PDiagMat{T,S}(d::Int,v::AbstractVector,inv_v::AbstractVector) where {T,S} =
         new{T,S}(d,v,inv_v)
 end
 
