@@ -39,8 +39,8 @@ function pdadd!(r::Matrix, a::Matrix, b::PDMat, c)
 end
 
 *(a::PDMat{S}, c::T) where {S<:Real, T<:Real} = PDMat(a.mat * c)
-*(a::PDMat, x::StridedVecOrMat) = a.mat * x
-\(a::PDMat, x::StridedVecOrMat) = a.chol \ x
+*(a::PDMat, x::AbstractVecOrMat) = a.mat * x
+\(a::PDMat, x::AbstractVecOrMat) = a.chol \ x
 
 
 ### Algebra
@@ -68,8 +68,8 @@ end
 
 ### quadratic forms
 
-quad(a::PDMat, x::StridedVector) = dot(x, a * x)
-invquad(a::PDMat, x::StridedVector) = dot(x, a \ x)
+quad(a::PDMat, x::AbstractVector) = dot(x, a * x)
+invquad(a::PDMat, x::AbstractVector) = dot(x, a \ x)
 
 """
     quad!(r::AbstractArray, a::AbstractPDMat, x::StridedMatrix)
