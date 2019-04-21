@@ -61,8 +61,8 @@ end
 
 ### quadratic forms
 
-quad(a::ScalMat, x::StridedVector) = sum(abs2, x) * a.value
-invquad(a::ScalMat, x::StridedVector) = sum(abs2, x) * a.inv_value
+quad(a::ScalMat, x::AbstractVector) = sum(abs2, x) * a.value
+invquad(a::ScalMat, x::AbstractVector) = sum(abs2, x) * a.inv_value
 
 quad!(r::AbstractArray, a::ScalMat, x::StridedMatrix) = colwise_sumsq!(r, x, a.value)
 invquad!(r::AbstractArray, a::ScalMat, x::StridedMatrix) = colwise_sumsq!(r, x, a.inv_value)
