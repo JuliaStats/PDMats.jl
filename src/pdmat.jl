@@ -68,8 +68,15 @@ end
 
 ### quadratic forms
 
-quad(a::PDMat, x::AbstractVector) = dot(x, a * x)
-invquad(a::PDMat, x::AbstractVector) = dot(x, a \ x)
+function quad(a::PDMat, x::AbstractVector)
+    z = a.chol.U * x
+    dot(z, z)
+end
+
+function invquad(a::PDMat, x::AbstractVector)
+    z = a.chol.L \ x
+    dot(z, z)
+end
 
 """
     quad!(r::AbstractArray, a::AbstractPDMat, x::StridedMatrix)
