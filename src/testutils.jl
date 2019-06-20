@@ -30,7 +30,7 @@ function test_pdmat(C::AbstractPDMat, Cmat::Matrix;
     pdtest_cmat(C, Cmat, cmat_eq, verbose)
 
     t_diag && pdtest_diag(C, Cmat, cmat_eq, verbose)
-    isa(C, Union{PDMat, PDSparseMat}) && t_cholesky && pdtest_cholesky(C, Cmat, cmat_eq, verbose)
+    isa(C, Union{PDMat, PDSparseMat, PDiagMat}) && t_cholesky && pdtest_cholesky(C, Cmat, cmat_eq, verbose)
     t_scale && pdtest_scale(C, Cmat, verbose)
     t_add && pdtest_add(C, Cmat, verbose)
     t_logdet && pdtest_logdet(C, Cmat, verbose)
@@ -98,7 +98,7 @@ function pdtest_diag(C::AbstractPDMat, Cmat::Matrix, cmat_eq::Bool, verbose::Int
     end
 end
 
-function pdtest_cholesky(C::PDMat, Cmat::Matrix, cmat_eq::Bool, verbose::Int)
+function pdtest_cholesky(C::Union{PDMat, PDiagMat}, Cmat::Matrix, cmat_eq::Bool, verbose::Int)
     _pdt(verbose, "cholesky")
     if cmat_eq
         @test cholesky(C).U == cholesky(Cmat).U

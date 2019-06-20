@@ -26,7 +26,7 @@ Base.convert(::Type{AbstractArray{T}}, a::PDiagMat) where {T<:Real} = convert(PD
 dim(a::PDiagMat) = a.dim
 Base.Matrix(a::PDiagMat) = Matrix(Diagonal(a.diag))
 LinearAlgebra.diag(a::PDiagMat) = copy(a.diag)
-
+LinearAlgebra.cholesky(a::PDiagMat) = cholesky(Diagonal(a.diag))
 
 ### Arithmetics
 
