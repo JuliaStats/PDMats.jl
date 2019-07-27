@@ -2,7 +2,7 @@ module PDMats
 
     using LinearAlgebra, SparseArrays, SuiteSparse
 
-    import Base: +, *, \, /, ==, convert, inv, Matrix
+    import Base: +, *, \, /, ==, convert, inv, Matrix, kron
 
     export
         # Types
