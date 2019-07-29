@@ -38,9 +38,15 @@ x = one(Float32); d = 4
 s = SparseMatrixCSC{Float32}(I, 2, 2)
 @test convert(PDSparseMat{Float64}, PDSparseMat(s)).mat == PDSparseMat(convert(SparseMatrixCSC{Float64}, s)).mat
 
+# no-op conversion with correct eltype (#101)
+X = PDMat((Y->Y'Y)(randn(Float32, 4, 4)))
+@test convert(AbstractArray{Float32}, X) === X
+@test convert(AbstractArray{Float64}, X) !== X
+
 # type stability of whiten! and unwhiten!
 a = PDMat([1 0.5; 0.5 1])
 @inferred whiten!(ones(2), a, ones(2))
 @inferred unwhiten!(ones(2), a, ones(2))
 @inferred whiten(a, ones(2))
 @inferred unwhiten(a, ones(2))
+
