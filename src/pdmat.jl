@@ -23,6 +23,7 @@ PDMat(fac::CholType) = PDMat(Matrix(fac), fac)
 ### Conversion
 Base.convert(::Type{PDMat{T}},         a::PDMat) where {T<:Real} = PDMat(convert(AbstractArray{T}, a.mat))
 Base.convert(::Type{AbstractArray{T}}, a::PDMat) where {T<:Real} = convert(PDMat{T}, a)
+Base.convert(::Type{AbstractArray{T}}, a::PDMat{T}) where {T<:Real} = a
 
 ### Basics
 
