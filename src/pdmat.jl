@@ -30,7 +30,7 @@ Base.convert(::Type{AbstractArray{T}}, a::PDMat{T}) where {T<:Real} = a
 dim(a::PDMat) = a.dim
 Base.Matrix(a::PDMat) = copy(a.mat)
 LinearAlgebra.diag(a::PDMat) = diag(a.mat)
-LinearAlgebra.cholesky(a::PDMat) = copy(a.chol)
+LinearAlgebra.cholesky(a::PDMat) = a.chol
 
 
 ### Arithmetics

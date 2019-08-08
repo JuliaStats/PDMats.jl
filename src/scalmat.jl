@@ -18,7 +18,7 @@ Base.convert(::Type{AbstractArray{T}}, a::ScalMat) where {T<:Real} = convert(Sca
 dim(a::ScalMat) = a.dim
 Base.Matrix(a::ScalMat) = Matrix(Diagonal(fill(a.value, a.dim)))
 LinearAlgebra.diag(a::ScalMat) = fill(a.value, a.dim)
-
+LinearAlgebra.cholesky(a::ScalMat) = cholesky(Diagonal(fill(a.value, a.dim)))
 
 ### Arithmetics
 
