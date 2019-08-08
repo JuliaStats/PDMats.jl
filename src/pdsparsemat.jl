@@ -30,7 +30,7 @@ Base.convert(::Type{PDSparseMat{T}}, a::PDSparseMat) where {T<:Real} = PDSparseM
 dim(a::PDSparseMat) = a.dim
 Base.Matrix(a::PDSparseMat) = Matrix(a.mat)
 LinearAlgebra.diag(a::PDSparseMat) = diag(a.mat)
-LinearAlgebra.cholesky(a::PDSparseMat) = copy(a.chol)
+LinearAlgebra.cholesky(a::PDSparseMat) = a.chol
 
 
 ### Arithmetics
