@@ -11,6 +11,7 @@ function test_pdmat(C::AbstractPDMat, Cmat::Matrix;
                     verbose::Int=2,             # the level to display intermediate steps
                     cmat_eq::Bool=false,        # require Cmat and Matrix(C) to be exactly equal
                     t_diag::Bool=true,          # whether to test diag method
+                    t_cholesky::Bool=true,      # whether to test cholesky method
                     t_scale::Bool=true,         # whether to test scaling
                     t_add::Bool=true,           # whether to test pdadd
                     t_logdet::Bool=true,        # whether to test logdet method
@@ -29,6 +30,7 @@ function test_pdmat(C::AbstractPDMat, Cmat::Matrix;
     pdtest_cmat(C, Cmat, cmat_eq, verbose)
 
     t_diag && pdtest_diag(C, Cmat, cmat_eq, verbose)
+    isa(C, Union{PDMat, PDSparseMat, PDiagMat}) && t_cholesky && pdtest_cholesky(C, Cmat, cmat_eq, verbose)
     t_scale && pdtest_scale(C, Cmat, verbose)
     t_add && pdtest_add(C, Cmat, verbose)
     t_logdet && pdtest_logdet(C, Cmat, verbose)
@@ -96,6 +98,23 @@ function pdtest_diag(C::AbstractPDMat, Cmat::Matrix, cmat_eq::Bool, verbose::Int
     end
 end
 
+function pdtest_cholesky(C::Union{PDMat, PDiagMat}, Cmat::Matrix, cmat_eq::Bool, verbose::Int)
+    _pdt(verbose, "cholesky")
+    if cmat_eq
+        @test cholesky(C).U == cholesky(Cmat).U
+    else
+        @test cholesky(C).U ≈ cholesky(Cmat).U
+    end
+end
+
+function pdtest_cholesky(C::PDSparseMat, Cmat::Matrix, cmat_eq::Bool, verbose::Int)
+    _pdt(verbose, "cholesky")
+    # We special case PDSparseMat because we can't perform equality checks on
+    # `SuiteSparse.CHOLMOD.Factor`s and `SuiteSparse.CHOLMOD.FactorComponent`s
+    @test diag(cholesky(C)) ≈ diag(cholesky(Cmat).U)
+    # NOTE: `==` also doesn't work because `diag(cholesky(C))` will return `Vector{Float64}`
+    # even if the inputs are `Float32`s.
+end
 
 function pdtest_scale(C::AbstractPDMat, Cmat::Matrix, verbose::Int)
     _pdt(verbose, "scale")
