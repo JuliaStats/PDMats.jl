@@ -1,6 +1,6 @@
 name = "PDMats"
 uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
-version = "0.9.8"
+version = "0.9.9"
 
 [deps]
 Arpack = "7d9fca2a-8960-54d3-9f78-7d1dccf2cb97"
@@ -11,4 +11,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 Arpack = ">=0.2"
-julia = "0.7, 1.0"
+julia = "0.7, 1"
