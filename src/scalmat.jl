@@ -19,6 +19,8 @@ dim(a::ScalMat) = a.dim
 Base.Matrix(a::ScalMat) = Matrix(Diagonal(fill(a.value, a.dim)))
 LinearAlgebra.diag(a::ScalMat) = fill(a.value, a.dim)
 LinearAlgebra.cholesky(a::ScalMat) = cholesky(Diagonal(fill(a.value, a.dim)))
+Base.getindex(a::ScalMat{T},i::Integer) where {T} = i%a.dim == (i÷a.dim+1) ? a.value : zero(T)
+Base.getindex(a::ScalMat{T},i::Integer,j::Integer) where {T} = i == j ? a.value : zero(T)
 
 ### Arithmetics
 

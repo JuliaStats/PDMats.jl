@@ -31,7 +31,8 @@ dim(a::PDSparseMat) = a.dim
 Base.Matrix(a::PDSparseMat) = Matrix(a.mat)
 LinearAlgebra.diag(a::PDSparseMat) = diag(a.mat)
 LinearAlgebra.cholesky(a::PDSparseMat) = a.chol
-
+Base.getindex(a::PDSparseMat,i::Integer) = getindex(a.mat,i)
+Base.getindex(a::PDSparseMat,i::Integer,j::Integer) = getindex(a.mat,i,j)
 
 ### Arithmetics
 
