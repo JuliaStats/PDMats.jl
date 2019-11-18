@@ -25,6 +25,7 @@ pdadd(a::Matrix{T}, b::AbstractPDMat{S}) where {T<:Real, S<:Real} = pdadd!(simil
 *(a::AbstractPDMat, c::T) where {T<:Real} = a * c
 *(c::T, a::AbstractPDMat) where {T<:Real} = a * c
 /(a::AbstractPDMat, c::T) where {T<:Real} = a * inv(c)
+Base.kron(A::AbstractPDMat, B::AbstractPDMat) = PDMat(kron(Matrix(A), Matrix(B)))
 
 
 ## whiten and unwhiten
@@ -58,7 +59,7 @@ PDMat{Float64,Array{Float64,2}}(2, [4.0 10.0; 10.0 30.0], Cholesky{Float64,Array
 
 julia> W = whiten(a, X)
 2×4 Array{Float64,2}:
-  0.5       0.5       0.5       0.5    
+  0.5       0.5       0.5       0.5
  -0.67082  -0.223607  0.223607  0.67082
 
 julia> W * W'

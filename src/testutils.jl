@@ -6,6 +6,8 @@
 
 using Test: @test
 
+const PDMatType = HAVE_CHOLMOD ? Union{PDMat, PDSparseMat, PDiagMat} : Union{PDMat, PDiagMat}
+
 ## driver function
 function test_pdmat(C::AbstractPDMat, Cmat::Matrix;
                     verbose::Int=2,             # the level to display intermediate steps
@@ -30,7 +32,7 @@ function test_pdmat(C::AbstractPDMat, Cmat::Matrix;
     pdtest_cmat(C, Cmat, cmat_eq, verbose)
 
     t_diag && pdtest_diag(C, Cmat, cmat_eq, verbose)
-    isa(C, Union{PDMat, PDSparseMat, PDiagMat}) && t_cholesky && pdtest_cholesky(C, Cmat, cmat_eq, verbose)
+    isa(C, PDMatType) && t_cholesky && pdtest_cholesky(C, Cmat, cmat_eq, verbose)
     t_scale && pdtest_scale(C, Cmat, verbose)
     t_add && pdtest_add(C, Cmat, verbose)
     t_logdet && pdtest_logdet(C, Cmat, verbose)
@@ -107,13 +109,15 @@ function pdtest_cholesky(C::Union{PDMat, PDiagMat}, Cmat::Matrix, cmat_eq::Bool,
     end
 end
 
-function pdtest_cholesky(C::PDSparseMat, Cmat::Matrix, cmat_eq::Bool, verbose::Int)
-    _pdt(verbose, "cholesky")
-    # We special case PDSparseMat because we can't perform equality checks on
-    # `SuiteSparse.CHOLMOD.Factor`s and `SuiteSparse.CHOLMOD.FactorComponent`s
-    @test diag(cholesky(C)) ≈ diag(cholesky(Cmat).U)
-    # NOTE: `==` also doesn't work because `diag(cholesky(C))` will return `Vector{Float64}`
-    # even if the inputs are `Float32`s.
+if HAVE_CHOLMOD
+    function pdtest_cholesky(C::PDSparseMat, Cmat::Matrix, cmat_eq::Bool, verbose::Int)
+        _pdt(verbose, "cholesky")
+        # We special case PDSparseMat because we can't perform equality checks on
+        # `SuiteSparse.CHOLMOD.Factor`s and `SuiteSparse.CHOLMOD.FactorComponent`s
+        @test diag(cholesky(C)) ≈ diag(cholesky(Cmat).U)
+        # NOTE: `==` also doesn't work because `diag(cholesky(C))` will return `Vector{Float64}`
+        # even if the inputs are `Float32`s.
+    end
 end
 
 function pdtest_scale(C::AbstractPDMat, Cmat::Matrix, verbose::Int)
