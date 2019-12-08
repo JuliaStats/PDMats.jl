@@ -56,15 +56,15 @@ Base.kron(A::PDMat, B::PDMat) = PDMat(kron(A.mat, B.mat), Cholesky(kron(A.chol.U
 ### whiten and unwhiten
 
 function whiten!(r::StridedVecOrMat, a::PDMat, x::StridedVecOrMat)
-    cf = a.chol.UL
+    cf = a.chol.U
     v = _rcopy!(r, x)
-    istriu(cf) ? ldiv!(transpose(cf), v) : ldiv!(cf, v)
+    ldiv!(transpose(cf), v)
 end
 
 function unwhiten!(r::StridedVecOrMat, a::PDMat, x::StridedVecOrMat)
-    cf = a.chol.UL
+    cf = a.chol.U
     v = _rcopy!(r, x)
-    istriu(cf) ? lmul!(transpose(cf), v) : lmul!(cf, v)
+    lmul!(transpose(cf), v)
 end
 
 
@@ -91,26 +91,25 @@ invquad!(r::AbstractArray, a::PDMat, x::StridedMatrix) = colwise_dot!(r, x, a.ma
 ### tri products
 
 function X_A_Xt(a::PDMat, x::StridedMatrix)
-    z = copy(x)
-    cf = a.chol.UL
-    rmul!(z, istriu(cf) ? transpose(cf) : cf)
-    z * transpose(z)
+    cf = a.chol.U
+    z = rmul!(copy(x), transpose(cf))
+    return z * transpose(z)
 end
 
 function Xt_A_X(a::PDMat, x::StridedMatrix)
-    cf = a.chol.UL
-    z = lmul!(istriu(cf) ? cf : transpose(cf), copy(x))
-    transpose(z) * z
+    cf = a.chol.U
+    z = lmul!(cf, copy(x))
+    return transpose(z) * z
 end
 
 function X_invA_Xt(a::PDMat, x::StridedMatrix)
-    cf = a.chol.UL
-    z = rdiv!(copy(x), istriu(cf) ? cf : transpose(cf))
-    z * transpose(z)
+    cf = a.chol.U
+    z = rdiv!(copy(x), cf)
+    return z * transpose(z)
 end
 
 function Xt_invA_X(a::PDMat, x::StridedMatrix)
-    cf = a.chol.UL
-    z = ldiv!(istriu(cf) ? transpose(cf) : cf, copy(x))
-    transpose(z) * z
+    cf = a.chol.U
+    z = ldiv!(transpose(cf), copy(x))
+    return transpose(z) * z
 end
