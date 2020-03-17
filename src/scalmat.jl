@@ -40,9 +40,9 @@ end
 
 *(a::ScalMat, c::T) where {T<:Real} = ScalMat(a.dim, a.value * c)
 /(a::ScalMat{T}, c::T) where {T<:Real} = ScalMat(a.dim, a.value / c)
-*(a::ScalMat, x::StridedVecOrMat) = a.value * x
-\(a::ScalMat, x::StridedVecOrMat) = a.inv_value * x
-/(x::StridedVecOrMat, a::ScalMat) = a.inv_value * x
+*(a::ScalMat, x::AbstractVecOrMat) = a.value * x
+\(a::ScalMat, x::AbstractVecOrMat) = a.inv_value * x
+/(x::AbstractVecOrMat, a::ScalMat) = a.inv_value * x
 Base.kron(A::ScalMat, B::ScalMat) = ScalMat( dim(A) * dim(B), A.value * B.value )
 
 ### Algebra
