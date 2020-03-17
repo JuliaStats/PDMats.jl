@@ -49,7 +49,7 @@ end
 *(a::PDMat, x::AbstractVector{T}) where {T} = a.mat * x
 *(a::PDMat, x::AbstractMatrix{T}) where {T} = a.mat * x
 \(a::PDMat, x::AbstractVecOrMat) = a.chol \ x
-
+/(x::AbstractVecOrMat, a::PDMat) = x / a.chol
 
 ### Algebra
 

@@ -49,6 +49,8 @@ end
 *(a::PDiagMat, c::T) where {T<:Real} = PDiagMat(a.diag * c)
 *(a::PDiagMat, x::StridedVecOrMat) = a.diag .* x
 \(a::PDiagMat, x::StridedVecOrMat) = a.inv_diag .* x
+/(x::StridedVecOrMat, a::PDiagMat) = a.inv_diag .* x
+
 Base.kron(A::PDiagMat, B::PDiagMat) = PDiagMat( vcat([A.diag[i] * B.diag for i in 1:dim(A)]...) )
 
 ### Algebra
