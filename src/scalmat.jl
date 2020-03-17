@@ -22,9 +22,9 @@ LinearAlgebra.cholesky(a::ScalMat) = cholesky(Diagonal(fill(a.value, a.dim)))
 
 ### Inheriting from AbstractMatrix
 
-Base.size(a::ScalMat) = (a.dim,a.dim)
-Base.getindex(a::ScalMat{T},i::Integer) where {T} = i%a.dim == (i÷a.dim+1) ? a.value : zero(T)
-Base.getindex(a::ScalMat{T},i::Integer,j::Integer) where {T} = i == j ? a.value : zero(T)
+Base.size(a::ScalMat) = (a.dim, a.dim)
+Base.getindex(a::ScalMat{T}, i::Integer) where {T} = i%a.dim == (i ÷ a.dim + 1) ? a.value : zero(T)
+Base.getindex(a::ScalMat{T}, i::Integer, j::Integer) where {T} = i == j ? a.value : zero(T)
 
 ### Arithmetics
 

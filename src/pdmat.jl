@@ -35,8 +35,8 @@ LinearAlgebra.cholesky(a::PDMat) = a.chol
 ### Inheriting from AbstractMatrix
 
 Base.size(a::PDMat) = size(a.mat)
-Base.getindex(a::PDMat,i::Int) = getindex(a.mat,i)
-Base.getindex(a::PDMat,i::Int,j::Int) = getindex(a.mat,i,j)
+Base.getindex(a::PDMat, i::Int) = getindex(a.mat, i)
+Base.getindex(a::PDMat, I::Vararg{Int, N}) where {N} = getindex(a.mat, I...)
 
 ### Arithmetics
 
