@@ -47,7 +47,8 @@ function pdadd!(r::Matrix, a::Matrix, b::PDiagMat, c)
 end
 
 *(a::PDiagMat, c::T) where {T<:Real} = PDiagMat(a.diag * c)
-*(a::PDiagMat, x::AbstractVecOrMat) = a.diag .* x
+*(a::PDiagMat, x::AbstractVector) = a.diag .* x
+*(a::PDiagMat, x::AbstractMatrix) = a.diag .* x
 \(a::PDiagMat, x::AbstractVecOrMat) = a.inv_diag .* x
 /(x::AbstractVecOrMat, a::PDiagMat) = a.inv_diag .* x
 Base.kron(A::PDiagMat, B::PDiagMat) = PDiagMat( vcat([A.diag[i] * B.diag for i in 1:dim(A)]...) )
