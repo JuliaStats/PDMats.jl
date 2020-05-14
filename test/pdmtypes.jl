@@ -2,8 +2,6 @@
 using LinearAlgebra, PDMats, SparseArrays, SuiteSparse
 using Test
 
-call_test_pdmat(p::AbstractPDMat,m::Matrix) = test_pdmat(p,m,cmat_eq=true,verbose=1)
-
 for T in [Float64, Float32]
     #test that all external constructors are accessible
     m = Matrix{T}(I, 2, 2)
@@ -20,10 +18,10 @@ for T in [Float64, Float32]
     V = convert(Array{T,1}, [1.5, 2.5, 2.0])
     X = convert(T,2.0)
 
-    call_test_pdmat(PDMat(M), M) #tests of PDMat
-    call_test_pdmat(PDiagMat(V), Matrix(Diagonal(V))) #tests of PDiagMat
-    call_test_pdmat(ScalMat(3,x), x*Matrix{T}(I, 3, 3)) #tests of ScalMat
-    call_test_pdmat(PDSparseMat(sparse(M)), M)
+    test_pdmat(PDMat(M), M,                        cmat_eq=true, verbose=1) #tests of PDMat
+    test_pdmat(PDiagMat(V), Matrix(Diagonal(V)),   cmat_eq=true, verbose=1) #tests of PDiagMat
+    test_pdmat(ScalMat(3,x), x*Matrix{T}(I, 3, 3), cmat_eq=true, verbose=1) #tests of ScalMat
+    test_pdmat(PDSparseMat(sparse(M)), M,          cmat_eq=true, verbose=1, t_eig=false)
 end
 
 m = Matrix{Float32}(I, 2, 2)
