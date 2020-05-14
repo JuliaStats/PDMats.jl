@@ -1,3 +1,4 @@
+include("testutils.jl")
 tests = ["pdmtypes", "addition", "generics", "kron"]
 println("Running tests ...")
 
