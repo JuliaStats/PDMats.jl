@@ -28,6 +28,12 @@ Base.Matrix(a::PDiagMat) = Matrix(Diagonal(a.diag))
 LinearAlgebra.diag(a::PDiagMat) = copy(a.diag)
 LinearAlgebra.cholesky(a::PDiagMat) = cholesky(Diagonal(a.diag))
 
+### Inheriting from AbstractMatrix
+
+Base.size(a::PDiagMat) = (a.dim, a.dim)
+Base.getindex(a::PDiagMat{T},i::Integer) where {T} = i % a.dim == (i ÷ a.dim + 1) ? a.diag[i % a.dim] : zero(T)
+Base.getindex(a::PDiagMat{T},i::Integer,j::Integer) where {T} = i == j ? a.diag[i] : zero(T)
+
 ### Arithmetics
 
 function pdadd!(r::Matrix, a::Matrix, b::PDiagMat, c)
@@ -41,8 +47,10 @@ function pdadd!(r::Matrix, a::Matrix, b::PDiagMat, c)
 end
 
 *(a::PDiagMat, c::T) where {T<:Real} = PDiagMat(a.diag * c)
-*(a::PDiagMat, x::AbstractVecOrMat) = a.diag .* x
+*(a::PDiagMat, x::AbstractVector) = a.diag .* x
+*(a::PDiagMat, x::AbstractMatrix) = a.diag .* x
 \(a::PDiagMat, x::AbstractVecOrMat) = a.inv_diag .* x
+/(x::AbstractVecOrMat, a::PDiagMat) = a.inv_diag .* x
 Base.kron(A::PDiagMat, B::PDiagMat) = PDiagMat( vcat([A.diag[i] * B.diag for i in 1:dim(A)]...) )
 
 ### Algebra

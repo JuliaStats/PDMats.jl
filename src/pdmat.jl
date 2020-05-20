@@ -32,6 +32,11 @@ Base.Matrix(a::PDMat) = copy(a.mat)
 LinearAlgebra.diag(a::PDMat) = diag(a.mat)
 LinearAlgebra.cholesky(a::PDMat) = a.chol
 
+### Inheriting from AbstractMatrix
+
+Base.size(a::PDMat) = size(a.mat)
+Base.getindex(a::PDMat, i::Int) = getindex(a.mat, i)
+Base.getindex(a::PDMat, I::Vararg{Int, N}) where {N} = getindex(a.mat, I...)
 
 ### Arithmetics
 
@@ -41,9 +46,10 @@ function pdadd!(r::Matrix, a::Matrix, b::PDMat, c)
 end
 
 *(a::PDMat{S}, c::T) where {S<:Real, T<:Real} = PDMat(a.mat * c)
-*(a::PDMat, x::AbstractVecOrMat) = a.mat * x
+*(a::PDMat, x::AbstractVector{T}) where {T} = a.mat * x
+*(a::PDMat, x::AbstractMatrix{T}) where {T} = a.mat * x
 \(a::PDMat, x::AbstractVecOrMat) = a.chol \ x
-
+/(x::AbstractVecOrMat, a::PDMat) = x / a.chol
 
 ### Algebra
 

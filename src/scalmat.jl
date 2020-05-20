@@ -20,6 +20,12 @@ Base.Matrix(a::ScalMat) = Matrix(Diagonal(fill(a.value, a.dim)))
 LinearAlgebra.diag(a::ScalMat) = fill(a.value, a.dim)
 LinearAlgebra.cholesky(a::ScalMat) = cholesky(Diagonal(fill(a.value, a.dim)))
 
+### Inheriting from AbstractMatrix
+
+Base.size(a::ScalMat) = (a.dim, a.dim)
+Base.getindex(a::ScalMat{T}, i::Integer) where {T} = i%a.dim == (i ÷ a.dim + 1) ? a.value : zero(T)
+Base.getindex(a::ScalMat{T}, i::Integer, j::Integer) where {T} = i == j ? a.value : zero(T)
+
 ### Arithmetics
 
 function pdadd!(r::Matrix, a::Matrix, b::ScalMat, c)
@@ -34,8 +40,10 @@ end
 
 *(a::ScalMat, c::T) where {T<:Real} = ScalMat(a.dim, a.value * c)
 /(a::ScalMat{T}, c::T) where {T<:Real} = ScalMat(a.dim, a.value / c)
-*(a::ScalMat, x::AbstractVecOrMat) = a.value * x
+*(a::ScalMat, x::AbstractVector) = a.value * x
+*(a::ScalMat, x::AbstractMatrix) = a.value * x
 \(a::ScalMat, x::AbstractVecOrMat) = a.inv_value * x
+/(x::AbstractVecOrMat, a::ScalMat) = a.inv_value * x
 Base.kron(A::ScalMat, B::ScalMat) = ScalMat( dim(A) * dim(B), A.value * B.value )
 
 ### Algebra
