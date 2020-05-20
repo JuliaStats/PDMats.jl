@@ -58,8 +58,6 @@ module PDMats
     include("generics.jl")
     include("addition.jl")
 
-    include("testutils.jl")
-
     include("deprecates.jl")
 
 end # module

@@ -4,8 +4,9 @@
 #       the implementation of a subtype of AbstractPDMat
 #
 
-using Test: @test
+using PDMats, SuiteSparse, Test
 
+const HAVE_CHOLMOD = isdefined(SuiteSparse, :CHOLMOD)
 const PDMatType = HAVE_CHOLMOD ? Union{PDMat, PDSparseMat, PDiagMat} : Union{PDMat, PDiagMat}
 
 ## driver function
@@ -244,7 +245,7 @@ end
 
 
 function pdtest_whiten(C::AbstractPDMat, Cmat::Matrix, verbose::Int)
-    Y = chol_lower(Cmat)
+    Y = PDMats.chol_lower(Cmat)
     Q = qr(convert(Array{eltype(C),2},randn(size(Cmat)))).Q
     Y = Y * Q'                    # generate a matrix Y such that Y * Y' = C
     @test Y * Y' ≈ Cmat

@@ -1,5 +1,3 @@
-using Arpack
-
 """
 Sparse positive definite matrix together with a Cholesky factorization object.
 """
@@ -55,9 +53,6 @@ end
 
 Base.inv(a::PDSparseMat{T}) where {T<:Real} = PDMat( a\eye(T,a.dim) )
 LinearAlgebra.logdet(a::PDSparseMat) = logdet(a.chol)
-LinearAlgebra.eigmax(a::PDSparseMat{T}) where {T<:Real} = convert(T,eigs(convert(SparseMatrixCSC{Float64,Int},a.mat), which=:LM, nev=1, ritzvec=false)[1][1]) #to avoid type instability issues in eigs, see e.g., julia issue #13929
-LinearAlgebra.eigmin(a::PDSparseMat{T}) where {T<:Real} = convert(T,eigs(convert(SparseMatrixCSC{Float64,Int},a.mat), which=:SM, nev=1, ritzvec=false)[1][1]) #to avoid type instability issues in eigs, see e.g., julia issue #13929
-
 
 ### whiten and unwhiten
 
