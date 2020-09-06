@@ -15,7 +15,7 @@ function PDiagMat(v::AbstractVector,inv_v::AbstractVector)
     PDiagMat{eltype(v),typeof(v)}(length(v), v, inv_v)
 end
 
-PDiagMat(v::Vector) = PDiagMat(v, inv.(v))
+PDiagMat(v::AbstractVector) = PDiagMat(v, inv.(v))
 
 ### Conversion
 Base.convert(::Type{PDiagMat{T}},      a::PDiagMat) where {T<:Real} = PDiagMat(convert(AbstractArray{T}, a.diag))
