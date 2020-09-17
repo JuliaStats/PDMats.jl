@@ -9,11 +9,11 @@ struct PDMat{T<:Real,S<:AbstractMatrix} <: AbstractPDMat{T}
     PDMat{T,S}(d::Int,m::AbstractMatrix{T},c::CholType{T,S}) where {T,S} = new{T,S}(d,m,c)
 end
 
-function PDMat(mat::AbstractMatrix,chol::CholType)
+function PDMat(mat::AbstractMatrix,chol::CholType{T,S}) where {T,S}
     d = size(mat, 1)
     size(chol, 1) == d ||
         throw(DimensionMismatch("Dimensions of mat and chol are inconsistent."))
-    PDMat{eltype(mat),typeof(mat)}(d, mat, chol)
+    PDMat{T,S}(d, convert(S, mat), chol)
 end
 
 PDMat(mat::Matrix) = PDMat(mat, cholesky(mat))
