@@ -48,3 +48,5 @@ a = PDMat([1 0.5; 0.5 1])
 @inferred whiten(a, ones(2))
 @inferred unwhiten(a, ones(2))
 
+# convert Matrix type to the same Cholesky type (#117)
+@test PDMat([1 0; 0 1]) == [1.0 0.0; 0.0 1.0]
