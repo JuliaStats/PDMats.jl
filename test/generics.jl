@@ -22,3 +22,8 @@ for i in 1:length(pmats)
     @test Matrix(3 * pmats[i])   == Matrix(pmatsa[i])
     @test Matrix(pmats[i] * 3)   == Matrix(pmatsa[i])
 end
+
+# issue #123
+@test isposdef(PDMat([1.0 0.0; 0.0 1.0]))
+@test isposdef(PDiagMat([1.0, 1.0]))
+@test isposdef(ScalMat(2, 3.0))
