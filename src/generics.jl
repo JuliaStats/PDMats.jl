@@ -24,6 +24,9 @@ pdadd(a::Matrix{T}, b::AbstractPDMat{S}) where {T<:Real, S<:Real} = pdadd!(simil
 /(a::AbstractPDMat, c::T) where {T<:Real} = a * inv(c)
 Base.kron(A::AbstractPDMat, B::AbstractPDMat) = PDMat(kron(Matrix(A), Matrix(B)))
 
+# LinearAlgebra
+LinearAlgebra.isposdef(::AbstractPDMat) = true
+LinearAlgebra.ishermitian(::AbstractPDMat) = true
 
 ## whiten and unwhiten
 whiten!(a::AbstractPDMat, x::StridedVecOrMat) = whiten!(x, a, x)
