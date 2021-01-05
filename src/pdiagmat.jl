@@ -31,7 +31,10 @@ LinearAlgebra.cholesky(a::PDiagMat) = cholesky(Diagonal(a.diag))
 ### Inheriting from AbstractMatrix
 
 Base.size(a::PDiagMat) = (a.dim, a.dim)
-Base.getindex(a::PDiagMat{T},i::Integer) where {T} = i % a.dim == (i ÷ a.dim + 1) ? a.diag[i % a.dim] : zero(T)
+function Base.getindex(a::PDiagMat, i::Integer)
+    ncol, nrow = fldmod1(i, a.dim)
+    ncol == nrow ? a.diag[nrow] : zero(eltype(a))
+end
 Base.getindex(a::PDiagMat{T},i::Integer,j::Integer) where {T} = i == j ? a.diag[i] : zero(T)
 
 ### Arithmetics
