@@ -22,7 +22,6 @@ LinearAlgebra.cholesky(a::ScalMat) = cholesky(Diagonal(fill(a.value, a.dim)))
 
 ### Inheriting from AbstractMatrix
 
-Base.size(a::ScalMat) = (a.dim, a.dim)
 function Base.getindex(a::ScalMat, i::Integer)
     ncol, nrow = fldmod1(i, a.dim)
     ncol == nrow ? a.value : zero(eltype(a))
