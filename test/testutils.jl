@@ -78,7 +78,11 @@ function pdtest_basics(C::AbstractPDMat, Cmat::Matrix, d::Int, verbose::Int)
 
     _pdt(verbose, "eltype")
     @test eltype(C) == eltype(Cmat)
-#    @test eltype(typeof(C)) == eltype(typeof(Cmat))
+    #    @test eltype(typeof(C)) == eltype(typeof(Cmat))
+
+    _pdt(verbose, "index")
+    @test all(C[i] == Cmat[i] for i in 1:(d^2))
+    @test all(C[i, j] == Cmat[i, j] for j in 1:d, i in 1:d)
 end
 
 
@@ -180,9 +184,15 @@ function pdtest_mul(C::AbstractPDMat, Cmat::Matrix, X::Matrix, verbose::Int)
     _pdt(verbose, "multiply")
     @test C * X ≈ Cmat * X
 
+    y = similar(C * X, size(C, 1))
+    ymat = similar(Cmat * X, size(Cmat, 1))
     for i = 1:size(X,2)
         xi = vec(copy(X[:,i]))
         @test C * xi ≈ Cmat * xi
+
+        mul!(y, C, xi)
+        mul!(ymat, Cmat, xi)
+        @test y ≈ ymat
     end
 end
 
