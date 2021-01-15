@@ -7,7 +7,7 @@ for T in [Float64,Float32]
   printstyled("Testing addition with eltype = $T\n", color=:blue)
   M = convert(Array{T,2},[4. -2. -1.; -2. 5. -1.; -1. -1. 6.])
   V = convert(Array{T,1},[1.5, 2.5, 2.0])
-  X = convert(T,2.0)
+  local X = convert(T,2.0)
 
   pm1 = PDMat(M)
   pm2 = PDiagMat(V)
