@@ -52,7 +52,8 @@ end
 *(a::PDiagMat, x::AbstractVector) = a.diag .* x
 *(a::PDiagMat, x::AbstractMatrix) = a.diag .* x
 \(a::PDiagMat, x::AbstractVecOrMat) = a.inv_diag .* x
-/(x::AbstractVecOrMat, a::PDiagMat) = a.inv_diag .* x
+/(x::AbstractVector, a::PDiagMat) = a.inv_diag .* x
+/(x::AbstractMatrix, a::PDiagMat) = transpose(a.inv_diag) .* x
 Base.kron(A::PDiagMat, B::PDiagMat) = PDiagMat( vcat([A.diag[i] * B.diag for i in 1:dim(A)]...) )
 
 ### Algebra
