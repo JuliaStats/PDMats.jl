@@ -16,8 +16,7 @@ function PDMat(mat::AbstractMatrix,chol::CholType{T,S}) where {T,S}
     PDMat{T,S}(d, convert(S, mat), chol)
 end
 
-PDMat(mat::Matrix) = PDMat(mat, cholesky(mat))
-PDMat(mat::Symmetric) = PDMat(Matrix(mat))
+PDMat(mat::AbstractMatrix) = PDMat(mat, cholesky(mat))
 PDMat(fac::CholType) = PDMat(Matrix(fac), fac)
 
 ### Conversion
