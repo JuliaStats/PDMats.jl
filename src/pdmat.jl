@@ -61,22 +61,20 @@ Base.kron(A::PDMat, B::PDMat) = PDMat(kron(A.mat, B.mat), Cholesky(kron(A.chol.U
 ### whiten and unwhiten
 
 function whiten!(r::StridedVecOrMat, a::PDMat, x::StridedVecOrMat)
-    cf = a.chol.U
     v = _rcopy!(r, x)
-    ldiv!(transpose(cf), v)
+    ldiv!(chol_lower(a.chol), v)
 end
 
 function unwhiten!(r::StridedVecOrMat, a::PDMat, x::StridedVecOrMat)
-    cf = a.chol.U
     v = _rcopy!(r, x)
-    lmul!(transpose(cf), v)
+    lmul!(chol_lower(a.chol), v)
 end
 
 
 ### quadratic forms
 
-quad(a::PDMat, x::AbstractVector) = sum(abs2, a.chol.U * x)
-invquad(a::PDMat, x::AbstractVector) = sum(abs2, a.chol.L \ x)
+quad(a::PDMat, x::AbstractVector) = sum(abs2, chol_upper(a.chol) * x)
+invquad(a::PDMat, x::AbstractVector) = sum(abs2, chol_lower(a.chol) \ x)
 
 """
     quad!(r::AbstractArray, a::AbstractPDMat, x::StridedMatrix)
@@ -96,25 +94,21 @@ invquad!(r::AbstractArray, a::PDMat, x::StridedMatrix) = colwise_dot!(r, x, a.ma
 ### tri products
 
 function X_A_Xt(a::PDMat, x::StridedMatrix)
-    cf = a.chol.U
-    z = rmul!(copy(x), transpose(cf))
+    z = rmul!(copy(x), chol_lower(a.chol))
     return z * transpose(z)
 end
 
 function Xt_A_X(a::PDMat, x::StridedMatrix)
-    cf = a.chol.U
-    z = lmul!(cf, copy(x))
+    z = lmul!(chol_upper(a.chol), copy(x))
     return transpose(z) * z
 end
 
 function X_invA_Xt(a::PDMat, x::StridedMatrix)
-    cf = a.chol.U
-    z = rdiv!(copy(x), cf)
+    z = rdiv!(copy(x), chol_upper(a.chol))
     return z * transpose(z)
 end
 
 function Xt_invA_X(a::PDMat, x::StridedMatrix)
-    cf = a.chol.U
-    z = ldiv!(transpose(cf), copy(x))
+    z = ldiv!(chol_lower(a.chol), copy(x))
     return transpose(z) * z
 end

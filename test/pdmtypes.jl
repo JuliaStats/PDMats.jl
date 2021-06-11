@@ -19,6 +19,8 @@ for T in [Float64, Float32]
     X = convert(T,2.0)
 
     test_pdmat(PDMat(M), M,                        cmat_eq=true, verbose=1) #tests of PDMat
+    cholL = Cholesky(Matrix(transpose(cholesky(M).factors)), 'L', 0)
+    test_pdmat(PDMat(cholL), M,                    cmat_eq=true, verbose=1) #tests of PDMat
     test_pdmat(PDiagMat(V), Matrix(Diagonal(V)),   cmat_eq=true, verbose=1) #tests of PDiagMat
     test_pdmat(ScalMat(3,x), x*Matrix{T}(I, 3, 3), cmat_eq=true, verbose=1) #tests of ScalMat
     test_pdmat(PDSparseMat(sparse(M)), M,          cmat_eq=true, verbose=1, t_eig=false)
