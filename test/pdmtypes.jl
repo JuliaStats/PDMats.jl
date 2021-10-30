@@ -38,6 +38,10 @@ x = one(Float32); d = 4
 s = SparseMatrixCSC{Float32}(I, 2, 2)
 @test convert(PDSparseMat{Float64}, PDSparseMat(s)).mat == PDSparseMat(convert(SparseMatrixCSC{Float64}, s)).mat
 
+Z = zeros(0, 0)
+test_pdmat(PDMat(Z), Z; t_eig=false)
+test_pdmat(PDiagMat(diag(Z)), Z; t_eig=false)
+
 # no-op conversion with correct eltype (#101)
 X = PDMat((Y->Y'Y)(randn(Float32, 4, 4)))
 @test convert(AbstractArray{Float32}, X) === X

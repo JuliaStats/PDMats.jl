@@ -1,7 +1,8 @@
 using PDMats
 using Test
+using LinearAlgebra: LinearAlgebra
 
-_randPDMat(T, n) = (X = randn(T, n, n); PDMat(X * X'))
+_randPDMat(T, n) = (X = randn(T, n, n); PDMat(X * X' + LinearAlgebra.I))
 _randPDiagMat(T, n) = PDiagMat(rand(T, n))
 _randScalMat(T, n) = ScalMat(n, rand(T))
 function _pd_compare(A::AbstractPDMat, B::AbstractPDMat)

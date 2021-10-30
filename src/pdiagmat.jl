@@ -58,7 +58,10 @@ Base.kron(A::PDiagMat, B::PDiagMat) = PDiagMat( vcat([A.diag[i] * B.diag for i i
 ### Algebra
 
 Base.inv(a::PDiagMat) = PDiagMat(a.inv_diag, a.diag)
-LinearAlgebra.logdet(a::PDiagMat) = sum(log, a.diag)
+function LinearAlgebra.logdet(a::PDiagMat)
+    diag = a.diag
+    return isempty(diag) ? zero(log(zero(eltype(diag)))) : sum(log, diag)
+end
 LinearAlgebra.eigmax(a::PDiagMat) = maximum(a.diag)
 LinearAlgebra.eigmin(a::PDiagMat) = minimum(a.diag)
 
