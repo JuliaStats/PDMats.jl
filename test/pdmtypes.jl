@@ -35,6 +35,14 @@ using Test
             @testset "PDSparseMat" begin
                 test_pdmat(PDSparseMat(sparse(M)), M,          cmat_eq=true, verbose=1, t_eig=false)
             end
+            @testset "PDiagMat inv" begin
+                # Test PDiagMat using a StepRangeLen
+                # the inverse of a StepRangeLen is a different type
+                R = StepRangeLen{T}(0.1,0.1,5)
+                vec_PDiagMat = PDiagMat(Vector{T}(R))
+                @test PDiagMat(R) == vec_PDiagMat
+                @test PDiagMat(R,inv.(R)) == vec_PDiagMat
+            end
         end
     end
 
