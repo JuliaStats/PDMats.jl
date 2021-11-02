@@ -10,9 +10,9 @@ struct PDiagMat{T<:Real,V<:AbstractVector} <: AbstractPDMat{T}
         new{T,S}(d,v,inv_v)
 end
 
-function PDiagMat(v::AbstractVector,inv_v::AbstractVector)
+function PDiagMat(v::A,inv_v::B) where {A <: AbstractVector, B <: AbstractVector}
     @check_argdims length(v) == length(inv_v)
-    PDiagMat{eltype(v),typeof(v)}(length(v), v, inv_v)
+    PDiagMat{eltype(v),Union{A,B}}(length(v), v, inv_v)
 end
 
 PDiagMat(v::AbstractVector) = PDiagMat(v, inv.(v))
