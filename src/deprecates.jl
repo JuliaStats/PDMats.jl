@@ -9,5 +9,3 @@ using Base: @deprecate
 @deprecate add_scal(a::Matrix, b::AbstractPDMat, c::Real) pdadd(a, b, c)
 
 @deprecate full(x::AbstractPDMat) Matrix(x)
-
-@deprecate CholType Cholesky
