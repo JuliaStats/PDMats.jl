@@ -1,5 +1,5 @@
 using LinearAlgebra, PDMats
-using PDMats: chol_lower
+using PDMats: chol_lower, chol_upper
 
 @testset "chol_lower" begin
     A = rand(100, 100)
