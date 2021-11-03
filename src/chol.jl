@@ -1,9 +1,7 @@
-CholType{T,S<:AbstractMatrix} = Cholesky{T,S}
-
 # Accessing a.L directly might involve an extra copy();
 # instead, always use the stored Cholesky factor:
-chol_lower(a::CholType) = a.uplo === 'L' ? a.L : a.U'
-chol_upper(a::CholType) = a.uplo === 'U' ? a.U : a.L'
+chol_lower(a::Cholesky) = a.uplo === 'L' ? a.L : a.U'
+chol_upper(a::Cholesky) = a.uplo === 'U' ? a.U : a.L'
 
 chol_lower(a::Matrix) = chol_lower(cholesky(a))
 
