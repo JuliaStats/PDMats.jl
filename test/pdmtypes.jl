@@ -30,7 +30,7 @@ using Test
                 test_pdmat(PDiagMat(V), Matrix(Diagonal(V)),   cmat_eq=true, verbose=1)
             end
             @testset "ScalMat" begin
-                test_pdmat(ScalMat(3,x), x*Matrix{T}(I, 3, 3), cmat_eq=true, verbose=1)
+                test_pdmat(ScalMat(3,X), X*Matrix{T}(I, 3, 3), cmat_eq=true, verbose=1)
             end
             @testset "PDSparseMat" begin
                 test_pdmat(PDSparseMat(sparse(M)), M,          cmat_eq=true, verbose=1, t_eig=false)
