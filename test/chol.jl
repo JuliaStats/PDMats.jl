@@ -16,5 +16,5 @@ using PDMats: chol_lower
         @test (@allocated chol_lower(ch)) < 50  # allow small overhead for wrapper types
         chol_upper(ch)
         @test (@allocated chol_upper(ch)) < 50  # allow small overhead for wrapper types
-    @test 
+    end
 end
