@@ -14,15 +14,12 @@ module PDMats
 
         # Functions
         dim,
-        full,
         whiten,
         whiten!,
         unwhiten,
         unwhiten!,
         pdadd,
         pdadd!,
-        add_scal,
-        add_scal!,
         quad,
         quad!,
         invquad,
@@ -30,8 +27,7 @@ module PDMats
         X_A_Xt,
         Xt_A_X,
         X_invA_Xt,
-        Xt_invA_X,
-        test_pdmat
+        Xt_invA_X
 
 
     """

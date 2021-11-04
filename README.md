@@ -212,13 +212,6 @@ unwhiten(a, x)      # inverse of whitening transform. `x` can be a vector or
 unwhiten!(a, x)     # un-whitening transform inplace, updating `x`.
 
 unwhiten!(r, a, x)  # write the transformed result to `r`.
-
-test_pdmat(a, amat)     # test the correctness of implementation, given an
-                        # instance of some sub-type of `AbstractPDMat`, and
-                        # a corresponding full matrix.
-                        #
-                        # Note: this function is provided for the developers
-                        # who want to define their own customized sub types.
 ```
 
 
