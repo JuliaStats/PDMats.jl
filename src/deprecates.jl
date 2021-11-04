@@ -11,3 +11,5 @@ using Base: @deprecate
 @deprecate full(x::AbstractPDMat) Matrix(x)
 
 @deprecate CholType Cholesky
+
+@deprecate PDiagMat{T,S}(d::Int,v::AbstractVector,inv_v::AbstractVector) where {T,S} PDiagMat{T,S}(d::Int,v::AbstractVector) where {T,S}
