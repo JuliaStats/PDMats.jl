@@ -2,7 +2,7 @@
 
 Uniform interface for positive definite matrices of various structures.
 
-[![Build Status](https://travis-ci.org/JuliaStats/PDMats.jl.svg?branch=master)](https://travis-ci.org/JuliaStats/PDMats.jl)
+[![CI](https://github.com/JuliaStats/PDMats.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/JuliaStats/PDMats.jl/actions/workflows/ci.yml)
 [![Coverage Status](https://img.shields.io/coveralls/JuliaStats/PDMats.jl.svg)](https://coveralls.io/r/JuliaStats/PDMats.jl?branch=master)
 
 --------------
