@@ -1,22 +1,37 @@
 """
 Positive definite diagonal matrix.
 """
-struct PDiagMat{T<:Real,V<:AbstractVector,I<:AbstractVector} <: AbstractPDMat{T}
+struct PDiagMat{T<:Real,V<:AbstractVector} <: AbstractPDMat{T}
     dim::Int
     diag::V
-    inv_diag::I
 
-    PDiagMat{T,S,I}(d::Int,v::AbstractVector,inv_v::AbstractVector) where {T,S,I} =
-        new{T,S,I}(d,v,inv_v)
-    PDiagMat{T,S}(d::Int,v::AbstractVector,inv_v::AbstractVector) where {T,S} = PDiagMat{T,S,S}(d,v,inv_v)
+    PDiagMat{T,S}(d::Int,v::AbstractVector) where {T,S} =
+        new{T,S}(d,v)
+    
+    # deprecated
+    PDiagMat{T,S}(d::Int,v::AbstractVector,inv_v::AbstractVector) where {T,S} =
+        new{T,S}(d,v)
 end
 
+function Base.getproperty(pdm::PDiagMat, s::Symbol)
+    if s == :inv_diag
+        # deprecated
+        return inv.(Base.getfield(pdm,:diag))
+    else
+        return Base.getfield(pdm,s)
+    end
+end
+
+function PDiagMat(v::AbstractVector)
+    @check_argdims length(v) == length(inv.(v))
+    PDiagMat{eltype(v),typeof(v)}(length(v), v)
+end
+
+# deprecated
 function PDiagMat(v::AbstractVector,inv_v::AbstractVector)
     @check_argdims length(v) == length(inv_v)
-    PDiagMat{eltype(v),typeof(v),typeof(inv_v)}(length(v), v, inv_v)
+    PDiagMat{eltype(v),typeof(v)}(length(v), v, inv_v)
 end
-
-PDiagMat(v::AbstractVector) = PDiagMat{eltype(v),typeof(v), typeof(inv.(v))}(length(v), v, inv.(v))
 
 ### Conversion
 Base.convert(::Type{PDiagMat{T}},      a::PDiagMat) where {T<:Real} = PDiagMat(convert(AbstractArray{T}, a.diag))
