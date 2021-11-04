@@ -59,6 +59,15 @@ function wsumsq(w::AbstractVector, a::AbstractVector)
     return s
 end
 
+function invwsumsq(w::AbstractVector, a::AbstractVector)
+    @check_argdims(length(a) == length(w))
+    s = zero(zero(eltype(a)) / zero(eltype(w)))
+    for i = 1:length(a)
+        @inbounds s += abs2(a[i]) / w[i]
+    end
+    return s
+end
+
 function colwise_dot!(r::AbstractArray, a::AbstractMatrix, b::AbstractMatrix)
     n = length(r)
     @check_argdims n == size(a, 2) == size(b, 2) && size(a, 1) == size(b, 1)
@@ -81,6 +90,19 @@ function colwise_sumsq!(r::AbstractArray, a::AbstractMatrix, c::Real)
             @inbounds v += abs2(a[i, j])
         end
         r[j] = v*c
+    end
+    return r
+end
+
+function colwise_sumsqinv!(r::AbstractArray, a::AbstractMatrix, c::Real)
+    n = length(r)
+    @check_argdims n == size(a, 2)
+    for j = 1:n
+        v = zero(eltype(a))
+        @simd for i = 1:size(a, 1)
+            @inbounds v += abs2(a[i, j])
+        end
+        r[j] = v / c
     end
     return r
 end
