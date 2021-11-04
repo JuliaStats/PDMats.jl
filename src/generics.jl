@@ -2,9 +2,6 @@
 
 ## Basic functions
 
-Base.eltype(a::AbstractPDMat{T}) where {T<:Real} = T
-Base.eltype(::Type{AbstractPDMat{T}}) where {T<:Real} = T
-Base.ndims(a::AbstractPDMat) = 2
 Base.size(a::AbstractPDMat) = (dim(a), dim(a))
 Base.size(a::AbstractPDMat, i::Integer) = 1 <= i <= 2 ? dim(a) : 1
 Base.length(a::AbstractPDMat) = abs2(dim(a))
@@ -27,6 +24,9 @@ pdadd(a::Matrix{T}, b::AbstractPDMat{S}) where {T<:Real, S<:Real} = pdadd!(simil
 /(a::AbstractPDMat, c::T) where {T<:Real} = a * inv(c)
 Base.kron(A::AbstractPDMat, B::AbstractPDMat) = PDMat(kron(Matrix(A), Matrix(B)))
 
+# LinearAlgebra
+LinearAlgebra.isposdef(::AbstractPDMat) = true
+LinearAlgebra.ishermitian(::AbstractPDMat) = true
 
 ## whiten and unwhiten
 whiten!(a::AbstractPDMat, x::StridedVecOrMat) = whiten!(x, a, x)

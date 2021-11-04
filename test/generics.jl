@@ -23,3 +23,8 @@ using Test
         @test Matrix(pmats[i] * 3) == Matrix(pmatsa[i])
     end
 end
+
+# issue #121
+@test isposdef(PDMat([1.0 0.0; 0.0 1.0]))
+@test isposdef(PDiagMat([1.0, 1.0]))
+@test isposdef(ScalMat(2, 3.0))
