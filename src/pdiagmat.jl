@@ -67,13 +67,13 @@ end
 *(a::PDiagMat, c::T) where {T<:Real} = PDiagMat(a.diag * c)
 *(a::PDiagMat, x::AbstractVector) = a.diag .* x
 *(a::PDiagMat, x::AbstractMatrix) = a.diag .* x
-\(a::PDiagMat, x::AbstractVecOrMat) = a.inv_diag .* x
-/(x::AbstractVecOrMat, a::PDiagMat) = a.inv_diag .* x
+\(a::PDiagMat, x::AbstractVecOrMat) = a.diag .\ x
+/(x::AbstractVecOrMat, a::PDiagMat) = a.diag ./ x
 Base.kron(A::PDiagMat, B::PDiagMat) = PDiagMat( vcat([A.diag[i] * B.diag for i in 1:dim(A)]...) )
 
 ### Algebra
 
-Base.inv(a::PDiagMat) = PDiagMat(a.inv_diag, a.diag)
+Base.inv(a::PDiagMat) = PDiagMat(inv.(a.diag))
 function LinearAlgebra.logdet(a::PDiagMat)
     diag = a.diag
     return isempty(diag) ? zero(log(zero(eltype(diag)))) : sum(log, diag)
@@ -87,7 +87,7 @@ LinearAlgebra.eigmin(a::PDiagMat) = minimum(a.diag)
 function whiten!(r::StridedVector, a::PDiagMat, x::StridedVector)
     n = dim(a)
     @check_argdims length(r) == length(x) == n
-    v = a.inv_diag
+    v = inv.(a.diag)
     for i = 1:n
         r[i] = x[i] * sqrt(v[i])
     end
@@ -105,7 +105,7 @@ function unwhiten!(r::StridedVector, a::PDiagMat, x::StridedVector)
 end
 
 whiten!(r::StridedMatrix, a::PDiagMat, x::StridedMatrix) =
-    broadcast!(*, r, x, sqrt.(a.inv_diag))
+    broadcast!(*, r, x, sqrt.(inv.(a.diag)))
 
 unwhiten!(r::StridedMatrix, a::PDiagMat, x::StridedMatrix) =
     broadcast!(*, r, x, sqrt.(a.diag))
@@ -114,7 +114,7 @@ unwhiten!(r::StridedMatrix, a::PDiagMat, x::StridedMatrix) =
 ### quadratic forms
 
 quad(a::PDiagMat, x::AbstractVector) = wsumsq(a.diag, x)
-invquad(a::PDiagMat, x::AbstractVector) = wsumsq(a.inv_diag, x)
+invquad(a::PDiagMat, x::AbstractVector) = wsumsq(inv.(a.diag), x)
 
 function quad!(r::AbstractArray, a::PDiagMat, x::StridedMatrix)
     m, n = size(x)
@@ -132,7 +132,7 @@ end
 
 function invquad!(r::AbstractArray, a::PDiagMat, x::StridedMatrix)
     m, n = size(x)
-    ainvd = a.inv_diag
+    ainvd = inv.(a.diag)
     @check_argdims m == length(ainvd) && length(r) == n
     @inbounds for j = 1:n
         s = zero(promote_type(eltype(ainvd), eltype(x)))
@@ -158,11 +158,11 @@ function Xt_A_X(a::PDiagMat, x::StridedMatrix)
 end
 
 function X_invA_Xt(a::PDiagMat, x::StridedMatrix)
-    z = x .* reshape(sqrt.(a.inv_diag), 1, dim(a))
+    z = x .* reshape(sqrt.(inv.(a.diag)), 1, dim(a))
     z * transpose(z)
 end
 
 function Xt_invA_X(a::PDiagMat, x::StridedMatrix)
-    z = x .* sqrt.(a.inv_diag)
+    z = x .* sqrt.(inv.(a.diag))
     transpose(z) * z
 end
