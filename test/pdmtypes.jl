@@ -75,4 +75,12 @@ using Test
     @testset "convert Matrix type to the same Cholesky type (#117)" begin
         @test PDMat([1 0; 0 1]) == [1.0 0.0; 0.0 1.0]
     end
+
+    # https://github.com/JuliaStats/PDMats.jl/pull/141
+    @testset "PDiagMat with range" begin
+        v = 0.1:0.1:0.5
+        d = PDiagMat(v)
+        @test d isa PDiagMat{eltype(v),typeof(v)}
+        @test d.diag === v
+    end
 end
