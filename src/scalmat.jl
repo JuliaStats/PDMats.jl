@@ -57,7 +57,7 @@ LinearAlgebra.eigmin(a::ScalMat) = a.value
 
 function whiten!(r::StridedVecOrMat, a::ScalMat, x::StridedVecOrMat)
     @check_argdims dim(a) == size(x, 1)
-    ldiv!(r, sqrt(a.value), x)
+    _ldiv!(r, sqrt(a.value), x)
 end
 
 function unwhiten!(r::StridedVecOrMat, a::ScalMat, x::StridedVecOrMat)
@@ -89,10 +89,10 @@ end
 
 function X_invA_Xt(a::ScalMat, x::StridedMatrix)
     @check_argdims dim(a) == size(x, 2)
-    ldiv!(a.value, x * transpose(x))
+    _rdiv!(x * transpose(x), a.value)
 end
 
 function Xt_invA_X(a::ScalMat, x::StridedMatrix)
     @check_argdims dim(a) == size(x, 1)
-    ldiv!(a.value, transpose(x) * x)
+    _rdiv!(transpose(x) * x, a.value)
 end

@@ -106,3 +106,24 @@ function colwise_sumsqinv!(r::AbstractArray, a::AbstractMatrix, c::Real)
     end
     return r
 end
+
+# `rdiv!(::AbstractArray, ::Number)` was introduced in Julia 1.2
+# https://github.com/JuliaLang/julia/pull/31179
+@static if VERSION < v"1.2.0-DEV.385"
+    function _rdiv!(X::AbstractArray, s::Number)
+        @simd for I in eachindex(X)
+            @inbounds X[I] /= s
+        end
+        X
+    end
+else
+    _rdiv!(X::AbstractArray, s::Number) = rdiv!(X, s)
+end
+
+# `ldiv!(::AbstractArray, ::Number, ::AbstractArray)` was introduced in Julia 1.4
+# https://github.com/JuliaLang/julia/pull/33806
+@static if VERSION < v"1.4.0-DEV.635"
+    _ldiv!(Y::AbstractArray, s::Number, X::AbstractArray) = Y .= s .\ X
+else
+    _ldiv!(Y::AbstractArray, s::Number, X::AbstractArray) = ldiv!(Y, s, X)
+end
