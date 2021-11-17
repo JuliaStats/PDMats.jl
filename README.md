@@ -50,17 +50,14 @@ PDMat(chol)         # with the Cholesky factorization
 * `PDiagMat`: diagonal matrix, defined as
 
 ```julia
-struct PDiagMat{T<:Real,V<:AbstractVector} <: AbstractPDMat{T}
+struct PDiagMat{T<:Real,V<:AbstractVector{T}} <: AbstractPDMat{T}
     dim::Int                    # matrix dimension
     diag::V                     # the vector of diagonal elements
-    inv_diag::V                 # the element-wise inverse of diag
 end
 
 # Constructors
 
-PDiagMat(v,inv_v)   # with the vector of diagonal elements and its inverse
 PDiagMat(v)         # with the vector of diagonal elements
-                    # inv_diag will be computed upon construction
 ```
 
 
@@ -70,13 +67,11 @@ PDiagMat(v)         # with the vector of diagonal elements
 struct ScalMat{T<:Real} <: AbstractPDMat{T}
     dim::Int         # matrix dimension
     value::T         # diagonal value (shared by all diagonal elements)
-    inv_value::T     # inv(value)
 end
 
 
 # Constructors
 
-ScalMat(d, v, inv_v) # with dimension d, diagonal value v and its inverse inv_v
 ScalMat(d, v)        # with dimension d and diagonal value v
 ```
 

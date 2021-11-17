@@ -7,9 +7,9 @@ using Test
             m = Matrix{T}(I, 2, 2)
             @test PDMat(m, cholesky(m)).mat == PDMat(Symmetric(m)).mat == PDMat(m).mat == PDMat(cholesky(m)).mat
             d = ones(T,2)
-            @test PDiagMat(d,d).inv_diag == PDiagMat(d).inv_diag
+            @test @test_deprecated(PDiagMat(d, d)) == PDiagMat(d)
             x = one(T)
-            @test ScalMat(2,x,x).inv_value == ScalMat(2,x).inv_value
+            @test @test_deprecated(ScalMat(2, x, x)) == ScalMat(2, x)
             s = SparseMatrixCSC{T}(I, 2, 2)
             @test PDSparseMat(s, cholesky(s)).mat == PDSparseMat(s).mat == PDSparseMat(cholesky(s)).mat
         end
@@ -74,5 +74,13 @@ using Test
 
     @testset "convert Matrix type to the same Cholesky type (#117)" begin
         @test PDMat([1 0; 0 1]) == [1.0 0.0; 0.0 1.0]
+    end
+
+    # https://github.com/JuliaStats/PDMats.jl/pull/141
+    @testset "PDiagMat with range" begin
+        v = 0.1:0.1:0.5
+        d = PDiagMat(v)
+        @test d isa PDiagMat{eltype(v),typeof(v)}
+        @test d.diag === v
     end
 end
