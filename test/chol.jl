@@ -13,8 +13,8 @@ using PDMats: chol_lower, chol_upper
     for uplo in (:L, :U)
         ch = cholesky(Symmetric(C, uplo))
         chol_lower(ch)
-        @test (@allocated chol_lower(ch)) < 25  # allow small overhead for wrapper types
+        @test (@allocated chol_lower(ch)) < 33  # allow small overhead for wrapper types
         chol_upper(ch)
-        @test (@allocated chol_upper(ch)) < 25  # allow small overhead for wrapper types
+        @test (@allocated chol_upper(ch)) < 33  # allow small overhead for wrapper types
     end
 end
