@@ -4,12 +4,12 @@ Full positive definite matrix together with a Cholesky factorization object.
 struct PDMat{T<:Real,S<:AbstractMatrix} <: AbstractPDMat{T}
     dim::Int
     mat::S
-    chol::CholType{T,S}
+    chol::Cholesky{T,S}
 
-    PDMat{T,S}(d::Int,m::AbstractMatrix{T},c::CholType{T,S}) where {T,S} = new{T,S}(d,m,c)
+    PDMat{T,S}(d::Int,m::AbstractMatrix{T},c::Cholesky{T,S}) where {T,S} = new{T,S}(d,m,c)
 end
 
-function PDMat(mat::AbstractMatrix,chol::CholType{T,S}) where {T,S}
+function PDMat(mat::AbstractMatrix,chol::Cholesky{T,S}) where {T,S}
     d = size(mat, 1)
     size(chol, 1) == d ||
         throw(DimensionMismatch("Dimensions of mat and chol are inconsistent."))
@@ -17,7 +17,7 @@ function PDMat(mat::AbstractMatrix,chol::CholType{T,S}) where {T,S}
 end
 
 PDMat(mat::AbstractMatrix) = PDMat(mat, cholesky(mat))
-PDMat(fac::CholType) = PDMat(Matrix(fac), fac)
+PDMat(fac::Cholesky) = PDMat(Matrix(fac), fac)
 
 ### Conversion
 Base.convert(::Type{PDMat{T}},         a::PDMat) where {T<:Real} = PDMat(convert(AbstractArray{T}, a.mat))
@@ -60,22 +60,20 @@ Base.kron(A::PDMat, B::PDMat) = PDMat(kron(A.mat, B.mat), Cholesky(kron(A.chol.U
 ### whiten and unwhiten
 
 function whiten!(r::StridedVecOrMat, a::PDMat, x::StridedVecOrMat)
-    cf = a.chol.U
     v = _rcopy!(r, x)
-    ldiv!(transpose(cf), v)
+    ldiv!(chol_lower(a.chol), v)
 end
 
 function unwhiten!(r::StridedVecOrMat, a::PDMat, x::StridedVecOrMat)
-    cf = a.chol.U
     v = _rcopy!(r, x)
-    lmul!(transpose(cf), v)
+    lmul!(chol_lower(a.chol), v)
 end
 
 
 ### quadratic forms
 
-quad(a::PDMat, x::AbstractVector) = sum(abs2, a.chol.U * x)
-invquad(a::PDMat, x::AbstractVector) = sum(abs2, a.chol.L \ x)
+quad(a::PDMat, x::AbstractVector) = sum(abs2, chol_upper(a.chol) * x)
+invquad(a::PDMat, x::AbstractVector) = sum(abs2, chol_lower(a.chol) \ x)
 
 """
     quad!(r::AbstractArray, a::AbstractPDMat, x::StridedMatrix)
@@ -95,25 +93,21 @@ invquad!(r::AbstractArray, a::PDMat, x::StridedMatrix) = colwise_dot!(r, x, a.ma
 ### tri products
 
 function X_A_Xt(a::PDMat, x::StridedMatrix)
-    cf = a.chol.U
-    z = rmul!(copy(x), transpose(cf))
+    z = rmul!(copy(x), chol_lower(a.chol))
     return z * transpose(z)
 end
 
 function Xt_A_X(a::PDMat, x::StridedMatrix)
-    cf = a.chol.U
-    z = lmul!(cf, copy(x))
+    z = lmul!(chol_upper(a.chol), copy(x))
     return transpose(z) * z
 end
 
 function X_invA_Xt(a::PDMat, x::StridedMatrix)
-    cf = a.chol.U
-    z = rdiv!(copy(x), cf)
+    z = rdiv!(copy(x), chol_upper(a.chol))
     return z * transpose(z)
 end
 
 function Xt_invA_X(a::PDMat, x::StridedMatrix)
-    cf = a.chol.U
-    z = ldiv!(transpose(cf), copy(x))
+    z = ldiv!(chol_lower(a.chol), copy(x))
     return transpose(z) * z
 end

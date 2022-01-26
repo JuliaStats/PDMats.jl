@@ -59,6 +59,15 @@ function wsumsq(w::AbstractVector, a::AbstractVector)
     return s
 end
 
+function invwsumsq(w::AbstractVector, a::AbstractVector)
+    @check_argdims(length(a) == length(w))
+    s = zero(zero(eltype(a)) / zero(eltype(w)))
+    for i = 1:length(a)
+        @inbounds s += abs2(a[i]) / w[i]
+    end
+    return s
+end
+
 function colwise_dot!(r::AbstractArray, a::AbstractMatrix, b::AbstractMatrix)
     n = length(r)
     @check_argdims n == size(a, 2) == size(b, 2) && size(a, 1) == size(b, 1)
@@ -83,4 +92,38 @@ function colwise_sumsq!(r::AbstractArray, a::AbstractMatrix, c::Real)
         r[j] = v*c
     end
     return r
+end
+
+function colwise_sumsqinv!(r::AbstractArray, a::AbstractMatrix, c::Real)
+    n = length(r)
+    @check_argdims n == size(a, 2)
+    for j = 1:n
+        v = zero(eltype(a))
+        @simd for i = 1:size(a, 1)
+            @inbounds v += abs2(a[i, j])
+        end
+        r[j] = v / c
+    end
+    return r
+end
+
+# `rdiv!(::AbstractArray, ::Number)` was introduced in Julia 1.2
+# https://github.com/JuliaLang/julia/pull/31179
+@static if VERSION < v"1.2.0-DEV.385"
+    function _rdiv!(X::AbstractArray, s::Number)
+        @simd for I in eachindex(X)
+            @inbounds X[I] /= s
+        end
+        X
+    end
+else
+    _rdiv!(X::AbstractArray, s::Number) = rdiv!(X, s)
+end
+
+# `ldiv!(::AbstractArray, ::Number, ::AbstractArray)` was introduced in Julia 1.4
+# https://github.com/JuliaLang/julia/pull/33806
+@static if VERSION < v"1.4.0-DEV.635"
+    _ldiv!(Y::AbstractArray, s::Number, X::AbstractArray) = Y .= s .\ X
+else
+    _ldiv!(Y::AbstractArray, s::Number, X::AbstractArray) = ldiv!(Y, s, X)
 end

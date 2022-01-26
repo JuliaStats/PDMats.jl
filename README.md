@@ -2,7 +2,7 @@
 
 Uniform interface for positive definite matrices of various structures.
 
-[![Build Status](https://travis-ci.org/JuliaStats/PDMats.jl.svg?branch=master)](https://travis-ci.org/JuliaStats/PDMats.jl)
+[![CI](https://github.com/JuliaStats/PDMats.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/JuliaStats/PDMats.jl/actions/workflows/ci.yml)
 [![Coverage Status](https://img.shields.io/coveralls/JuliaStats/PDMats.jl.svg)](https://coveralls.io/r/JuliaStats/PDMats.jl?branch=master)
 
 --------------
@@ -50,17 +50,14 @@ PDMat(chol)         # with the Cholesky factorization
 * `PDiagMat`: diagonal matrix, defined as
 
 ```julia
-struct PDiagMat{T<:Real,V<:AbstractVector} <: AbstractPDMat{T}
+struct PDiagMat{T<:Real,V<:AbstractVector{T}} <: AbstractPDMat{T}
     dim::Int                    # matrix dimension
     diag::V                     # the vector of diagonal elements
-    inv_diag::V                 # the element-wise inverse of diag
 end
 
 # Constructors
 
-PDiagMat(v,inv_v)   # with the vector of diagonal elements and its inverse
 PDiagMat(v)         # with the vector of diagonal elements
-                    # inv_diag will be computed upon construction
 ```
 
 
@@ -70,13 +67,11 @@ PDiagMat(v)         # with the vector of diagonal elements
 struct ScalMat{T<:Real} <: AbstractPDMat{T}
     dim::Int         # matrix dimension
     value::T         # diagonal value (shared by all diagonal elements)
-    inv_value::T     # inv(value)
 end
 
 
 # Constructors
 
-ScalMat(d, v, inv_v) # with dimension d, diagonal value v and its inverse inv_v
 ScalMat(d, v)        # with dimension d and diagonal value v
 ```
 
@@ -212,13 +207,6 @@ unwhiten(a, x)      # inverse of whitening transform. `x` can be a vector or
 unwhiten!(a, x)     # un-whitening transform inplace, updating `x`.
 
 unwhiten!(r, a, x)  # write the transformed result to `r`.
-
-test_pdmat(a, amat)     # test the correctness of implementation, given an
-                        # instance of some sub-type of `AbstractPDMat`, and
-                        # a corresponding full matrix.
-                        #
-                        # Note: this function is provided for the developers
-                        # who want to define their own customized sub types.
 ```
 
 

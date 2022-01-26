@@ -78,11 +78,17 @@ function pdtest_basics(C::AbstractPDMat, Cmat::Matrix, d::Int, verbose::Int)
 
     _pdt(verbose, "eltype")
     @test eltype(C) == eltype(Cmat)
-    #    @test eltype(typeof(C)) == eltype(typeof(Cmat))
+#    @test eltype(typeof(C)) == eltype(typeof(Cmat))
 
     _pdt(verbose, "index")
     @test all(C[i] == Cmat[i] for i in 1:(d^2))
     @test all(C[i, j] == Cmat[i, j] for j in 1:d, i in 1:d)
+
+    _pdt(verbose, "isposdef")
+    @test isposdef(C)
+
+    _pdt(verbose, "ishermitian")
+    @test ishermitian(C)
 end
 
 
