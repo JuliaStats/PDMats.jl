@@ -83,4 +83,17 @@ using Test
         @test d isa PDiagMat{eltype(v),typeof(v)}
         @test d.diag === v
     end
+
+    @testset "division of vectors (dim = 1)" begin
+        A = rand(1, 1)
+        x = randn(1)
+        y = x / A
+        @assert x / A isa Matrix{Float64}
+        @assert size(y) == (1, 1)
+
+        for M in (PDMat(A), PDiagMat(vec(A)), ScalMat(1, first(A)))
+            @test x / M isa Matrix{Float64}
+            @test x / M ≈ y
+        end
+    end
 end

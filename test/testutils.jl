@@ -20,7 +20,7 @@ function test_pdmat(C::AbstractPDMat, Cmat::Matrix;
                     t_logdet::Bool=true,        # whether to test logdet method
                     t_eig::Bool=true,           # whether to test eigmax and eigmin
                     t_mul::Bool=true,           # whether to test multiplication
-                    t_rdiv::Bool=true,          # whether to test right division (solve)
+                    t_div::Bool=true,           # whether to test division
                     t_quad::Bool=true,          # whether to test quad & invquad
                     t_triprod::Bool=true,       # whether to test X_A_Xt, Xt_A_X, X_invA_Xt, and Xt_invA_X
                     t_whiten::Bool=true         # whether to test whiten and unwhiten
@@ -45,7 +45,7 @@ function test_pdmat(C::AbstractPDMat, Cmat::Matrix;
     X = rand(eltype(C),d,n) .- convert(eltype(C),0.5)
 
     t_mul && pdtest_mul(C, Cmat, X, verbose)
-    t_rdiv && pdtest_rdiv(C, Imat, X, verbose)
+    t_div && pdtest_div(C, Imat, X, verbose)
     t_quad && pdtest_quad(C, Cmat, Imat, X, verbose)
     t_triprod && pdtest_triprod(C, Cmat, Imat, X, verbose)
 
@@ -203,13 +203,26 @@ function pdtest_mul(C::AbstractPDMat, Cmat::Matrix, X::Matrix, verbose::Int)
 end
 
 
-function pdtest_rdiv(C::AbstractPDMat, Imat::Matrix, X::Matrix, verbose::Int)
-    _pdt(verbose, "rdivide")
+function pdtest_div(C::AbstractPDMat, Imat::Matrix, X::Matrix, verbose::Int)
+    _pdt(verbose, "divide")
     @test C \ X ≈ Imat * X
+    if !HAVE_CHOLMOD
+        # CHOLMOD throws error since no method is found for
+        # ` rdiv!(::Matrix{Float64}, ::SuiteSparse.CHOLMOD.Factor{Float64})`
+        @test Matrix(X') / C ≈ (C \ X)'
+    end
 
     for i = 1:size(X,2)
         xi = vec(copy(X[:,i]))
         @test C \ xi ≈ Imat * xi
+    end
+
+    # dimension mismatches
+    d = dim(C)
+    @test_throws DimensionMismatch C \ rand(d + 1, d)
+    @test_throws DimensionMismatch C \ rand(d + 1)
+    if !HAVE_CHOLMOD # same error as above
+        @test_throws DimensionMismatch rand(d, d + 1) / C
     end
 end
 
