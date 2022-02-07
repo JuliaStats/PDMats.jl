@@ -20,7 +20,7 @@ function test_pdmat(C::AbstractPDMat, Cmat::Matrix;
                     t_logdet::Bool=true,        # whether to test logdet method
                     t_eig::Bool=true,           # whether to test eigmax and eigmin
                     t_mul::Bool=true,           # whether to test multiplication
-                    t_rdiv::Bool=true,          # whether to test right division (solve)
+                    t_div::Bool=true,           # whether to test division
                     t_quad::Bool=true,          # whether to test quad & invquad
                     t_triprod::Bool=true,       # whether to test X_A_Xt, Xt_A_X, X_invA_Xt, and Xt_invA_X
                     t_whiten::Bool=true         # whether to test whiten and unwhiten
@@ -45,7 +45,7 @@ function test_pdmat(C::AbstractPDMat, Cmat::Matrix;
     X = rand(eltype(C),d,n) .- convert(eltype(C),0.5)
 
     t_mul && pdtest_mul(C, Cmat, X, verbose)
-    t_rdiv && pdtest_rdiv(C, Imat, X, verbose)
+    t_div && pdtest_div(C, Imat, X, verbose)
     t_quad && pdtest_quad(C, Cmat, Imat, X, verbose)
     t_triprod && pdtest_triprod(C, Cmat, Imat, X, verbose)
 
@@ -174,25 +174,21 @@ end
 
 function pdtest_mul(C::AbstractPDMat, Cmat::Matrix, verbose::Int)
     n = 5
-    X = rand(eltype(C),dim(C), n)
-
-    _pdt(verbose, "multiply")
-    @test C * X ≈ Cmat * X
-
-    for i = 1:n
-        xi = vec(copy(X[:,i]))
-        @test C * xi ≈ Cmat * xi
-    end
+    X = rand(eltype(C), dim(C), n)
+    pdtest_mul(C, Cmat, X, verbose)
 end
 
 
 function pdtest_mul(C::AbstractPDMat, Cmat::Matrix, X::Matrix, verbose::Int)
     _pdt(verbose, "multiply")
+    d, n = size(X)
+    @assert d == dim(C)
+    @assert size(Cmat) == size(C)
     @test C * X ≈ Cmat * X
 
-    y = similar(C * X, size(C, 1))
-    ymat = similar(Cmat * X, size(Cmat, 1))
-    for i = 1:size(X,2)
+    y = similar(C * X, d)
+    ymat = similar(Cmat * X, d)
+    for i = 1:n
         xi = vec(copy(X[:,i]))
         @test C * xi ≈ Cmat * xi
 
@@ -200,16 +196,38 @@ function pdtest_mul(C::AbstractPDMat, Cmat::Matrix, X::Matrix, verbose::Int)
         mul!(ymat, Cmat, xi)
         @test y ≈ ymat
     end
+
+    # Dimension mismatches
+    @test_throws DimensionMismatch C * rand(d + 1) 
+    @test_throws DimensionMismatch C * rand(d + 1, n)
 end
 
 
-function pdtest_rdiv(C::AbstractPDMat, Imat::Matrix, X::Matrix, verbose::Int)
-    _pdt(verbose, "rdivide")
+function pdtest_div(C::AbstractPDMat, Imat::Matrix, X::Matrix, verbose::Int)
+    _pdt(verbose, "divide")
+    d, n = size(X)
+    @assert d == dim(C)
+    @assert size(Imat) == size(C)
     @test C \ X ≈ Imat * X
+    # Right division with Choleskyrequires https://github.com/JuliaLang/julia/pull/32594
+    # CHOLMOD throws error since no method is found for
+    # `rdiv!(::Matrix{Float64}, ::SuiteSparse.CHOLMOD.Factor{Float64})`
+    check_rdiv = !(C isa PDMat && VERSION < v"1.3.0-DEV.562") && !(C isa PDSparseMat && HAVE_CHOLMOD)
+    check_rdiv && @test Matrix(X') / C ≈ (C \ X)'
 
-    for i = 1:size(X,2)
+    for i = 1:n
         xi = vec(copy(X[:,i]))
         @test C \ xi ≈ Imat * xi
+        check_rdiv && @test Matrix(xi') / C ≈ (C \ xi)'
+    end
+
+
+    # Dimension mismatches
+    @test_throws DimensionMismatch C \ rand(d + 1) 
+    @test_throws DimensionMismatch C \ rand(d + 1, n)
+    if check_rdiv
+        @test_throws DimensionMismatch rand(1, d + 1) / C
+        @test_throws DimensionMismatch rand(n, d + 1) / C
     end
 end
 
@@ -240,6 +258,8 @@ end
 
 
 function pdtest_triprod(C::AbstractPDMat, Cmat::Matrix, Imat::Matrix, X::Matrix, verbose::Int)
+    d, n = size(X)
+    @assert d == dim(C)
     Xt = copy(transpose(X))
 
     _pdt(verbose, "X_A_Xt")
@@ -247,16 +267,20 @@ function pdtest_triprod(C::AbstractPDMat, Cmat::Matrix, Imat::Matrix, X::Matrix,
     # ≈ form used when 0.4 is no longer supported
     lhs, rhs = X_A_Xt(C, Xt), Xt * Cmat * X
     @test isapprox(lhs, rhs, rtol=sqrt(max(eps(real(float(eltype(lhs)))), eps(real(float(eltype(rhs)))))))
+    @test_throws DimensionMismatch X_A_Xt(C, rand(n, d + 1))
 
     _pdt(verbose, "Xt_A_X")
     lhs, rhs = Xt_A_X(C, X), Xt * Cmat * X
     @test isapprox(lhs, rhs, rtol=sqrt(max(eps(real(float(eltype(lhs)))), eps(real(float(eltype(rhs)))))))
+    @test_throws DimensionMismatch Xt_A_X(C, rand(d + 1, n))
 
     _pdt(verbose, "X_invA_Xt")
     @test X_invA_Xt(C, Xt) ≈ Xt * Imat * X
+    @test_throws DimensionMismatch X_invA_Xt(C, rand(n, d + 1))
 
     _pdt(verbose, "Xt_invA_X")
     @test Xt_invA_X(C, X) ≈ Xt * Imat * X
+    @test_throws DimensionMismatch Xt_invA_X(C, rand(d + 1, n))
 end
 
 

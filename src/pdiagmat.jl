@@ -39,11 +39,24 @@ function pdadd!(r::Matrix, a::Matrix, b::PDiagMat, c)
     return r
 end
 
-*(a::PDiagMat, c::T) where {T<:Real} = PDiagMat(a.diag * c)
-*(a::PDiagMat, x::AbstractVector) = a.diag .* x
-*(a::PDiagMat, x::AbstractMatrix) = a.diag .* x
-\(a::PDiagMat, x::AbstractVecOrMat) = x ./ a.diag
-/(x::AbstractVecOrMat, a::PDiagMat) = x ./ a.diag
+*(a::PDiagMat, c::Real) = PDiagMat(a.diag * c)
+function *(a::PDiagMat, x::AbstractVector)
+    @check_argdims dim(a) == length(x)
+    return a.diag .* x
+end
+function *(a::PDiagMat, x::AbstractMatrix)
+    @check_argdims dim(a) == size(x, 1)
+    return a.diag .* x
+end
+function \(a::PDiagMat, x::AbstractVecOrMat)
+    @check_argdims dim(a) == size(x, 1)
+    return x ./ a.diag
+end
+function /(x::AbstractVecOrMat, a::PDiagMat)
+    @check_argdims dim(a) == size(x, 2)
+    # return matrix for 1-element vectors `x`, consistent with LinearAlgebra
+    return reshape(x, Val(2)) ./ permutedims(a.diag) # = (a' \ x')'
+end
 Base.kron(A::PDiagMat, B::PDiagMat) = PDiagMat( vcat([A.diag[i] * B.diag for i in 1:dim(A)]...) )
 
 ### Algebra
@@ -127,21 +140,25 @@ end
 ### tri products
 
 function X_A_Xt(a::PDiagMat, x::StridedMatrix)
-    z = x .* sqrt.(reshape(a.diag, 1, dim(a)))
+    @check_argdims dim(a) == size(x, 2)
+    z = x .* sqrt.(permutedims(a.diag))
     z * transpose(z)
 end
 
 function Xt_A_X(a::PDiagMat, x::StridedMatrix)
+    @check_argdims dim(a) == size(x, 1)
     z = x .* sqrt.(a.diag)
     transpose(z) * z
 end
 
 function X_invA_Xt(a::PDiagMat, x::StridedMatrix)
-    z = x ./ sqrt.(reshape(a.diag, 1, dim(a)))
+    @check_argdims dim(a) == size(x, 2)
+    z = x ./ sqrt.(permutedims(a.diag))
     z * transpose(z)
 end
 
 function Xt_invA_X(a::PDiagMat, x::StridedMatrix)
+    @check_argdims dim(a) == size(x, 1)
     z = x ./ sqrt.(a.diag)
     transpose(z) * z
 end
