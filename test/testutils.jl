@@ -229,14 +229,6 @@ function pdtest_div(C::AbstractPDMat, Imat::Matrix, X::Matrix, verbose::Int)
         @test_throws DimensionMismatch rand(1, d + 1) / C
         @test_throws DimensionMismatch rand(n, d + 1) / C
     end
-
-    # dimension mismatches
-    d = dim(C)
-    @test_throws DimensionMismatch C \ rand(d + 1, d)
-    @test_throws DimensionMismatch C \ rand(d + 1)
-    if !HAVE_CHOLMOD # same error as above
-        @test_throws DimensionMismatch rand(d, d + 1) / C
-    end
 end
 
 
