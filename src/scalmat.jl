@@ -37,12 +37,25 @@ function pdadd!(r::Matrix, a::Matrix, b::ScalMat, c)
     return r
 end
 
-*(a::ScalMat, c::T) where {T<:Real} = ScalMat(a.dim, a.value * c)
-/(a::ScalMat{T}, c::T) where {T<:Real} = ScalMat(a.dim, a.value / c)
-*(a::ScalMat, x::AbstractVector) = a.value * x
-*(a::ScalMat, x::AbstractMatrix) = a.value * x
-\(a::ScalMat, x::AbstractVecOrMat) = x / a.value
-/(x::AbstractVecOrMat, a::ScalMat) = x / a.value
+*(a::ScalMat, c::Real) = ScalMat(a.dim, a.value * c)
+/(a::ScalMat, c::Real) = ScalMat(a.dim, a.value / c)
+function *(a::ScalMat, x::AbstractVector)
+    @check_argdims dim(a) == length(x)
+    return a.value * x
+end
+function *(a::ScalMat, x::AbstractMatrix)
+    @check_argdims dim(a) == size(x, 1)
+    return a.value * x
+end
+function \(a::ScalMat, x::AbstractVecOrMat)
+    @check_argdims dim(a) == size(x, 1)
+    return x / a.value
+end
+function /(x::AbstractVecOrMat, a::ScalMat)
+    @check_argdims dim(a) == size(x, 2)
+    # return matrix for 1-element vectors `x`, consistent with LinearAlgebra
+    return reshape(x, Val(2)) / a.value
+end
 Base.kron(A::ScalMat, B::ScalMat) = ScalMat( dim(A) * dim(B), A.value * B.value )
 
 ### Algebra

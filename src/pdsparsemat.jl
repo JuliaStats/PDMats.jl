@@ -43,7 +43,7 @@ function pdadd!(r::Matrix, a::Matrix, b::PDSparseMat, c)
     _addscal!(r, a, b.mat, c)
 end
 
-*(a::PDSparseMat, c::T) where {T<:Real} = PDSparseMat(a.mat * c)
+*(a::PDSparseMat, c::Real) = PDSparseMat(a.mat * c)
 *(a::PDSparseMat, x::StridedVecOrMat) = a.mat * x
 \(a::PDSparseMat{T}, x::StridedVecOrMat{T}) where {T<:Real} = convert(Array{T},a.chol \ convert(Array{Float64},x)) #to avoid limitations in sparse factorization library CHOLMOD, see e.g., julia issue #14076
 /(x::StridedVecOrMat{T}, a::PDSparseMat{T}) where {T<:Real} = convert(Array{T},convert(Array{Float64},x) / a.chol )
