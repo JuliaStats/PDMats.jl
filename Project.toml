@@ -11,8 +11,9 @@ SuiteSparse = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
 julia = "1"
 
 [extras]
+BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["StaticArrays", "Test"]
+test = ["BandedMatrices", "StaticArrays", "Test"]
