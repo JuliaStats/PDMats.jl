@@ -58,7 +58,10 @@ using StaticArrays
         Y = rand(5, 2)
         @test P * x ≈ A * x
         @test P * Y ≈ A * Y
-        @test X / P ≈ X / A
+        # Right division with Cholesky requires https://github.com/JuliaLang/julia/pull/32594
+        if VERSION >= v"1.3.0-DEV.562"
+            @test X / P ≈ X / A
+        end
         @test P \ x ≈ A \ x
         @test P \ Y ≈ A \ Y
         @test X_A_Xt(P, X) ≈ X * A * X'
