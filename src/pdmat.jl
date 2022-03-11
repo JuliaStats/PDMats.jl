@@ -16,8 +16,7 @@ function PDMat(mat::AbstractMatrix,chol::Cholesky{T,S}) where {T,S}
     PDMat{T,S}(d, convert(S, mat), chol)
 end
 
-PDMat(mat::Matrix) = PDMat(mat, cholesky(mat))
-PDMat(mat::Symmetric) = PDMat(Matrix(mat))
+PDMat(mat::AbstractMatrix) = PDMat(mat, cholesky(mat))
 PDMat(fac::Cholesky) = PDMat(Matrix(fac), fac)
 
 ### Conversion
@@ -94,25 +93,25 @@ invquad!(r::AbstractArray, a::PDMat, x::StridedMatrix) = colwise_dot!(r, x, a.ma
 
 ### tri products
 
-function X_A_Xt(a::PDMat, x::StridedMatrix)
+function X_A_Xt(a::PDMat, x::AbstractMatrix)
     @check_argdims dim(a) == size(x, 2)
     z = x * chol_lower(a.chol)
     return z * transpose(z)
 end
 
-function Xt_A_X(a::PDMat, x::StridedMatrix)
+function Xt_A_X(a::PDMat, x::AbstractMatrix)
     @check_argdims dim(a) == size(x, 1)
     z = chol_upper(a.chol) * x
     return transpose(z) * z
 end
 
-function X_invA_Xt(a::PDMat, x::StridedMatrix)
+function X_invA_Xt(a::PDMat, x::AbstractMatrix)
     @check_argdims dim(a) == size(x, 2)
     z = x / chol_upper(a.chol)
     return z * transpose(z)
 end
 
-function Xt_invA_X(a::PDMat, x::StridedMatrix)
+function Xt_invA_X(a::PDMat, x::AbstractMatrix)
     @check_argdims dim(a) == size(x, 1)
     z = chol_lower(a.chol) \ x
     return transpose(z) * z

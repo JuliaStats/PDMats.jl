@@ -139,25 +139,25 @@ end
 
 ### tri products
 
-function X_A_Xt(a::PDiagMat, x::StridedMatrix)
+function X_A_Xt(a::PDiagMat, x::AbstractMatrix)
     @check_argdims dim(a) == size(x, 2)
     z = x .* sqrt.(permutedims(a.diag))
     z * transpose(z)
 end
 
-function Xt_A_X(a::PDiagMat, x::StridedMatrix)
+function Xt_A_X(a::PDiagMat, x::AbstractMatrix)
     @check_argdims dim(a) == size(x, 1)
     z = x .* sqrt.(a.diag)
     transpose(z) * z
 end
 
-function X_invA_Xt(a::PDiagMat, x::StridedMatrix)
+function X_invA_Xt(a::PDiagMat, x::AbstractMatrix)
     @check_argdims dim(a) == size(x, 2)
     z = x ./ sqrt.(permutedims(a.diag))
     z * transpose(z)
 end
 
-function Xt_invA_X(a::PDiagMat, x::StridedMatrix)
+function Xt_invA_X(a::PDiagMat, x::AbstractMatrix)
     @check_argdims dim(a) == size(x, 1)
     z = x ./ sqrt.(a.diag)
     transpose(z) * z
