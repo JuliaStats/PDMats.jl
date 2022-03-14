@@ -22,6 +22,19 @@ function _addscal!(r::Matrix, a::Matrix, b::Union{Matrix, SparseMatrixCSC}, c::R
     end
     return r
 end
+function _addscal!(r::Matrix, a::Matrix, b::Diagonal, c::Real)
+    copyto!(r, a)
+    if c == one(c)
+        for i = diagind(a)
+            @inbounds r[i] += b[i]
+        end
+    else
+        for i = diagind(a)
+            @inbounds r[i] += b[i] * c
+        end
+    end
+    return r
+end
 
 function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::Real)
     n = size(a, 1)

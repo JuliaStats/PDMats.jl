@@ -17,6 +17,7 @@ function PDMat(mat::AbstractMatrix,chol::Cholesky{T,S}) where {T,S}
 end
 
 PDMat(mat::AbstractMatrix) = PDMat(mat, cholesky(mat))
+PDMat(mat::Symmetric{<:Any,<:Diagonal}) = PDMat(parent(mat), cholesky(mat))
 PDMat(fac::Cholesky) = PDMat(Matrix(fac), fac)
 
 ### Conversion

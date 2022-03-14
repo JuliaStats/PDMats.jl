@@ -26,6 +26,11 @@ using Test
                 cholL = Cholesky(Matrix(transpose(cholesky(M).factors)), 'L', 0)
                 test_pdmat(PDMat(cholL), M,                    cmat_eq=true, verbose=1)
             end
+            @testset "PDMat from Symmetric" begin
+                d = Diagonal(M)
+                symdiag = Symmetric(d)
+                test_pdmat(PDMat(symdiag), Matrix(d),          cmat_eq=true, verbose=1)
+            end
             @testset "PDiagMat" begin
                 test_pdmat(PDiagMat(V), Matrix(Diagonal(V)),   cmat_eq=true, verbose=1)
             end
