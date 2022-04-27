@@ -16,8 +16,7 @@ function PDMat(mat::AbstractMatrix,chol::Cholesky{T,S}) where {T,S}
     PDMat{T,S}(d, convert(S, mat), chol)
 end
 
-PDMat(mat::Matrix) = PDMat(mat, cholesky(mat))
-PDMat(mat::Symmetric) = PDMat(Matrix(mat))
+PDMat(mat::AbstractMatrix) = PDMat(mat, cholesky(mat))
 PDMat(fac::Cholesky) = PDMat(Matrix(fac), fac)
 
 ### Conversion
@@ -44,11 +43,12 @@ function pdadd!(r::Matrix, a::Matrix, b::PDMat, c)
     _addscal!(r, a, b.mat, c)
 end
 
-*(a::PDMat{S}, c::T) where {S<:Real, T<:Real} = PDMat(a.mat * c)
-*(a::PDMat, x::AbstractVector{T}) where {T} = a.mat * x
-*(a::PDMat, x::AbstractMatrix{T}) where {T} = a.mat * x
+*(a::PDMat, c::Real) = PDMat(a.mat * c)
+*(a::PDMat, x::AbstractVector) = a.mat * x
+*(a::PDMat, x::AbstractMatrix) = a.mat * x
 \(a::PDMat, x::AbstractVecOrMat) = a.chol \ x
-/(x::AbstractVecOrMat, a::PDMat) = x / a.chol
+# return matrix for 1-element vectors `x`, consistent with LinearAlgebra
+/(x::AbstractVecOrMat, a::PDMat) = reshape(x, Val(2)) / a.chol
 
 ### Algebra
 
@@ -93,22 +93,26 @@ invquad!(r::AbstractArray, a::PDMat, x::StridedMatrix) = colwise_dot!(r, x, a.ma
 
 ### tri products
 
-function X_A_Xt(a::PDMat, x::StridedMatrix)
-    z = rmul!(copy(x), chol_lower(a.chol))
+function X_A_Xt(a::PDMat, x::AbstractMatrix)
+    @check_argdims dim(a) == size(x, 2)
+    z = x * chol_lower(a.chol)
     return z * transpose(z)
 end
 
-function Xt_A_X(a::PDMat, x::StridedMatrix)
-    z = lmul!(chol_upper(a.chol), copy(x))
+function Xt_A_X(a::PDMat, x::AbstractMatrix)
+    @check_argdims dim(a) == size(x, 1)
+    z = chol_upper(a.chol) * x
     return transpose(z) * z
 end
 
-function X_invA_Xt(a::PDMat, x::StridedMatrix)
-    z = rdiv!(copy(x), chol_upper(a.chol))
+function X_invA_Xt(a::PDMat, x::AbstractMatrix)
+    @check_argdims dim(a) == size(x, 2)
+    z = x / chol_upper(a.chol)
     return z * transpose(z)
 end
 
-function Xt_invA_X(a::PDMat, x::StridedMatrix)
-    z = ldiv!(chol_lower(a.chol), copy(x))
+function Xt_invA_X(a::PDMat, x::AbstractMatrix)
+    @check_argdims dim(a) == size(x, 1)
+    z = chol_lower(a.chol) \ x
     return transpose(z) * z
 end
