@@ -28,9 +28,6 @@ Base.kron(A::AbstractPDMat, B::AbstractPDMat) = PDMat(kron(Matrix(A), Matrix(B))
 LinearAlgebra.isposdef(::AbstractPDMat) = true
 LinearAlgebra.ishermitian(::AbstractPDMat) = true
 
-# Generic fallback
-LinearAlgebra.sqrt(A::AbstractPDMat) = PDMat(sqrt(Matrix(A)))
-
 ## whiten and unwhiten
 whiten!(a::AbstractPDMat, x::StridedVecOrMat) = whiten!(x, a, x)
 unwhiten!(a::AbstractPDMat, x::StridedVecOrMat) = unwhiten!(x, a, x)
