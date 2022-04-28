@@ -198,7 +198,7 @@ function pdtest_mul(C::AbstractPDMat, Cmat::Matrix, X::Matrix, verbose::Int)
     end
 
     # Dimension mismatches
-    @test_throws DimensionMismatch C * rand(d + 1) 
+    @test_throws DimensionMismatch C * rand(d + 1)
     @test_throws DimensionMismatch C * rand(d + 1, n)
 end
 
@@ -223,7 +223,7 @@ function pdtest_div(C::AbstractPDMat, Imat::Matrix, X::Matrix, verbose::Int)
 
 
     # Dimension mismatches
-    @test_throws DimensionMismatch C \ rand(d + 1) 
+    @test_throws DimensionMismatch C \ rand(d + 1)
     @test_throws DimensionMismatch C \ rand(d + 1, n)
     if check_rdiv
         @test_throws DimensionMismatch rand(1, d + 1) / C
@@ -318,4 +318,18 @@ function pdtest_whiten(C::AbstractPDMat, Cmat::Matrix, verbose::Int)
     _pdt(verbose, "whiten-unwhiten")
     @test unwhiten(C, whiten(C, Matrix{eltype(C)}(I, d, d))) ≈ Matrix{eltype(C)}(I, d, d)
     @test whiten(C, unwhiten(C, Matrix{eltype(C)}(I, d, d))) ≈ Matrix{eltype(C)}(I, d, d)
+end
+
+
+# testing functions for kron and sqrt
+
+_randPDMat(T, n) = (X = randn(T, n, n); PDMat(X * X' + LinearAlgebra.I))
+_randPDiagMat(T, n) = PDiagMat(rand(T, n))
+_randScalMat(T, n) = ScalMat(n, rand(T))
+
+function _pd_compare(A::AbstractPDMat, B::AbstractPDMat)
+    @test dim(A) == dim(B)
+    @test Matrix(A) ≈ Matrix(B)
+    @test cholesky(A).L ≈ cholesky(B).L
+    @test cholesky(A).U ≈ cholesky(B).U
 end

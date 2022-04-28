@@ -2,17 +2,6 @@ using PDMats
 using Test
 using LinearAlgebra: LinearAlgebra
 
-_randPDMat(T, n) = (X = randn(T, n, n); PDMat(X * X' + LinearAlgebra.I))
-_randPDiagMat(T, n) = PDiagMat(rand(T, n))
-_randScalMat(T, n) = ScalMat(n, rand(T))
-
-function _pd_compare(A::AbstractPDMat, B::AbstractPDMat)
-    @test dim(A) == dim(B)
-    @test Matrix(A) ≈ Matrix(B)
-    @test cholesky(A).L ≈ cholesky(B).L
-    @test cholesky(A).U ≈ cholesky(B).U
-end
-
 function _pd_kron_compare(A::AbstractPDMat, B::AbstractPDMat)
     PDAkB_kron = kron(A, B)
     PDAkB_dense = PDMat( kron( Matrix(A), Matrix(B) ) )
