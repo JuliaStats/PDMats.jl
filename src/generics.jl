@@ -28,11 +28,7 @@ Base.kron(A::AbstractPDMat, B::AbstractPDMat) = PDMat(kron(Matrix(A), Matrix(B))
 LinearAlgebra.isposdef(::AbstractPDMat) = true
 LinearAlgebra.ishermitian(::AbstractPDMat) = true
 
-"""
-    sqrt(A::AbstractPDMat)
-
-Return the matrix square root of `A`: the matrix `X` such that ``XX = A``
-"""
+# Generic fallback
 LinearAlgebra.sqrt(A::AbstractPDMat) = PDMat(sqrt(Matrix(A)))
 
 ## whiten and unwhiten
