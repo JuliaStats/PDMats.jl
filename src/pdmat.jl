@@ -57,7 +57,7 @@ LinearAlgebra.logdet(a::PDMat) = logdet(a.chol)
 LinearAlgebra.eigmax(a::PDMat) = eigmax(a.mat)
 LinearAlgebra.eigmin(a::PDMat) = eigmin(a.mat)
 Base.kron(A::PDMat, B::PDMat) = PDMat(kron(A.mat, B.mat), Cholesky(kron(A.chol.U, B.chol.U), 'U', A.chol.info))
-LinearAlgebra.sqrt(A::PDMat) = PDMat(sqrt(A.mat))
+LinearAlgebra.sqrt(A::PDMat) = PDMat(sqrt(Hermitian(A.mat)))
 
 ### whiten and unwhiten
 
