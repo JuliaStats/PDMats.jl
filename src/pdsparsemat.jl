@@ -52,6 +52,7 @@ end
 
 Base.inv(a::PDSparseMat{T}) where {T<:Real} = PDMat(inv(a.mat))
 LinearAlgebra.logdet(a::PDSparseMat) = logdet(a.chol)
+LinearAlgebra.sqrt(A::PDSparseMat) = PDSparseMat(sparse(sqrt(Matrix(A))))
 
 ### whiten and unwhiten
 
