@@ -6,8 +6,12 @@ _randPDSparseMat(T, n) = (X = T.(sprand(n, 1, 0.5)); PDSparseMat(X * X' + Linear
 
 function _pd_sqrt_compare(A::AbstractPDMat)
     PDAsqrt = sqrt(A)
-    PDAaqrt_dense = PDMat(sqrt(Matrix(A)))
-    _pd_compare(PDAsqrt, PDAaqrt_dense)
+    Asqrt_dense = sqrt(Matrix(A))
+    _pd_compare(PDAsqrt, PDMat(Asqrt_dense))
+    pdtest_cmat(PDAsqrt, Asqrt_dense, false, 0)
+    pdtest_diag(PDAsqrt, Asqrt_dense, false, 0)
+    pdtest_scale(PDAsqrt, Asqrt_dense, 0)
+    return PDAsqrt, Asqrt_dense
 end
 
 n = 10
