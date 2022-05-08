@@ -61,6 +61,7 @@ Base.kron(A::ScalMat, B::ScalMat) = ScalMat( dim(A) * dim(B), A.value * B.value 
 ### Algebra
 
 Base.inv(a::ScalMat) = ScalMat(a.dim, inv(a.value))
+LinearAlgebra.det(a::ScalMat) = a.value^a.dim
 LinearAlgebra.logdet(a::ScalMat) = a.dim * log(a.value)
 LinearAlgebra.eigmax(a::ScalMat) = a.value
 LinearAlgebra.eigmin(a::ScalMat) = a.value

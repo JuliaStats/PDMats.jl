@@ -51,6 +51,7 @@ end
 ### Algebra
 
 Base.inv(a::PDSparseMat{T}) where {T<:Real} = PDMat(inv(a.mat))
+LinearAlgebra.det(a::PDSparseMat) = det(a.chol)
 LinearAlgebra.logdet(a::PDSparseMat) = logdet(a.chol)
 
 ### whiten and unwhiten

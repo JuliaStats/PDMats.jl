@@ -53,6 +53,7 @@ end
 ### Algebra
 
 Base.inv(a::PDMat) = PDMat(inv(a.chol))
+LinearAlgebra.det(a::PDMat) = det(a.chol)
 LinearAlgebra.logdet(a::PDMat) = logdet(a.chol)
 LinearAlgebra.eigmax(a::PDMat) = eigmax(a.mat)
 LinearAlgebra.eigmin(a::PDMat) = eigmin(a.mat)
