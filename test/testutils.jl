@@ -17,6 +17,7 @@ function test_pdmat(C::AbstractPDMat, Cmat::Matrix;
                     t_cholesky::Bool=true,      # whether to test cholesky method
                     t_scale::Bool=true,         # whether to test scaling
                     t_add::Bool=true,           # whether to test pdadd
+		    t_det::Bool=true,           # whether to test det method
                     t_logdet::Bool=true,        # whether to test logdet method
                     t_eig::Bool=true,           # whether to test eigmax and eigmin
                     t_mul::Bool=true,           # whether to test multiplication
@@ -36,6 +37,7 @@ function test_pdmat(C::AbstractPDMat, Cmat::Matrix;
     isa(C, PDMatType) && t_cholesky && pdtest_cholesky(C, Cmat, cmat_eq, verbose)
     t_scale && pdtest_scale(C, Cmat, verbose)
     t_add && pdtest_add(C, Cmat, verbose)
+    t_det && pdtest_det(C, Cmat, verbose)
     t_logdet && pdtest_logdet(C, Cmat, verbose)
 
     t_eig && pdtest_eig(C, Cmat, verbose)
@@ -154,12 +156,24 @@ function pdtest_add(C::AbstractPDMat, Cmat::Matrix, verbose::Int)
     @test Mr ≈ R
 end
 
+function pdtest_det(C::AbstractPDMat, Cmat::Matrix, verbose::Int)
+    _pdt(verbose, "det")
+    @test det(C) ≈ det(Cmat)
+
+    # generic fallback in LinearAlgebra performs LU decomposition
+    if C isa Union{PDMat,PDiagMat,ScalMat}
+	@test iszero(@allocated det(C))
+    end
+end
 
 function pdtest_logdet(C::AbstractPDMat, Cmat::Matrix, verbose::Int)
     _pdt(verbose, "logdet")
-    # default tolerance in isapprox is different on 0.4. rtol argument can be deleted
-    # ≈ form used when 0.4 is no longer supported
-    @test isapprox(logdet(C), logdet(Cmat), rtol=sqrt(max(eps(real(eltype(C))), eps(real(eltype(Cmat))))))
+    @test logdet(C) ≈ logdet(Cmat)
+
+    # generic fallback in LinearAlgebra performs LU decomposition
+    if C isa Union{PDMat,PDiagMat,ScalMat}
+	@test iszero(@allocated logdet(C))
+    end
 end
 
 
