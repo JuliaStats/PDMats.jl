@@ -65,6 +65,7 @@ LinearAlgebra.det(a::ScalMat) = a.value^a.dim
 LinearAlgebra.logdet(a::ScalMat) = a.dim * log(a.value)
 LinearAlgebra.eigmax(a::ScalMat) = a.value
 LinearAlgebra.eigmin(a::ScalMat) = a.value
+LinearAlgebra.sqrt(a::ScalMat) = ScalMat(a.dim, sqrt(a.value))
 
 
 ### whiten and unwhiten

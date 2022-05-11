@@ -69,6 +69,7 @@ function LinearAlgebra.logdet(a::PDiagMat)
 end
 LinearAlgebra.eigmax(a::PDiagMat) = maximum(a.diag)
 LinearAlgebra.eigmin(a::PDiagMat) = minimum(a.diag)
+LinearAlgebra.sqrt(a::PDiagMat) = PDiagMat(map(sqrt, a.diag))
 
 
 ### whiten and unwhiten
