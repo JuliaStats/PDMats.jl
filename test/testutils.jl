@@ -326,6 +326,7 @@ end
 _randPDMat(T, n) = (X = randn(T, n, n); PDMat(X * X' + LinearAlgebra.I))
 _randPDiagMat(T, n) = PDiagMat(rand(T, n))
 _randScalMat(T, n) = ScalMat(n, rand(T))
+_randPDSparseMat(T, n) = (X = T.(sprand(n, 1, 0.5)); PDSparseMat(X * X' + LinearAlgebra.I))
 
 function _pd_compare(A::AbstractPDMat, B::AbstractPDMat)
     @test dim(A) == dim(B)

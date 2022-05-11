@@ -2,12 +2,9 @@ using PDMats
 using Test
 using LinearAlgebra: LinearAlgebra
 
-_randPDSparseMat(T, n) = (X = T.(sprand(n, 1, 0.5)); PDSparseMat(X * X' + LinearAlgebra.I))
-
 function _pd_sqrt_compare(A::AbstractPDMat)
     PDAsqrt = sqrt(A)
     Asqrt_dense = sqrt(Matrix(A))
-    _pd_compare(PDAsqrt, PDMat(Asqrt_dense))
     pdtest_cmat(PDAsqrt, Asqrt_dense, false, 0)
     pdtest_diag(PDAsqrt, Asqrt_dense, false, 0)
     pdtest_scale(PDAsqrt, Asqrt_dense, 0)
