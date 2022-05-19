@@ -60,39 +60,6 @@ LinearAlgebra.eigmin(a::PDMat) = eigmin(a.mat)
 Base.kron(A::PDMat, B::PDMat) = PDMat(kron(A.mat, B.mat), Cholesky(kron(A.chol.U, B.chol.U), 'U', A.chol.info))
 LinearAlgebra.sqrt(A::PDMat) = PDMat(sqrt(Hermitian(A.mat)))
 
-### whiten and unwhiten
-
-function whiten!(r::StridedVecOrMat, a::PDMat, x::StridedVecOrMat)
-    v = _rcopy!(r, x)
-    ldiv!(chol_lower(a.chol), v)
-end
-
-function unwhiten!(r::StridedVecOrMat, a::PDMat, x::StridedVecOrMat)
-    v = _rcopy!(r, x)
-    lmul!(chol_lower(a.chol), v)
-end
-
-
-### quadratic forms
-
-quad(a::PDMat, x::AbstractVector) = sum(abs2, chol_upper(a.chol) * x)
-invquad(a::PDMat, x::AbstractVector) = sum(abs2, chol_lower(a.chol) \ x)
-
-"""
-    quad!(r::AbstractArray, a::AbstractPDMat, x::StridedMatrix)
-
-Overwrite `r` with the value of the quadratic form defined by `a` applied columnwise to `x`
-"""
-quad!(r::AbstractArray, a::PDMat, x::StridedMatrix) = colwise_dot!(r, x, a.mat * x)
-
-"""
-    invquad!(r::AbstractArray, a::AbstractPDMat, x::StridedMatrix)
-
-Overwrite `r` with the value of the quadratic form defined by `inv(a)` applied columnwise to `x`
-"""
-invquad!(r::AbstractArray, a::PDMat, x::StridedMatrix) = colwise_dot!(r, x, a.mat \ x)
-
-
 ### tri products
 
 function X_A_Xt(a::PDMat, x::AbstractMatrix)
