@@ -94,7 +94,6 @@ unwhiten(a::AbstractMatrix, x::AbstractVecOrMat) = unwhiten!(similar(x), a, x)
 
 """
     quad(a::AbstractMatrix, x::AbstractVecOrMat)
-    quad(a::AbstractPDMat, x::StridedVecOrMat)
 
 Return the value of the quadratic form defined by `a` applied to `x`
 
@@ -110,8 +109,7 @@ quad(a::AbstractMatrix, x::AbstractVector) = sum(abs2, chol_upper(cholesky(a)) *
 invquad(a::AbstractMatrix, x::AbstractVector) = sum(abs2, chol_lower(cholesky(a)) \ x)
 
 """
-    quad!(r::AbstractArray, a::AbstractMatrix, x::AbstractMatrix
-    quad!(r::AbstractArray, a::AbstractPDMat, x::StridedMatrix)
+    quad!(r::AbstractArray, a::AbstractMatrix, x::AbstractMatrix)
 
 Overwrite `r` with the value of the quadratic form defined by `a` applied columnwise to `x`
 """
@@ -121,7 +119,6 @@ invquad!(r::AbstractArray, a::AbstractMatrix, x::AbstractMatrix) = colwise_dot!(
 
 """
     invquad(a::AbstractMatrix, x::AbstractVecOrMat)
-    invquad(a::AbstractPDMat, x::StridedVecOrMat)
 
 Return the value of the quadratic form defined by `inv(a)` applied to `x`.
 
@@ -138,7 +135,6 @@ end
 
 """
     invquad!(r::AbstractArray, a::AbstractMatrix, x::AbstractMatrix)
-    invquad!(r::AbstractArray, a::AbstractPDMat, x::StridedMatrix)
 
 Overwrite `r` with the value of the quadratic form defined by `inv(a)` applied columnwise to `x`
 """
