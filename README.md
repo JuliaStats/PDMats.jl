@@ -220,7 +220,7 @@ While in theory all of them can be defined, at present only the following subset
  - `quad`, `quad!`
  - `invquad`, `invquad!`
 
-PRs to implement more generic fallbacks are welcome
+PRs to implement more generic fallbacks are welcome.
 
 ## Define Customized Subtypes
 
