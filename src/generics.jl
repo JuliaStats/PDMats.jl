@@ -114,7 +114,6 @@ invquad(a::AbstractMatrix, x::AbstractVector) = sum(abs2, chol_lower(cholesky(a)
 Overwrite `r` with the value of the quadratic form defined by `a` applied columnwise to `x`
 """
 quad!(r::AbstractArray, a::AbstractMatrix, x::AbstractMatrix) = colwise_dot!(r, x, a * x)
-invquad!(r::AbstractArray, a::AbstractMatrix, x::AbstractMatrix) = colwise_dot!(r, x, a \ x)
 
 
 """
