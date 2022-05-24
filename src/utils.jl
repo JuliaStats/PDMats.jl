@@ -69,7 +69,7 @@ function invwsumsq(w::AbstractVector, a::AbstractVector)
 end
 
 function colwise_dot!(r::AbstractArray, a::AbstractMatrix, b::AbstractMatrix)
-    @check_argdims size(a, 2) == size(b, 2) && size(a, 1) == size(b, 1)
+    @check_argdims(axes(a) == axes(b))
     for j in axes(a, 2)
         v = zero(promote_type(eltype(a), eltype(b)))
         @simd for i in axes(a, 1)
