@@ -48,15 +48,10 @@ function unwhiten!(r::AbstractVecOrMat, a::AbstractMatrix, x::AbstractVecOrMat)
 end
 
 """
-    whiten(a::AbstractMatrix, x::AbstractVecOrMat)    
-    whiten(a::AbstractPDMat, x::StridedVecOrMat)
-    whiten!(a::AbstractPDMat, x::StridedVecOrMat)
-    whiten!(r::StridedVecOrMat, a::AbstractPDMat, x::StridedVecOrMat)
+    whiten(a::AbstractMatrix, x::AbstractVecOrMat)
     unwhiten(a::AbstractMatrix, x::AbstractVecOrMat)
-    unwhiten(a::AbstractPDMat, x::StridedVecOrMat)
     unwhiten!(a::AbstractMatrix, x::AbstractVecOrMat)
-    unwhiten!(a::AbstractPDMat, x::StridedVecOrMat)
-    unwhiten!(r::StridedVecOrMat, a::AbstractPDMat, x::StridedVecOrMat)
+    unwhiten!(r::AbstractVecOrMat, a::AbstractPDMat, x::AbstractVecOrMat)
 
 Allocating and in-place versions of the `whiten`ing transform (or its inverse) defined by `a` applied to `x`
 
