@@ -44,9 +44,10 @@ function pdadd!(r::Matrix, a::Matrix, b::PDSparseMat, c)
 end
 
 *(a::PDSparseMat, c::Real) = PDSparseMat(a.mat * c)
-*(a::PDSparseMat, x::StridedVecOrMat) = a.mat * x
-\(a::PDSparseMat{T}, x::StridedVecOrMat{T}) where {T<:Real} = convert(Array{T},a.chol \ convert(Array{Float64},x)) #to avoid limitations in sparse factorization library CHOLMOD, see e.g., julia issue #14076
-/(x::StridedVecOrMat{T}, a::PDSparseMat{T}) where {T<:Real} = convert(Array{T},convert(Array{Float64},x) / a.chol )
+*(a::PDSparseMat, x::AbstractMatrix) = a.mat * x  # defining these seperately to avoid
+*(a::PDSparseMat, x::AbstractVector) = a.mat * x  # ambiguity errors
+\(a::PDSparseMat{T}, x::AbstractVecOrMat{T}) where {T<:Real} = convert(Array{T},a.chol \ convert(Array{Float64},x)) #to avoid limitations in sparse factorization library CHOLMOD, see e.g., julia issue #14076
+/(x::AbstractVecOrMat{T}, a::PDSparseMat{T}) where {T<:Real} = convert(Array{T},convert(Array{Float64},x) / a.chol )
 
 ### Algebra
 
@@ -57,12 +58,12 @@ LinearAlgebra.sqrt(A::PDSparseMat) = PDMat(sqrt(Hermitian(Matrix(A))))
 
 ### whiten and unwhiten
 
-function whiten!(r::StridedVecOrMat, a::PDSparseMat, x::StridedVecOrMat)
+function whiten!(r::AbstractVecOrMat, a::PDSparseMat, x::AbstractVecOrMat)
     r[:] = sparse(chol_lower(a.chol)) \ x
     return r
 end
 
-function unwhiten!(r::StridedVecOrMat, a::PDSparseMat, x::StridedVecOrMat)
+function unwhiten!(r::AbstractVecOrMat, a::PDSparseMat, x::AbstractVecOrMat)
     r[:] = sparse(chol_lower(a.chol)) * x
     return r
 end
@@ -70,18 +71,18 @@ end
 
 ### quadratic forms
 
-quad(a::PDSparseMat, x::StridedVector) = dot(x, a * x)
-invquad(a::PDSparseMat, x::StridedVector) = dot(x, a \ x)
+quad(a::PDSparseMat, x::AbstractVector) = dot(x, a * x)
+invquad(a::PDSparseMat, x::AbstractVector) = dot(x, a \ x)
 
-function quad!(r::AbstractArray, a::PDSparseMat, x::StridedMatrix)
-    for i in 1:size(x, 2)
+function quad!(r::AbstractArray, a::PDSparseMat, x::AbstractMatrix)
+    for i in axes(x, 2)
         r[i] = quad(a, x[:,i])
     end
     return r
 end
 
-function invquad!(r::AbstractArray, a::PDSparseMat, x::StridedMatrix)
-    for i in 1:size(x, 2)
+function invquad!(r::AbstractArray, a::PDSparseMat, x::AbstractMatrix)
+    for i in axes(x, 2)
         r[i] = invquad(a, x[:,i])
     end
     return r
@@ -90,24 +91,24 @@ end
 
 ### tri products
 
-function X_A_Xt(a::PDSparseMat, x::StridedMatrix)
+function X_A_Xt(a::PDSparseMat, x::AbstractMatrix)
     z = x * sparse(chol_lower(a.chol))
     z * transpose(z)
 end
 
 
-function Xt_A_X(a::PDSparseMat, x::StridedMatrix)
+function Xt_A_X(a::PDSparseMat, x::AbstractMatrix)
     z = transpose(x) * sparse(chol_lower(a.chol))
     z * transpose(z)
 end
 
 
-function X_invA_Xt(a::PDSparseMat, x::StridedMatrix)
+function X_invA_Xt(a::PDSparseMat, x::AbstractMatrix)
     z = a.chol \ collect(transpose(x))
     x * z
 end
 
-function Xt_invA_X(a::PDSparseMat, x::StridedMatrix)
+function Xt_invA_X(a::PDSparseMat, x::AbstractMatrix)
     z = a.chol \ x
     transpose(x) * z
 end

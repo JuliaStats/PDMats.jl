@@ -70,13 +70,13 @@ LinearAlgebra.sqrt(a::ScalMat) = ScalMat(a.dim, sqrt(a.value))
 
 ### whiten and unwhiten
 
-function whiten!(r::StridedVecOrMat, a::ScalMat, x::StridedVecOrMat)
-    @check_argdims a.dim == size(x, 1)
+function whiten!(r::AbstractVecOrMat, a::ScalMat, x::AbstractVecOrMat)
+    @check_argdims dim(a) == size(x, 1)
     _ldiv!(r, sqrt(a.value), x)
 end
 
-function unwhiten!(r::StridedVecOrMat, a::ScalMat, x::StridedVecOrMat)
-    @check_argdims a.dim == size(x, 1)
+function unwhiten!(r::AbstractVecOrMat, a::ScalMat, x::AbstractVecOrMat)
+    @check_argdims dim(a) == size(x, 1)
     mul!(r, x, sqrt(a.value))
 end
 
@@ -86,28 +86,28 @@ end
 quad(a::ScalMat, x::AbstractVector) = sum(abs2, x) * a.value
 invquad(a::ScalMat, x::AbstractVector) = sum(abs2, x) / a.value
 
-quad!(r::AbstractArray, a::ScalMat, x::StridedMatrix) = colwise_sumsq!(r, x, a.value)
-invquad!(r::AbstractArray, a::ScalMat, x::StridedMatrix) = colwise_sumsqinv!(r, x, a.value)
+quad!(r::AbstractArray, a::ScalMat, x::AbstractMatrix) = colwise_sumsq!(r, x, a.value)
+invquad!(r::AbstractArray, a::ScalMat, x::AbstractMatrix) = colwise_sumsqinv!(r, x, a.value)
 
 
 ### tri products
 
-function X_A_Xt(a::ScalMat, x::StridedMatrix)
-    @check_argdims a.dim == size(x, 2)
+function X_A_Xt(a::ScalMat, x::AbstractMatrix)
+    @check_argdims dim(a) == size(x, 2)
     lmul!(a.value, x * transpose(x))
 end
 
-function Xt_A_X(a::ScalMat, x::StridedMatrix)
-    @check_argdims a.dim == size(x, 1)
+function Xt_A_X(a::ScalMat, x::AbstractMatrix)
+    @check_argdims dim(a) == size(x, 1)
     lmul!(a.value, transpose(x) * x)
 end
 
-function X_invA_Xt(a::ScalMat, x::StridedMatrix)
-    @check_argdims a.dim == size(x, 2)
+function X_invA_Xt(a::ScalMat, x::AbstractMatrix)
+    @check_argdims dim(a) == size(x, 2)
     _rdiv!(x * transpose(x), a.value)
 end
 
-function Xt_invA_X(a::ScalMat, x::StridedMatrix)
-    @check_argdims a.dim == size(x, 1)
+function Xt_invA_X(a::ScalMat, x::AbstractMatrix)
+    @check_argdims dim(a) == size(x, 1)
     _rdiv!(transpose(x) * x, a.value)
 end
