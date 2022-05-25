@@ -24,7 +24,7 @@ function _addscal!(r::Matrix, a::Matrix, b::Union{Matrix, SparseMatrixCSC}, c::R
 end
 
 function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::Real)
-    for i in axes(a, 1)
+    for i in diagind(a)
         @inbounds a[i,i] += v
     end
     return a
