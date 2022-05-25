@@ -115,9 +115,9 @@ quad(a::PDiagMat, x::AbstractVector) = wsumsq(a.diag, x)
 invquad(a::PDiagMat, x::AbstractVector) = invwsumsq(a.diag, x)
 
 function quad!(r::AbstractArray, a::PDiagMat, x::AbstractMatrix)
-    m, n = size(x)
     ad = a.diag
-    @check_argdims m == length(ad) && length(r) == n
+    @check_argdims eachindex(ad) == axes(x, 1)
+    @check_argdims eachindex(r) == axes(x, 2)
     @inbounds for j in axes(x, 2)
         s = zero(promote_type(eltype(ad), eltype(x)))
         for i in axes(x, 1)
@@ -131,7 +131,8 @@ end
 function invquad!(r::AbstractArray, a::PDiagMat, x::AbstractMatrix)
     m, n = size(x)
     ad = a.diag
-    @check_argdims m == length(ad) && length(r) == n
+    @check_argdims eachindex(ad) == axes(x, 1)
+    @check_argdims eachindex(x) == axes(x, 2)
     @inbounds for j in axes(x, 2)
         s = zero(zero(eltype(x)) / zero(eltype(ad)))
         for i in axes(x, 1)

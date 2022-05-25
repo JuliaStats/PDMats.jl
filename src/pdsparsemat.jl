@@ -75,6 +75,7 @@ quad(a::PDSparseMat, x::AbstractVector) = dot(x, a * x)
 invquad(a::PDSparseMat, x::AbstractVector) = dot(x, a \ x)
 
 function quad!(r::AbstractArray, a::PDSparseMat, x::AbstractMatrix)
+    @check_argdims eachindex(x) == axes(x, 2)
     for i in axes(x, 2)
         r[i] = quad(a, x[:,i])
     end
@@ -82,6 +83,7 @@ function quad!(r::AbstractArray, a::PDSparseMat, x::AbstractMatrix)
 end
 
 function invquad!(r::AbstractArray, a::PDSparseMat, x::AbstractMatrix)
+    @check_argdims eachindex(x) == axes(x, 2)
     for i in axes(x, 2)
         r[i] = invquad(a, x[:,i])
     end
