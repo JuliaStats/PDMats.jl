@@ -132,7 +132,7 @@ function invquad!(r::AbstractArray, a::PDiagMat, x::AbstractMatrix)
     m, n = size(x)
     ad = a.diag
     @check_argdims eachindex(ad) == axes(x, 1)
-    @check_argdims eachindex(x) == axes(x, 2)
+    @check_argdims eachindex(r) == axes(x, 2)
     @inbounds for j in axes(x, 2)
         s = zero(zero(eltype(x)) / zero(eltype(ad)))
         for i in axes(x, 1)

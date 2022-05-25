@@ -25,7 +25,7 @@ end
 
 function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::Real)
     for i in diagind(a)
-        @inbounds a[i,i] += v
+        @inbounds a[i] += v
     end
     return a
 end
