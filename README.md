@@ -209,6 +209,18 @@ unwhiten!(a, x)     # un-whitening transform inplace, updating `x`.
 unwhiten!(r, a, x)  # write the transformed result to `r`.
 ```
 
+### Fallbacks for `AbstractArray`s
+For ease of composability, some of these functions have generic fallbacks defined that work on `AbstractArray`s.
+These fallbacks may not be as fast as the methods specializaed for `AbstractPDMat`s, but they let you more easily swap out types.
+While in theory all of them can be defined, at present only the following subset has:
+
+ - `dim`
+ - `whiten`, `whiten!`
+ - `unwhiten`, `unwhiten!`
+ - `quad`, `quad!`
+ - `invquad`, `invquad!`
+
+PRs to implement more generic fallbacks are welcome.
 
 ## Define Customized Subtypes
 

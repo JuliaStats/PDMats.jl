@@ -1,10 +1,14 @@
 # Generic functions (on top of the type-specific implementations)
 
 ## Basic functions
-
 Base.size(a::AbstractPDMat) = (dim(a), dim(a))
 Base.size(a::AbstractPDMat, i::Integer) = 1 <= i <= 2 ? dim(a) : 1
 Base.length(a::AbstractPDMat) = abs2(dim(a))
+
+function dim(a::AbstractMatrix)
+    @check_argdims size(a, 1) == size(a, 2)
+    return size(a, 1)
+end
 
 ## arithmetics
 
@@ -29,16 +33,25 @@ LinearAlgebra.isposdef(::AbstractPDMat) = true
 LinearAlgebra.ishermitian(::AbstractPDMat) = true
 
 ## whiten and unwhiten
-whiten!(a::AbstractPDMat, x::StridedVecOrMat) = whiten!(x, a, x)
-unwhiten!(a::AbstractPDMat, x::StridedVecOrMat) = unwhiten!(x, a, x)
+
+whiten!(a::AbstractMatrix, x::AbstractVecOrMat) = whiten!(x, a, x)
+unwhiten!(a::AbstractMatrix, x::AbstractVecOrMat) = unwhiten!(x, a, x)
+
+function whiten!(r::AbstractVecOrMat, a::AbstractMatrix, x::AbstractVecOrMat)
+    v = _rcopy!(r, x)
+    ldiv!(chol_lower(cholesky(a)), v)
+end
+
+function unwhiten!(r::AbstractVecOrMat, a::AbstractMatrix, x::AbstractVecOrMat)
+    v = _rcopy!(r, x)
+    lmul!(chol_lower(cholesky(a)), v)
+end
 
 """
-    whiten(a::AbstractPDMat, x::StridedVecOrMat)
-    whiten!(a::AbstractPDMat, x::StridedVecOrMat)
-    whiten!(r::StridedVecOrMat, a::AbstractPDMat, x::StridedVecOrMat)
-    unwhiten(a::AbstractPDMat, x::StridedVecOrMat)
-    unwhiten!(a::AbstractPDMat, x::StridedVecOrMat)
-    unwhiten!(r::StridedVecOrMat, a::AbstractPDMat, x::StridedVecOrMat)
+    whiten(a::AbstractMatrix, x::AbstractVecOrMat)
+    unwhiten(a::AbstractMatrix, x::AbstractVecOrMat)
+    unwhiten!(a::AbstractMatrix, x::AbstractVecOrMat)
+    unwhiten!(r::AbstractVecOrMat, a::AbstractPDMat, x::AbstractVecOrMat)
 
 Allocating and in-place versions of the `whiten`ing transform (or its inverse) defined by `a` applied to `x`
 
@@ -68,28 +81,38 @@ julia> W * W'
  0.0  1.0
 ```
 """
-whiten(a::AbstractPDMat, x::StridedVecOrMat) = whiten!(similar(x), a, x)
-unwhiten(a::AbstractPDMat, x::StridedVecOrMat) = unwhiten!(similar(x), a, x)
+whiten(a::AbstractMatrix, x::AbstractVecOrMat) = whiten!(similar(x), a, x)
+unwhiten(a::AbstractMatrix, x::AbstractVecOrMat) = unwhiten!(similar(x), a, x)
 
 
 ## quad
 
 """
-    quad(a::AbstractPDMat, x::StridedVecOrMat)
+    quad(a::AbstractMatrix, x::AbstractVecOrMat)
 
 Return the value of the quadratic form defined by `a` applied to `x`
 
 If `x` is a vector the quadratic form is `x' * a * x`.  If `x` is a matrix
 the quadratic form is applied column-wise.
 """
-function quad(a::AbstractPDMat{T}, x::StridedMatrix{S}) where {T<:Real, S<:Real}
+function quad(a::AbstractMatrix{T}, x::AbstractMatrix{S}) where {T<:Real, S<:Real}
     @check_argdims dim(a) == size(x, 1)
     quad!(Array{promote_type(T, S)}(undef, size(x,2)), a, x)
 end
 
+quad(a::AbstractMatrix, x::AbstractVector) = sum(abs2, chol_upper(cholesky(a)) * x)
+invquad(a::AbstractMatrix, x::AbstractVector) = sum(abs2, chol_lower(cholesky(a)) \ x)
 
 """
-    invquad(a::AbstractPDMat, x::StridedVecOrMat)
+    quad!(r::AbstractArray, a::AbstractMatrix, x::AbstractMatrix)
+
+Overwrite `r` with the value of the quadratic form defined by `a` applied columnwise to `x`
+"""
+quad!(r::AbstractArray, a::AbstractMatrix, x::AbstractMatrix) = colwise_dot!(r, x, a * x)
+
+
+"""
+    invquad(a::AbstractMatrix, x::AbstractVecOrMat)
 
 Return the value of the quadratic form defined by `inv(a)` applied to `x`.
 
@@ -98,7 +121,15 @@ For most `PDMat` types this is done in a way that does not require evaluation of
 If `x` is a vector the quadratic form is `x' * a * x`.  If `x` is a matrix
 the quadratic form is applied column-wise.
 """
-function invquad(a::AbstractPDMat{T}, x::StridedMatrix{S}) where {T<:Real, S<:Real}
+invquad(a::AbstractMatrix, x::AbstractVecOrMat) = x' / a * x
+function invquad(a::AbstractMatrix{T}, x::AbstractMatrix{S}) where {T<:Real, S<:Real}
     @check_argdims dim(a) == size(x, 1)
     invquad!(Array{promote_type(T, S)}(undef, size(x,2)), a, x)
 end
+
+"""
+    invquad!(r::AbstractArray, a::AbstractMatrix, x::AbstractMatrix)
+
+Overwrite `r` with the value of the quadratic form defined by `inv(a)` applied columnwise to `x`
+"""
+invquad!(r::AbstractArray, a::AbstractMatrix, x::AbstractMatrix) = colwise_dot!(r, x, a \ x)

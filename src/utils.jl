@@ -7,7 +7,7 @@ macro check_argdims(cond)
     end
 end
 
-_rcopy!(r::StridedVecOrMat, x::StridedVecOrMat) = (r === x || copyto!(r, x); r)
+_rcopy!(r, x) = (r === x || copyto!(r, x); r)
 
 
 function _addscal!(r::Matrix, a::Matrix, b::Union{Matrix, SparseMatrixCSC}, c::Real)
@@ -69,11 +69,11 @@ function invwsumsq(w::AbstractVector, a::AbstractVector)
 end
 
 function colwise_dot!(r::AbstractArray, a::AbstractMatrix, b::AbstractMatrix)
-    n = length(r)
-    @check_argdims n == size(a, 2) == size(b, 2) && size(a, 1) == size(b, 1)
-    for j = 1:n
+    @check_argdims(axes(a) == axes(b))
+    @check_argdims(axes(a, 2) == eachindex(r))
+    for j in axes(a, 2)
         v = zero(promote_type(eltype(a), eltype(b)))
-        @simd for i = 1:size(a, 1)
+        @simd for i in axes(a, 1)
             @inbounds v += a[i, j]*b[i, j]
         end
         r[j] = v
