@@ -57,7 +57,7 @@ function /(x::AbstractVecOrMat, a::PDiagMat)
     # return matrix for 1-element vectors `x`, consistent with LinearAlgebra
     return reshape(x, Val(2)) ./ permutedims(a.diag) # = (a' \ x')'
 end
-Base.kron(A::PDiagMat, B::PDiagMat) = PDiagMat( vcat([A.diag[i] * B.diag for i in 1:dim(A)]...) )
+Base.kron(A::PDiagMat, B::PDiagMat) = PDiagMat(vec(permutedims(A.diag) .* B.diag))
 
 ### Algebra
 
