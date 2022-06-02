@@ -8,6 +8,12 @@ using StaticArrays
         PDS = PDMat(S)
         @test PDS isa PDMat{Float64, <:SMatrix{4, 4, Float64}}
         @test isbits(PDS)
+        C = cholesky(S)
+        PDC = PDMat(C)
+        @test typeof(PDC) === typeof(PDS)
+        @test Matrix(PDC) ≈ Matrix(PDS)
+        @test PDMat(S, C) === PDS
+        @test @allocated(PDMat(S)) == @allocated(PDMat(C)) == @allocated(PDMat(S, C))
 
         # Diagonal matrix
         D = PDiagMat(@SVector(rand(4)))

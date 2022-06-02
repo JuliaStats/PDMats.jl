@@ -17,7 +17,7 @@ function PDMat(mat::AbstractMatrix,chol::Cholesky{T,S}) where {T,S}
 end
 
 PDMat(mat::AbstractMatrix) = PDMat(mat, cholesky(mat))
-PDMat(fac::Cholesky) = PDMat(Matrix(fac), fac)
+PDMat(fac::Cholesky) = PDMat(AbstractMatrix(fac), fac)
 
 ### Conversion
 Base.convert(::Type{PDMat{T}},         a::PDMat) where {T<:Real} = PDMat(convert(AbstractArray{T}, a.mat))
