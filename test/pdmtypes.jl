@@ -111,10 +111,14 @@ using Test
     end
 
     @testset "PDMat from Cholesky decomposition of diagonal matrix (#137)" begin
-        x = rand(10, 10)
-        A = Diagonal(x' * x)
-        M = PDMat(cholesky(A))
-        @test M isa PDMat{Float64, typeof(A)}
-        @test Matrix(M) ≈ A
+        # U'*U where U isa UpperTriangular etc.
+        # requires https://github.com/JuliaLang/julia/pull/33334
+        if VERSION >= v"1.4.0-DEV.286"
+            x = rand(10, 10)
+            A = Diagonal(x' * x)
+            M = PDMat(cholesky(A))
+            @test M isa PDMat{Float64, typeof(A)}
+            @test Matrix(M) ≈ A
+        end
     end
 end
