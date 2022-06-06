@@ -31,7 +31,7 @@ function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::Real)
 end
 
 function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::Vector, c::Real)
-    @check_argdims eachindex(v) == axes(a, 1)
+    @check_argdims eachindex(v) == axes(a, 1) == axes(a, 2)
     if c == one(c)
         for i in eachindex(v)
             @inbounds a[i,i] += v[i]
@@ -60,7 +60,6 @@ end
 
 function invwsumsq(w::AbstractVector, a::AbstractVector)
     @check_argdims(eachindex(a) == eachindex(w))
-    s = zero(promote_type(eltype(w), eltype(a)))
     s = zero(zero(eltype(a)) / zero(eltype(w)))
     for i in eachindex(w)
         @inbounds s += abs2(a[i]) / w[i]
