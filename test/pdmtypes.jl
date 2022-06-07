@@ -109,4 +109,16 @@ using Test
             @test x / PDSparseMat(sparse(first(A), 1, 1)) ≈ y
         end
     end
+
+    @testset "PDMat from Cholesky decomposition of diagonal matrix (#137)" begin
+        # U'*U where U isa UpperTriangular etc.
+        # requires https://github.com/JuliaLang/julia/pull/33334
+        if VERSION >= v"1.4.0-DEV.286"
+            x = rand(10, 10)
+            A = Diagonal(x' * x)
+            M = PDMat(cholesky(A))
+            @test M isa PDMat{Float64, typeof(A)}
+            @test Matrix(M) ≈ A
+        end
+    end
 end
