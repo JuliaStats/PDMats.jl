@@ -3,7 +3,7 @@ using Test
 using LinearAlgebra: LinearAlgebra
 
 function _pd_kron_compare(A::AbstractPDMat, B::AbstractPDMat)
-    PDAkB_kron = kron(A, B)
+    PDAkB_kron = @inferred kron(A, B)
     PDAkB_dense = PDMat( kron( Matrix(A), Matrix(B) ) )
     _pd_compare(PDAkB_kron, PDAkB_dense)
 end
