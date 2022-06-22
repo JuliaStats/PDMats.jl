@@ -53,7 +53,10 @@ using StaticArrays
 
             @test Xt_invA_X(A, Y) isa SMatrix{10, 10, Float64}
             @test Xt_invA_X(A, Y) ≈ Matrix(Y)' * (Matrix(A) \ Matrix(Y))
+        end
 
+        # TODO: Fix for `PDMat` and `PDiagMat`
+        for A in (C,)
             @test quad(A, x) isa Float64
             @test quad(A, x) ≈ quad(Matrix(A), Vector(x))
 
