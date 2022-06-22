@@ -17,7 +17,7 @@ function test_pdmat(C, Cmat::Matrix;
                     t_cholesky::Bool=true,      # whether to test cholesky method
                     t_scale::Bool=true,         # whether to test scaling
                     t_add::Bool=true,           # whether to test pdadd
-		    t_det::Bool=true,           # whether to test det method
+                    t_det::Bool=true,           # whether to test det method
                     t_logdet::Bool=true,        # whether to test logdet method
                     t_eig::Bool=true,           # whether to test eigmax and eigmin
                     t_mul::Bool=true,           # whether to test multiplication

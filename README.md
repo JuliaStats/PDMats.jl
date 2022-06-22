@@ -222,6 +222,17 @@ While in theory all of them can be defined, at present only the following subset
 
 PRs to implement more generic fallbacks are welcome.
 
+### Fallbacks for `LinearAlgebra.Cholesky`
+
+For Cholesky decompositions of type `Cholesky` the following functions are defined as well:
+
+ - `dim`
+ - `whiten`, `whiten!`
+ - `unwhiten`, `unwhiten!`
+ - `quad`, `quad!`
+ - `invquad`, `invquad!`
+ - `X_A_Xt`, `Xt_A_X`, `X_invA_Xt`, `Xt_invA_X`
+
 ## Define Customized Subtypes
 
 In some situation, it is useful to define a customized subtype of `AbstractPDMat` to capture positive definite matrices with special structures. For this purpose, one has to define a subset of methods (as listed below), and other methods will be automatically provided.

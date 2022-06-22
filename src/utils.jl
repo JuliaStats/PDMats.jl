@@ -127,3 +127,10 @@ end
 else
     _ldiv!(Y::AbstractArray, s::Number, X::AbstractArray) = ldiv!(Y, s, X)
 end
+
+# eachcol was introduced in Julia 1.1
+@static if VERSION < v"1.1.0-DEV.792"
+    _eachcol(x::AbstractMatrix) = (view(x, :, i) for i in axes(x, 2))
+else
+    const _eachcol = eachcol
+end

@@ -23,12 +23,15 @@ using StaticArrays
         X = @SMatrix rand(10, 4)
         Y = @SMatrix rand(4, 10)
 
-        for A in (PDS, D)
-            @test A * x isa SVector{4, Float64}
-            @test A * x ≈ Matrix(A) * Vector(x)
+        for A in (PDS, D, C)
+            if !(A isa Cholesky)
+                # `*(::Cholesky, ::SArray)` is not defined
+                @test A * x isa SVector{4, Float64}
+                @test A * x ≈ Matrix(A) * Vector(x)
 
-            @test A * Y isa SMatrix{4, 10, Float64}
-            @test A * Y ≈ Matrix(A) * Matrix(Y)
+                @test A * Y isa SMatrix{4, 10, Float64}
+                @test A * Y ≈ Matrix(A) * Matrix(Y)
+            end
 
             @test X / A isa SMatrix{10, 4, Float64}
             @test X / A ≈ Matrix(X) / Matrix(A)
@@ -50,6 +53,30 @@ using StaticArrays
 
             @test Xt_invA_X(A, Y) isa SMatrix{10, 10, Float64}
             @test Xt_invA_X(A, Y) ≈ Matrix(Y)' * (Matrix(A) \ Matrix(Y))
+
+            @test quad(A, x) isa Float64
+            @test quad(A, x) ≈ quad(Matrix(A), Vector(x))
+
+            @test quad(A, Y) isa SVector{10, Float64}
+            @test quad(A, Y) ≈ quad(Matrix(A), Matrix(Y))
+
+            @test invquad(A, x) isa Float64
+            @test invquad(A, x) ≈ invquad(Matrix(A), Vector(x))
+
+            @test invquad(A, Y) isa SVector{10, Float64}
+            @test invquad(A, Y) ≈ invquad(Matrix(A), Matrix(Y))
+
+            @test whiten(A, x) isa SVector{4, Float64}
+            @test whiten(A, x) ≈ whiten(Matrix(A), Vector(x))
+
+            @test whiten(A, Y) isa SMatrix{4, 10, Float64}
+            @test whiten(A, Y) ≈ whiten(Matrix(A), Matrix(Y))
+
+            @test unwhiten(A, x) isa SVector{4, Float64}
+            @test unwhiten(A, x) ≈ unwhiten(Matrix(A), Vector(x))
+
+            @test unwhiten(A, Y) isa SMatrix{4, 10, Float64}
+            @test unwhiten(A, Y) ≈ unwhiten(Matrix(A), Matrix(Y))
         end
     end
 
