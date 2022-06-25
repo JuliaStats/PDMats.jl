@@ -26,7 +26,7 @@ Base.convert(::Type{AbstractArray{T}}, a::PDMat{T}) where {T<:Real} = a
 
 ### Basics
 
-dim(a::PDMat) = a.dim
+Base.size(a::PDMat) = (a.dim, a.dim)
 Base.Matrix(a::PDMat) = copy(a.mat)
 LinearAlgebra.diag(a::PDMat) = diag(a.mat)
 LinearAlgebra.cholesky(a::PDMat) = a.chol
@@ -63,25 +63,25 @@ LinearAlgebra.sqrt(A::PDMat) = PDMat(sqrt(Hermitian(A.mat)))
 ### tri products
 
 function X_A_Xt(a::PDMat, x::AbstractMatrix)
-    @check_argdims dim(a) == size(x, 2)
+    @check_argdims a.dim == size(x, 2)
     z = x * chol_lower(a.chol)
     return z * transpose(z)
 end
 
 function Xt_A_X(a::PDMat, x::AbstractMatrix)
-    @check_argdims dim(a) == size(x, 1)
+    @check_argdims a.dim == size(x, 1)
     z = chol_upper(a.chol) * x
     return transpose(z) * z
 end
 
 function X_invA_Xt(a::PDMat, x::AbstractMatrix)
-    @check_argdims dim(a) == size(x, 2)
+    @check_argdims a.dim == size(x, 2)
     z = x / chol_upper(a.chol)
     return z * transpose(z)
 end
 
 function Xt_invA_X(a::PDMat, x::AbstractMatrix)
-    @check_argdims dim(a) == size(x, 1)
+    @check_argdims a.dim == size(x, 1)
     z = chol_lower(a.chol) \ x
     return transpose(z) * z
 end

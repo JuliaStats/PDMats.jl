@@ -28,7 +28,7 @@ function test_pdmat(C, Cmat::Matrix;
                     )
 
     d = size(Cmat, 1)
-    verbose >= 1 && printstyled("Testing $(typeof(C)) with dim = $d\n", color=:blue)
+    verbose >= 1 && printstyled("Testing $(typeof(C)) of size ($d, $d)\n", color=:blue)
 
     pdtest_basics(C, Cmat, d, verbose)
     pdtest_cmat(C, Cmat, cmat_eq, verbose)
@@ -64,7 +64,7 @@ _pdt(vb::Int, s) = (vb >= 2 && printstyled("    .. testing $s\n", color=:green))
 
 function pdtest_basics(C, Cmat::Matrix, d::Int, verbose::Int)
     _pdt(verbose, "dim")
-    @test dim(C) == d
+    @test @test_deprecated(dim(C)) == d
 
     _pdt(verbose, "size")
     @test size(C) == (d, d)
@@ -188,7 +188,7 @@ end
 
 function pdtest_mul(C, Cmat::Matrix, verbose::Int)
     n = 5
-    X = rand(eltype(C), dim(C), n)
+    X = rand(eltype(C), size(C, 1), n)
     pdtest_mul(C, Cmat, X, verbose)
 end
 
@@ -196,7 +196,7 @@ end
 function pdtest_mul(C, Cmat::Matrix, X::Matrix, verbose::Int)
     _pdt(verbose, "multiply")
     d, n = size(X)
-    @assert d == dim(C)
+    @assert d == size(C, 1) == size(C, 2)
     @assert size(Cmat) == size(C)
     @test C * X ≈ Cmat * X
 
@@ -220,7 +220,7 @@ end
 function pdtest_div(C, Imat::Matrix, X::Matrix, verbose::Int)
     _pdt(verbose, "divide")
     d, n = size(X)
-    @assert d == dim(C)
+    @assert d == size(C, 1) == size(C, 2)
     @assert size(Imat) == size(C)
     @test C \ X ≈ Imat * X
     # Right division with Choleskyrequires https://github.com/JuliaLang/julia/pull/32594
@@ -273,7 +273,7 @@ end
 
 function pdtest_triprod(C, Cmat::Matrix, Imat::Matrix, X::Matrix, verbose::Int)
     d, n = size(X)
-    @assert d == dim(C)
+    @assert d == size(C, 1) == size(C, 2)
     Xt = copy(transpose(X))
 
     _pdt(verbose, "X_A_Xt")
@@ -303,7 +303,7 @@ function pdtest_whiten(C, Cmat::Matrix, verbose::Int)
     Q = qr(convert(Array{eltype(C),2},randn(size(Cmat)))).Q
     Y = Y * Q'                    # generate a matrix Y such that Y * Y' = C
     @test Y * Y' ≈ Cmat
-    d = dim(C)
+    d = size(C, 1)
 
     _pdt(verbose, "whiten")
     Z = whiten(C, Y)
@@ -343,7 +343,7 @@ _randScalMat(T, n) = ScalMat(n, rand(T))
 _randPDSparseMat(T, n) = (X = T.(sprand(n, 1, 0.5)); PDSparseMat(X * X' + LinearAlgebra.I))
 
 function _pd_compare(A::AbstractPDMat, B::AbstractPDMat)
-    @test dim(A) == dim(B)
+    @test size(A) == size(B)
     @test Matrix(A) ≈ Matrix(B)
     @test cholesky(A).L ≈ cholesky(B).L
     @test cholesky(A).U ≈ cholesky(B).U

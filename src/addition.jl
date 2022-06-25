@@ -39,8 +39,8 @@ end
 
 # between pdmat and uniformscaling (multiple of identity)
 
-+(a::AbstractPDMat, b::UniformScaling) = a + ScalMat(dim(a), b.λ)
-+(a::UniformScaling, b::AbstractPDMat) = ScalMat(dim(b), a.λ) + b
++(a::AbstractPDMat, b::UniformScaling) = a + ScalMat(a.dim, b.λ)
++(a::UniformScaling, b::AbstractPDMat) = ScalMat(b.dim, a.λ) + b
 
 pdadd(a::PDMat, b::AbstractPDMat, c::Real) = PDMat(a.mat + Matrix(b * c))
 pdadd(a::PDiagMat, b::AbstractPDMat, c::Real) = PDMat(_adddiag!(Matrix(b * c), a.diag, one(c)))
