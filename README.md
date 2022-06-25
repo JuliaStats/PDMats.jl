@@ -101,14 +101,10 @@ PDSparseMat(chol)         # with the Cholesky factorization
 
 ## Common interface
 
-All subtypes of `AbstractPDMat` share the same API, *i.e.* with the same set of methods to operate on their instances. These methods are introduced below, where `a` is an instance of a subtype of `AbstractPDMat` to represent a positive definite matrix, `x` be a column vector or a matrix with `size(x,1) == dim(a)`, and `c` be a positive real value.
+All subtypes of `AbstractPDMat` share the same API, *i.e.* with the same set of methods to operate on their instances. These methods are introduced below, where `a` is an instance of a subtype of `AbstractPDMat` to represent a positive definite matrix, `x` be a column vector or a matrix with `size(x,1) == size(a, 2)`, and `c` be a positive real value.
 
 ```julia
-
-dim(a)      # return the dimension of `a`.
-            # Let `a` represent a d x d matrix, then `dim(a)` returns d.
-
-size(a)     # return the size tuple of `a`, i.e. `(dim(a), dim(a))`.
+size(a)     # return the size of `a`.
 
 size(a, i)  # return the i-th dimension of `a`.
 
@@ -214,7 +210,6 @@ For ease of composability, some of these functions have generic fallbacks define
 These fallbacks may not be as fast as the methods specializaed for `AbstractPDMat`s, but they let you more easily swap out types.
 While in theory all of them can be defined, at present only the following subset has:
 
- - `dim`
  - `whiten`, `whiten!`
  - `unwhiten`, `unwhiten!`
  - `quad`, `quad!`
@@ -227,11 +222,8 @@ PRs to implement more generic fallbacks are welcome.
 In some situation, it is useful to define a customized subtype of `AbstractPDMat` to capture positive definite matrices with special structures. For this purpose, one has to define a subset of methods (as listed below), and other methods will be automatically provided.
 
 ```julia
-
 # Let `M` be the name of the subtype, then the following methods need
 # to be implemented for `M`:
-
-dim(a::M)       # return the dimension of `a`
 
 Matrix(a::M)    # return a copy of the matrix in full form, of type
                 # `Matrix{eltype(M)}`.

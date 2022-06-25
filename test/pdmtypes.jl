@@ -84,7 +84,7 @@ using Test
         @test d.diag === v
     end
 
-    @testset "division of vectors (dim = 1)" begin
+    @testset "division of vectors (size (1, 1))" begin
         A = rand(1, 1)
         x = randn(1)
         y = x / A
