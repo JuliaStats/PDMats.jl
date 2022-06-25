@@ -101,7 +101,7 @@ PDSparseMat(chol)         # with the Cholesky factorization
 
 ## Common interface
 
-All subtypes of `AbstractPDMat` share the same API, *i.e.* with the same set of methods to operate on their instances. These methods are introduced below, where `a` is an instance of a subtype of `AbstractPDMat` to represent a positive definite matrix, `x` be a column vector or a matrix with `size(x,1) == size(a, 2)`, and `c` be a positive real value.
+All subtypes of `AbstractPDMat` share the same API, *i.e.* with the same set of methods to operate on their instances. These methods are introduced below, where `a` is an instance of a subtype of `AbstractPDMat` to represent a positive definite matrix, `x` be a column vector or a matrix with `size(x,1) == size(a, 1) == size(a, 2)`, and `c` be a positive real value.
 
 ```julia
 size(a)     # return the size of `a`.
