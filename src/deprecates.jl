@@ -14,3 +14,5 @@ using Base: @deprecate
 
 @deprecate ScalMat(d::Int, x::Real, inv_x::Real) ScalMat(d, x)
 @deprecate PDiagMat(v::AbstractVector, inv_v::AbstractVector) PDiagMat(v)
+
+@deprecate dim(a::AbstractMatrix) LinearAlgebra.checksquare(a)

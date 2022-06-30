@@ -12,7 +12,7 @@ Base.convert(::Type{AbstractArray{T}}, a::ScalMat) where {T<:Real} = convert(Sca
 
 ### Basics
 
-dim(a::ScalMat) = a.dim
+Base.size(a::ScalMat) = (a.dim, a.dim)
 Base.Matrix(a::ScalMat) = Matrix(Diagonal(fill(a.value, a.dim)))
 LinearAlgebra.diag(a::ScalMat) = fill(a.value, a.dim)
 LinearAlgebra.cholesky(a::ScalMat) = cholesky(Diagonal(fill(a.value, a.dim)))
@@ -40,23 +40,23 @@ end
 *(a::ScalMat, c::Real) = ScalMat(a.dim, a.value * c)
 /(a::ScalMat, c::Real) = ScalMat(a.dim, a.value / c)
 function *(a::ScalMat, x::AbstractVector)
-    @check_argdims dim(a) == length(x)
+    @check_argdims a.dim == length(x)
     return a.value * x
 end
 function *(a::ScalMat, x::AbstractMatrix)
-    @check_argdims dim(a) == size(x, 1)
+    @check_argdims a.dim == size(x, 1)
     return a.value * x
 end
 function \(a::ScalMat, x::AbstractVecOrMat)
-    @check_argdims dim(a) == size(x, 1)
+    @check_argdims a.dim == size(x, 1)
     return x / a.value
 end
 function /(x::AbstractVecOrMat, a::ScalMat)
-    @check_argdims dim(a) == size(x, 2)
+    @check_argdims a.dim == size(x, 2)
     # return matrix for 1-element vectors `x`, consistent with LinearAlgebra
     return reshape(x, Val(2)) / a.value
 end
-Base.kron(A::ScalMat, B::ScalMat) = ScalMat( dim(A) * dim(B), A.value * B.value )
+Base.kron(A::ScalMat, B::ScalMat) = ScalMat(A.dim * B.dim, A.value * B.value )
 
 ### Algebra
 
@@ -71,12 +71,12 @@ LinearAlgebra.sqrt(a::ScalMat) = ScalMat(a.dim, sqrt(a.value))
 ### whiten and unwhiten
 
 function whiten!(r::StridedVecOrMat, a::ScalMat, x::StridedVecOrMat)
-    @check_argdims dim(a) == size(x, 1)
+    @check_argdims a.dim == size(x, 1)
     _ldiv!(r, sqrt(a.value), x)
 end
 
 function unwhiten!(r::StridedVecOrMat, a::ScalMat, x::StridedVecOrMat)
-    @check_argdims dim(a) == size(x, 1)
+    @check_argdims a.dim == size(x, 1)
     mul!(r, x, sqrt(a.value))
 end
 
@@ -93,21 +93,21 @@ invquad!(r::AbstractArray, a::ScalMat, x::StridedMatrix) = colwise_sumsqinv!(r, 
 ### tri products
 
 function X_A_Xt(a::ScalMat, x::StridedMatrix)
-    @check_argdims dim(a) == size(x, 2)
+    @check_argdims a.dim == size(x, 2)
     lmul!(a.value, x * transpose(x))
 end
 
 function Xt_A_X(a::ScalMat, x::StridedMatrix)
-    @check_argdims dim(a) == size(x, 1)
+    @check_argdims a.dim == size(x, 1)
     lmul!(a.value, transpose(x) * x)
 end
 
 function X_invA_Xt(a::ScalMat, x::StridedMatrix)
-    @check_argdims dim(a) == size(x, 2)
+    @check_argdims a.dim == size(x, 2)
     _rdiv!(x * transpose(x), a.value)
 end
 
 function Xt_invA_X(a::ScalMat, x::StridedMatrix)
-    @check_argdims dim(a) == size(x, 1)
+    @check_argdims a.dim == size(x, 1)
     _rdiv!(transpose(x) * x, a.value)
 end

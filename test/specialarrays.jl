@@ -18,6 +18,7 @@ using StaticArrays
         # Diagonal matrix
         D = PDiagMat(@SVector(rand(4)))
         @test D isa PDiagMat{Float64, <:SVector{4, Float64}}
+        @test @inferred(kron(D, D)) isa PDiagMat{Float64, <:SVector{16, Float64}}
 
         x = @SVector rand(4)
         X = @SMatrix rand(10, 4)

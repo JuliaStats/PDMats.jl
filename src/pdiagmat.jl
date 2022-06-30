@@ -14,7 +14,7 @@ Base.convert(::Type{AbstractArray{T}}, a::PDiagMat) where {T<:Real} = convert(PD
 
 ### Basics
 
-dim(a::PDiagMat) = a.dim
+Base.size(a::PDiagMat) = (a.dim, a.dim)
 Base.Matrix(a::PDiagMat) = Matrix(Diagonal(a.diag))
 LinearAlgebra.diag(a::PDiagMat) = copy(a.diag)
 LinearAlgebra.cholesky(a::PDiagMat) = cholesky(Diagonal(a.diag))
@@ -41,23 +41,23 @@ end
 
 *(a::PDiagMat, c::Real) = PDiagMat(a.diag * c)
 function *(a::PDiagMat, x::AbstractVector)
-    @check_argdims dim(a) == length(x)
+    @check_argdims a.dim == length(x)
     return a.diag .* x
 end
 function *(a::PDiagMat, x::AbstractMatrix)
-    @check_argdims dim(a) == size(x, 1)
+    @check_argdims a.dim == size(x, 1)
     return a.diag .* x
 end
 function \(a::PDiagMat, x::AbstractVecOrMat)
-    @check_argdims dim(a) == size(x, 1)
+    @check_argdims a.dim == size(x, 1)
     return x ./ a.diag
 end
 function /(x::AbstractVecOrMat, a::PDiagMat)
-    @check_argdims dim(a) == size(x, 2)
+    @check_argdims a.dim == size(x, 2)
     # return matrix for 1-element vectors `x`, consistent with LinearAlgebra
     return reshape(x, Val(2)) ./ permutedims(a.diag) # = (a' \ x')'
 end
-Base.kron(A::PDiagMat, B::PDiagMat) = PDiagMat( vcat([A.diag[i] * B.diag for i in 1:dim(A)]...) )
+Base.kron(A::PDiagMat, B::PDiagMat) = PDiagMat(vec(permutedims(A.diag) .* B.diag))
 
 ### Algebra
 
@@ -75,7 +75,7 @@ LinearAlgebra.sqrt(a::PDiagMat) = PDiagMat(map(sqrt, a.diag))
 ### whiten and unwhiten
 
 function whiten!(r::StridedVector, a::PDiagMat, x::StridedVector)
-    n = dim(a)
+    n = a.dim
     @check_argdims length(r) == length(x) == n
     v = a.diag
     for i = 1:n
@@ -85,7 +85,7 @@ function whiten!(r::StridedVector, a::PDiagMat, x::StridedVector)
 end
 
 function unwhiten!(r::StridedVector, a::PDiagMat, x::StridedVector)
-    n = dim(a)
+    n = a.dim
     @check_argdims length(r) == length(x) == n
     v = a.diag
     for i = 1:n
@@ -142,25 +142,25 @@ end
 ### tri products
 
 function X_A_Xt(a::PDiagMat, x::AbstractMatrix)
-    @check_argdims dim(a) == size(x, 2)
+    @check_argdims a.dim == size(x, 2)
     z = x .* sqrt.(permutedims(a.diag))
     z * transpose(z)
 end
 
 function Xt_A_X(a::PDiagMat, x::AbstractMatrix)
-    @check_argdims dim(a) == size(x, 1)
+    @check_argdims a.dim == size(x, 1)
     z = x .* sqrt.(a.diag)
     transpose(z) * z
 end
 
 function X_invA_Xt(a::PDiagMat, x::AbstractMatrix)
-    @check_argdims dim(a) == size(x, 2)
+    @check_argdims a.dim == size(x, 2)
     z = x ./ sqrt.(permutedims(a.diag))
     z * transpose(z)
 end
 
 function Xt_invA_X(a::PDiagMat, x::AbstractMatrix)
-    @check_argdims dim(a) == size(x, 1)
+    @check_argdims a.dim == size(x, 1)
     z = x ./ sqrt.(a.diag)
     transpose(z) * z
 end
