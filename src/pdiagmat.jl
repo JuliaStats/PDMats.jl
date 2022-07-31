@@ -105,18 +105,22 @@ function unwhiten!(r::StridedMatrix, a::PDiagMat, x::StridedMatrix)
 end
 
 
+whiten!(r::AbstractVecOrMat, a::PDiagMat, x::AbstractVecOrMat) = r .= x ./ sqrt.(a.diag)
+unwhiten!(r::AbstractVecOrMat, a::PDiagMat, x::AbstractVecOrMat) = r .= x .* sqrt.(a.diag)
+
+
 ### quadratic forms
 
 quad(a::PDiagMat, x::AbstractVector) = wsumsq(a.diag, x)
 invquad(a::PDiagMat, x::AbstractVector) = invwsumsq(a.diag, x)
 
-function quad!(r::AbstractArray, a::PDiagMat, x::StridedMatrix)
-    m, n = size(x)
+function quad!(r::AbstractArray, a::PDiagMat, x::AbstractMatrix)
     ad = a.diag
-    @check_argdims m == length(ad) && length(r) == n
-    @inbounds for j = 1:n
+    @check_argdims eachindex(ad) == axes(x, 1)
+    @check_argdims eachindex(r) == axes(x, 2)
+    @inbounds for j in axes(x, 2)
         s = zero(promote_type(eltype(ad), eltype(x)))
-        for i in 1:m
+        for i in axes(x, 1)
             s += ad[i] * abs2(x[i,j])
         end
         r[j] = s
@@ -124,13 +128,14 @@ function quad!(r::AbstractArray, a::PDiagMat, x::StridedMatrix)
     r
 end
 
-function invquad!(r::AbstractArray, a::PDiagMat, x::StridedMatrix)
+function invquad!(r::AbstractArray, a::PDiagMat, x::AbstractMatrix)
     m, n = size(x)
     ad = a.diag
-    @check_argdims m == length(ad) && length(r) == n
-    @inbounds for j = 1:n
+    @check_argdims eachindex(ad) == axes(x, 1)
+    @check_argdims eachindex(r) == axes(x, 2)
+    @inbounds for j in axes(x, 2)
         s = zero(zero(eltype(x)) / zero(eltype(ad)))
-        for i in 1:m
+        for i in axes(x, 1)
             s += abs2(x[i,j]) / ad[i]
         end
         r[j] = s
