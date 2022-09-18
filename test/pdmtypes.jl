@@ -150,7 +150,12 @@ using Test
         @test M isa PDSparseMat
         @test Matrix(M) ≈ A
 
-        M = @inferred AbstractPDMat(cholesky(sparse(A)))
+        if VERSION < v"1.6"
+            # inference fails e.g. on Julia 1.0
+            M = AbstractPDMat(cholesky(sparse(A)))
+        else
+            M = @inferred AbstractPDMat(cholesky(sparse(A)))
+        end
         @test M isa PDSparseMat
         @test Matrix(M) ≈ A
     end
