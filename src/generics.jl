@@ -1,5 +1,9 @@
 # Generic functions (on top of the type-specific implementations)
 
+## constructors
+AbstractPDMat(A::AbstractPDMat) = A
+AbstractPDMat(A::AbstractMatrix) = PDMat(A)
+
 ## arithmetics
 
 pdadd!(r::Matrix, a::Matrix, b::AbstractPDMat{T}) where {T<:Real} = pdadd!(r, a, b, one(T))

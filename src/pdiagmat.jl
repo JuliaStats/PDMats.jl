@@ -8,6 +8,10 @@ end
 
 PDiagMat(v::AbstractVector{<:Real}) = PDiagMat{eltype(v),typeof(v)}(length(v), v)
 
+AbstractPDMat(A::Diagonal{<:Real}) = PDiagMat(A.diag)
+AbstractPDMat(A::Symmetric{<:Real,<:Diagonal{<:Real}}) = PDiagMat(A.data.diag)
+AbstractPDMat(A::Hermitian{<:Real,<:Diagonal{<:Real}}) = PDiagMat(A.data.diag)
+
 ### Conversion
 Base.convert(::Type{PDiagMat{T}},      a::PDiagMat) where {T<:Real} = PDiagMat(convert(AbstractArray{T}, a.diag))
 Base.convert(::Type{AbstractArray{T}}, a::PDiagMat) where {T<:Real} = convert(PDiagMat{T}, a)
