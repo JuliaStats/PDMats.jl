@@ -121,4 +121,42 @@ using Test
             @test Matrix(M) ≈ A
         end
     end
+
+    @testset "AbstractPDMat constructors (#136)" begin
+        x = rand(10, 10)
+        A = x' * x + I
+
+        M = @inferred AbstractPDMat(A)
+        @test M isa PDMat
+        @test Matrix(M) ≈ A
+
+        M = @inferred AbstractPDMat(cholesky(A))
+        @test M isa PDMat
+        @test Matrix(M) ≈ A
+
+        M = @inferred AbstractPDMat(Diagonal(A))
+        @test M isa PDiagMat
+        @test Matrix(M) ≈ Diagonal(A)
+
+        M = @inferred AbstractPDMat(Symmetric(Diagonal(A)))
+        @test M isa PDiagMat
+        @test Matrix(M) ≈ Diagonal(A)
+
+        M = @inferred AbstractPDMat(Hermitian(Diagonal(A)))
+        @test M isa PDiagMat
+        @test Matrix(M) ≈ Diagonal(A)
+
+        M = @inferred AbstractPDMat(sparse(A))
+        @test M isa PDSparseMat
+        @test Matrix(M) ≈ A
+
+        if VERSION < v"1.6"
+            # inference fails e.g. on Julia 1.0
+            M = AbstractPDMat(cholesky(sparse(A)))
+        else
+            M = @inferred AbstractPDMat(cholesky(sparse(A)))
+        end
+        @test M isa PDSparseMat
+        @test Matrix(M) ≈ A
+    end
 end

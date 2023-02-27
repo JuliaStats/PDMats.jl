@@ -18,7 +18,10 @@ function PDSparseMat(mat::AbstractSparseMatrix,chol::CholTypeSparse)
 end
 
 PDSparseMat(mat::SparseMatrixCSC) = PDSparseMat(mat, cholesky(mat))
-PDSparseMat(fac::CholTypeSparse) = PDSparseMat(sparse(fac) |> x -> x*x', fac)
+PDSparseMat(fac::CholTypeSparse) = PDSparseMat(sparse(fac), fac)
+
+AbstractPDMat(A::SparseMatrixCSC) = PDSparseMat(A)
+AbstractPDMat(A::CholTypeSparse) = PDSparseMat(A)
 
 ### Conversion
 Base.convert(::Type{PDSparseMat{T}}, a::PDSparseMat) where {T<:Real} = PDSparseMat(convert(SparseMatrixCSC{T}, a.mat))
