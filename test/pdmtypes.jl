@@ -88,8 +88,11 @@ using Test
         A = rand(1, 1)
         x = randn(1)
         y = x / A
-        @assert x / A isa Matrix{Float64}
-        @assert size(y) == (1, 1)
+        # See https://github.com/JuliaLang/julia/pull/44358 and https://github.com/JuliaLang/julia/pull/49915 
+        if !(v"1.9.0-DEV.17" <= VERSION < v"1.11.0-DEV.192")
+            @assert x / A isa Matrix{Float64}
+            @assert size(y) == (1, 1)
+        end
 
         for M in (PDiagMat(vec(A)), ScalMat(1, first(A)))
             @test x / M isa Matrix{Float64}
