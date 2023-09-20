@@ -2,11 +2,14 @@
 Positive definite diagonal matrix.
 """
 struct PDiagMat{T<:Real,V<:AbstractVector{T}} <: AbstractPDMat{T}
-    dim::Int
     diag::V
 end
 
-PDiagMat(v::AbstractVector{<:Real}) = PDiagMat{eltype(v),typeof(v)}(length(v), v)
+function Base.getproperty(a::PDiagMat, s::Symbol)
+    s === :dim && return length(getfield(a, :diag))
+    return getfield(a, s)
+end
+Base.propertynames(::PDiagMat) = (:diag, :dim)
 
 AbstractPDMat(A::Diagonal{<:Real}) = PDiagMat(A.diag)
 AbstractPDMat(A::Symmetric{<:Real,<:Diagonal{<:Real}}) = PDiagMat(A.data.diag)
@@ -58,7 +61,8 @@ function \(a::PDiagMat, x::AbstractVecOrMat)
 end
 function /(x::AbstractVecOrMat, a::PDiagMat)
     @check_argdims a.dim == size(x, 2)
-    # return matrix for 1-element vectors `x`, consistent with LinearAlgebra
+    (VERSION >= v"1.9" && x isa AbstractVector) && return x ./ a.diag
+    # return matrix for 1-element vectors `x`, consistent with LinearAlgebra on old Julia
     return reshape(x, Val(2)) ./ permutedims(a.diag) # = (a' \ x')'
 end
 Base.kron(A::PDiagMat, B::PDiagMat) = PDiagMat(vec(permutedims(A.diag) .* B.diag))

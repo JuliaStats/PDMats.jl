@@ -2,22 +2,31 @@
 Full positive definite matrix together with a Cholesky factorization object.
 """
 struct PDMat{T<:Real,S<:AbstractMatrix} <: AbstractPDMat{T}
-    dim::Int
     mat::S
     chol::Cholesky{T,S}
 
-    PDMat{T,S}(d::Int,m::AbstractMatrix{T},c::Cholesky{T,S}) where {T,S} = new{T,S}(d,m,c)
+    PDMat{T,S}(m::AbstractMatrix{T},c::Cholesky{T,S}) where {T,S} = new{T,S}(m,c)
+    function PDMat{T,S}(d::Int, m::AbstractMatrix{T},c::Cholesky{T,S}) where {T,S}
+        LinearAlgebra.checksquare(m) == d || throw(DimensionMismatch("Dimensions of mat and chol are inconsistent."))
+        new{T,S}(m,c)
+    end
 end
 
 function PDMat(mat::AbstractMatrix,chol::Cholesky{T,S}) where {T,S}
-    d = size(mat, 1)
+    d = LinearAlgebra.checksquare(mat)
     size(chol, 1) == d ||
         throw(DimensionMismatch("Dimensions of mat and chol are inconsistent."))
-    PDMat{T,S}(d, convert(S, mat), chol)
+    PDMat{T,S}(convert(S, mat), chol)
 end
 
 PDMat(mat::AbstractMatrix) = PDMat(mat, cholesky(mat))
 PDMat(fac::Cholesky) = PDMat(AbstractMatrix(fac), fac)
+
+function Base.getproperty(a::PDMat, s::Symbol)
+    s === :dim && return size(getfield(a, :mat), 1)
+    return getfield(a, s)
+end
+Base.propertynames(::PDMat) = (:mat, :chol, :dim)
 
 AbstractPDMat(A::Cholesky) = PDMat(A)
 
@@ -49,9 +58,17 @@ end
 *(a::PDMat, x::AbstractVector) = a.mat * x
 *(a::PDMat, x::AbstractMatrix) = a.mat * x
 \(a::PDMat, x::AbstractVecOrMat) = a.chol \ x
-# return matrix for 1-element vectors `x`, consistent with LinearAlgebra
-/(x::AbstractVecOrMat, a::PDMat) = reshape(x, Val(2)) / a.chol
-
+function /(x::AbstractVecOrMat, a::PDMat)
+    if VERSION >= v"1.9" && x isa AbstractVector
+        # either size(x) == 1, or we error
+        if length(x) != 1 || size(a) != (1,1)
+            throw(DimensionMismatch("size of A is $(size(a)), size of B is ($(length(x)), 1)"))
+        end
+        return x ./ a[1]
+    end
+    # return matrix for 1-element vectors `x`, consistent with LinearAlgebra
+    reshape(x, Val(2)) / a.chol
+end
 ### Algebra
 
 Base.inv(a::PDMat) = PDMat(inv(a.chol))
