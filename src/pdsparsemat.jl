@@ -6,8 +6,9 @@ struct PDSparseMat{T<:Real,S<:AbstractSparseMatrix} <: AbstractPDMat{T}
     chol::CholTypeSparse
 
     function PDSparseMat{T,S}(d::Int,m::AbstractSparseMatrix{T},c::CholTypeSparse) where {T,S}
-        LinearAlgebra.checksquare(m) == d ||
-            throw(DimensionMismatch("Dimensions of mat and chol are inconsistent."))
+        if LinearAlgebra.checksquare(m) != d || d != size(c,1)
+            throw(DimensionMismatch("dim `d`=$d, size(m) = $(size(m)), size(c) = $(size(c))"))
+        end
         new{T,S}(m,c) #add {T} to CholTypeSparse argument once #14076 is implemented
     end
     PDSparseMat{T,S}(m::AbstractSparseMatrix{T},c::CholTypeSparse) where {T,S} =
@@ -25,7 +26,9 @@ PDSparseMat(mat::SparseMatrixCSC) = PDSparseMat(mat, cholesky(mat))
 PDSparseMat(fac::CholTypeSparse) = PDSparseMat(sparse(fac), fac)
 
 function Base.getproperty(a::PDSparseMat, s::Symbol)
-    s == :dim && return size(getfield(a, :mat), 1)
+    if s === :dim
+        return size(getfield(a, :mat), 1)
+    end
     return getfield(a, s)
 end
 Base.propertynames(::PDSparseMat) = (:mat, :chol, :dim)

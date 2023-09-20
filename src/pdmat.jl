@@ -7,15 +7,18 @@ struct PDMat{T<:Real,S<:AbstractMatrix} <: AbstractPDMat{T}
 
     PDMat{T,S}(m::AbstractMatrix{T},c::Cholesky{T,S}) where {T,S} = new{T,S}(m,c)
     function PDMat{T,S}(d::Int, m::AbstractMatrix{T},c::Cholesky{T,S}) where {T,S}
-        LinearAlgebra.checksquare(m) == d || throw(DimensionMismatch("Dimensions of mat and chol are inconsistent."))
+        if LinearAlgebra.checksquare(m) != d || d != size(c,1)
+            throw(DimensionMismatch("dim `d`=$d, size(m) = $(size(m)), size(c) = $(size(c))"))
+        end
         new{T,S}(m,c)
     end
 end
 
 function PDMat(mat::AbstractMatrix,chol::Cholesky{T,S}) where {T,S}
     d = LinearAlgebra.checksquare(mat)
-    size(chol, 1) == d ||
+    if size(chol, 1) != d
         throw(DimensionMismatch("Dimensions of mat and chol are inconsistent."))
+    end
     PDMat{T,S}(convert(S, mat), chol)
 end
 
@@ -23,7 +26,9 @@ PDMat(mat::AbstractMatrix) = PDMat(mat, cholesky(mat))
 PDMat(fac::Cholesky) = PDMat(AbstractMatrix(fac), fac)
 
 function Base.getproperty(a::PDMat, s::Symbol)
-    s === :dim && return size(getfield(a, :mat), 1)
+    if s === :dim
+        return size(getfield(a, :mat), 1)
+    end
     return getfield(a, s)
 end
 Base.propertynames(::PDMat) = (:mat, :chol, :dim)
