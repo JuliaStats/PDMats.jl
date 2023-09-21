@@ -53,9 +53,12 @@ function \(a::ScalMat, x::AbstractVecOrMat)
 end
 function /(x::AbstractVecOrMat, a::ScalMat)
     @check_argdims a.dim == size(x, 2)
-    VERSION >= v"1.9" && return x .* inv(a.value)
-    # return matrix for 1-element vectors `x`, consistent with LinearAlgebra
-    return reshape(x, Val(2)) / a.value
+    if VERSION < v"1.9-"
+        # return matrix for 1-element vectors `x`, consistent with LinearAlgebra < 1.9
+        return reshape(x, Val(2)) / a.value
+    else
+        return x / a.value
+    end
 end
 Base.kron(A::ScalMat, B::ScalMat) = ScalMat(A.dim * B.dim, A.value * B.value )
 
