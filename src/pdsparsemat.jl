@@ -5,15 +5,10 @@ struct PDSparseMat{T<:Real,S<:AbstractSparseMatrix} <: AbstractPDMat{T}
     mat::S
     chol::CholTypeSparse
 
-    function PDSparseMat{T,S}(d::Int,m::AbstractSparseMatrix{T},c::CholTypeSparse) where {T,S}
-        if LinearAlgebra.checksquare(m) != d || d != size(c,1)
-            throw(DimensionMismatch("dim `d`=$d, size(m) = $(size(m)), size(c) = $(size(c))"))
-        end
-        new{T,S}(m,c) #add {T} to CholTypeSparse argument once #14076 is implemented
-    end
     PDSparseMat{T,S}(m::AbstractSparseMatrix{T},c::CholTypeSparse) where {T,S} =
         new{T,S}(m,c) #add {T} to CholTypeSparse argument once #14076 is implemented
 end
+@deprecate PDSparseMat{T,S}(d::Int, m::AbstractSparseMatrix{T}, c::CholTypeSparse) where {T,S} PDSparseMat{T,S}(m, c)
 
 function PDSparseMat(mat::AbstractSparseMatrix,chol::CholTypeSparse)
     d = LinearAlgebra.checksquare(mat)

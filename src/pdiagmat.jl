@@ -4,12 +4,7 @@ Positive definite diagonal matrix.
 struct PDiagMat{T<:Real,V<:AbstractVector{T}} <: AbstractPDMat{T}
     diag::V
 end
-function PDiagMat(dim::Int, diag::V) where {T,V<:AbstractVector{T}}
-    if length(diag) != dim
-        throw(DimensionMismatch("Dimensions of diag and dim are inconsistent."))
-    end
-    return PDiagMat{T,V}(diag)
-end
+@deprecate PDiagMat(dim, diag) PDiagMat(diag)
 
 function Base.getproperty(a::PDiagMat, s::Symbol)
     if s === :dim
