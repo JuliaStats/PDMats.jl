@@ -19,6 +19,8 @@ end
 PDMat(mat::AbstractMatrix) = PDMat(mat, cholesky(mat))
 PDMat(fac::Cholesky) = PDMat(AbstractMatrix(fac), fac)
 
+AbstractPDMat(A::Cholesky) = PDMat(A)
+
 ### Conversion
 Base.convert(::Type{PDMat{T}},         a::PDMat) where {T<:Real} = PDMat(convert(AbstractArray{T}, a.mat))
 Base.convert(::Type{AbstractArray{T}}, a::PDMat) where {T<:Real} = convert(PDMat{T}, a)
@@ -47,8 +49,19 @@ end
 *(a::PDMat, x::AbstractVector) = a.mat * x
 *(a::PDMat, x::AbstractMatrix) = a.mat * x
 \(a::PDMat, x::AbstractVecOrMat) = a.chol \ x
-# return matrix for 1-element vectors `x`, consistent with LinearAlgebra
-/(x::AbstractVecOrMat, a::PDMat) = reshape(x, Val(2)) / a.chol
+function /(x::AbstractVecOrMat, a::PDMat)
+    # /(::AbstractVector, ::Cholesky) is not defined
+    if VERSION < v"1.9-"
+        # return matrix for 1-element vectors `x`, consistent with LinearAlgebra
+        return reshape(x, Val(2)) / a.chol
+    else
+        if x isa AbstractVector
+            return vec(reshape(x, Val(2)) / a.chol)
+        else
+            return x / a.chol
+        end
+    end
+end
 
 ### Algebra
 

@@ -8,6 +8,10 @@ end
 
 PDiagMat(v::AbstractVector{<:Real}) = PDiagMat{eltype(v),typeof(v)}(length(v), v)
 
+AbstractPDMat(A::Diagonal{<:Real}) = PDiagMat(A.diag)
+AbstractPDMat(A::Symmetric{<:Real,<:Diagonal{<:Real}}) = PDiagMat(A.data.diag)
+AbstractPDMat(A::Hermitian{<:Real,<:Diagonal{<:Real}}) = PDiagMat(A.data.diag)
+
 ### Conversion
 Base.convert(::Type{PDiagMat{T}},      a::PDiagMat) where {T<:Real} = PDiagMat(convert(AbstractArray{T}, a.diag))
 Base.convert(::Type{AbstractArray{T}}, a::PDiagMat) where {T<:Real} = convert(PDiagMat{T}, a)
@@ -54,8 +58,12 @@ function \(a::PDiagMat, x::AbstractVecOrMat)
 end
 function /(x::AbstractVecOrMat, a::PDiagMat)
     @check_argdims a.dim == size(x, 2)
-    # return matrix for 1-element vectors `x`, consistent with LinearAlgebra
-    return reshape(x, Val(2)) ./ permutedims(a.diag) # = (a' \ x')'
+    if VERSION < v"1.9-"
+        # return matrix for 1-element vectors `x`, consistent with LinearAlgebra < 1.9
+        return reshape(x, Val(2)) ./ permutedims(a.diag) # = (a' \ x')'
+    else
+        return x ./ (x isa AbstractVector ? a.diag : a.diag')
+    end
 end
 Base.kron(A::PDiagMat, B::PDiagMat) = PDiagMat(vec(permutedims(A.diag) .* B.diag))
 

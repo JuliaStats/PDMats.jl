@@ -91,6 +91,13 @@ function pdtest_basics(C, Cmat::Matrix, d::Int, verbose::Int)
 
     _pdt(verbose, "ishermitian")
     @test ishermitian(C)
+
+    _pdt(verbose, "AbstractPDMat")
+    M = AbstractPDMat(C)
+    @test M isa AbstractPDMat
+    if C isa AbstractPDMat
+        @test M === C
+    end
 end
 
 

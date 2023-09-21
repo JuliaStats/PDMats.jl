@@ -88,25 +88,29 @@ using Test
         A = rand(1, 1)
         x = randn(1)
         y = x / A
-        @assert x / A isa Matrix{Float64}
-        @assert size(y) == (1, 1)
 
         for M in (PDiagMat(vec(A)), ScalMat(1, first(A)))
-            @test x / M isa Matrix{Float64}
-            @test x / M ≈ y
+            z = x / M
+            @test typeof(z) === typeof(y)
+            @test size(z) == size(y)
+            @test z ≈ y
         end
 
         # requires https://github.com/JuliaLang/julia/pull/32594
         if VERSION >= v"1.3.0-DEV.562"
-            @test x / PDMat(A) isa Matrix{Float64}
-            @test x / PDMat(A) ≈ y
+            z = x / PDMat(A)
+            @test typeof(z) === typeof(y)
+            @test size(z) == size(y)
+            @test z ≈ y
         end
 
         # right division not defined for CHOLMOD:
         # `rdiv!(::Matrix{Float64}, ::SuiteSparse.CHOLMOD.Factor{Float64})` not defined
         if !HAVE_CHOLMOD
-            @test x / PDSparseMat(sparse(first(A), 1, 1)) isa Matrix{Float64}
-            @test x / PDSparseMat(sparse(first(A), 1, 1)) ≈ y
+            z = x / PDSparseMat(sparse(first(A), 1, 1)) 
+            @test typeof(z) === typeof(y)
+            @test size(z) == size(y)
+            @test z ≈ y
         end
     end
 
@@ -120,5 +124,43 @@ using Test
             @test M isa PDMat{Float64, typeof(A)}
             @test Matrix(M) ≈ A
         end
+    end
+
+    @testset "AbstractPDMat constructors (#136)" begin
+        x = rand(10, 10)
+        A = x' * x + I
+
+        M = @inferred AbstractPDMat(A)
+        @test M isa PDMat
+        @test Matrix(M) ≈ A
+
+        M = @inferred AbstractPDMat(cholesky(A))
+        @test M isa PDMat
+        @test Matrix(M) ≈ A
+
+        M = @inferred AbstractPDMat(Diagonal(A))
+        @test M isa PDiagMat
+        @test Matrix(M) ≈ Diagonal(A)
+
+        M = @inferred AbstractPDMat(Symmetric(Diagonal(A)))
+        @test M isa PDiagMat
+        @test Matrix(M) ≈ Diagonal(A)
+
+        M = @inferred AbstractPDMat(Hermitian(Diagonal(A)))
+        @test M isa PDiagMat
+        @test Matrix(M) ≈ Diagonal(A)
+
+        M = @inferred AbstractPDMat(sparse(A))
+        @test M isa PDSparseMat
+        @test Matrix(M) ≈ A
+
+        if VERSION < v"1.6"
+            # inference fails e.g. on Julia 1.0
+            M = AbstractPDMat(cholesky(sparse(A)))
+        else
+            M = @inferred AbstractPDMat(cholesky(sparse(A)))
+        end
+        @test M isa PDSparseMat
+        @test Matrix(M) ≈ A
     end
 end

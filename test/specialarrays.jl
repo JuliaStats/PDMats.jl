@@ -93,17 +93,17 @@ using StaticArrays
         x = rand(5)
         X = rand(2, 5)
         Y = rand(5, 2)
-        @test P * x ≈ A * x
-        @test P * Y ≈ A * Y
+        @test P * x ≈ x
+        @test P * Y ≈ Y
         # Right division with Cholesky requires https://github.com/JuliaLang/julia/pull/32594
         if VERSION >= v"1.3.0-DEV.562"
-            @test X / P ≈ X / A
+            @test X / P ≈ X
         end
-        @test P \ x ≈ A \ x
-        @test P \ Y ≈ A \ Y
-        @test X_A_Xt(P, X) ≈ X * A * X'
-        @test X_invA_Xt(P, X) ≈ X * (A \ X')
-        @test Xt_A_X(P, Y) ≈ Y' * A * Y
-        @test Xt_invA_X(P, Y) ≈ Y' * (A \ Y)
+        @test P \ x ≈ x
+        @test P \ Y ≈ Y
+        @test X_A_Xt(P, X) ≈ X * X'
+        @test X_invA_Xt(P, X) ≈ X * X'
+        @test Xt_A_X(P, Y) ≈ Y' * Y
+        @test Xt_invA_X(P, Y) ≈ Y' * Y
     end
 end
