@@ -4,6 +4,10 @@
 AbstractPDMat(A::AbstractPDMat) = A
 AbstractPDMat(A::AbstractMatrix) = PDMat(A)
 
+## convert
+Base.convert(::Type{AbstractMatrix{T}}, a::AbstractPDMat) where {T<:Real} = convert(AbstractPDMat{T}, a) 
+Base.convert(::Type{AbstractArray{T}}, a::AbstractPDMat) where {T<:Real} = convert(AbstractMatrix{T}, a)
+
 ## arithmetics
 
 pdadd!(r::Matrix, a::Matrix, b::AbstractPDMat{T}) where {T<:Real} = pdadd!(r, a, b, one(T))
