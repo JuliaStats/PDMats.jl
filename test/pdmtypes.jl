@@ -88,28 +88,29 @@ using Test
         A = rand(1, 1)
         x = randn(1)
         y = x / A
-        # See https://github.com/JuliaLang/julia/pull/44358 and https://github.com/JuliaLang/julia/pull/49915 
-        if !(v"1.9.0-DEV.17" <= VERSION < v"1.11.0-DEV.192")
-            @assert x / A isa Matrix{Float64}
-            @assert size(y) == (1, 1)
-        end
 
         for M in (PDiagMat(vec(A)), ScalMat(1, first(A)))
-            @test x / M isa Matrix{Float64}
-            @test x / M ≈ y
+            z = x / M
+            @test typeof(z) === typeof(y)
+            @test size(z) == size(y)
+            @test z ≈ y
         end
 
         # requires https://github.com/JuliaLang/julia/pull/32594
         if VERSION >= v"1.3.0-DEV.562"
-            @test x / PDMat(A) isa Matrix{Float64}
-            @test x / PDMat(A) ≈ y
+            z = x / PDMat(A)
+            @test typeof(z) === typeof(y)
+            @test size(z) == size(y)
+            @test z ≈ y
         end
 
         # right division not defined for CHOLMOD:
         # `rdiv!(::Matrix{Float64}, ::SuiteSparse.CHOLMOD.Factor{Float64})` not defined
         if !HAVE_CHOLMOD
-            @test x / PDSparseMat(sparse(first(A), 1, 1)) isa Matrix{Float64}
-            @test x / PDSparseMat(sparse(first(A), 1, 1)) ≈ y
+            z = x / PDSparseMat(sparse(first(A), 1, 1)) 
+            @test typeof(z) === typeof(y)
+            @test size(z) == size(y)
+            @test z ≈ y
         end
     end
 
