@@ -64,8 +64,7 @@ function \(a::PDiagMat, x::AbstractVecOrMat)
 end
 function /(x::AbstractVecOrMat, a::PDiagMat)
     @check_argdims a.dim == size(x, 2)
-    (VERSION >= v"1.9" && x isa AbstractVector) && return x ./ a.diag
-    # return matrix for 1-element vectors `x`, consistent with LinearAlgebra on old Julia
+    # return matrix for 1-element vectors `x`, consistent with LinearAlgebra
     return reshape(x, Val(2)) ./ permutedims(a.diag) # = (a' \ x')'
 end
 Base.kron(A::PDiagMat, B::PDiagMat) = PDiagMat(vec(permutedims(A.diag) .* B.diag))

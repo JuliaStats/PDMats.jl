@@ -59,17 +59,9 @@ end
 *(a::PDMat, x::AbstractVector) = a.mat * x
 *(a::PDMat, x::AbstractMatrix) = a.mat * x
 \(a::PDMat, x::AbstractVecOrMat) = a.chol \ x
-function /(x::AbstractVecOrMat, a::PDMat)
-    if VERSION >= v"1.9" && x isa AbstractVector
-        # either size(x) == 1, or we error
-        if length(x) != 1 || size(a) != (1,1)
-            throw(DimensionMismatch("size of A is $(size(a)), size of B is ($(length(x)), 1)"))
-        end
-        return x ./ a[1]
-    end
-    # return matrix for 1-element vectors `x`, consistent with LinearAlgebra
-    reshape(x, Val(2)) / a.chol
-end
+# return matrix for 1-element vectors `x`, consistent with LinearAlgebra
+/(x::AbstractVecOrMat, a::PDMat) = reshape(x, Val(2)) / a.chol
+
 ### Algebra
 
 Base.inv(a::PDMat) = PDMat(inv(a.chol))
