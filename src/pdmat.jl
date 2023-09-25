@@ -22,9 +22,14 @@ PDMat(fac::Cholesky) = PDMat(AbstractMatrix(fac), fac)
 AbstractPDMat(A::Cholesky) = PDMat(A)
 
 ### Conversion
-Base.convert(::Type{PDMat{T}},         a::PDMat) where {T<:Real} = PDMat(convert(AbstractArray{T}, a.mat))
-Base.convert(::Type{AbstractArray{T}}, a::PDMat) where {T<:Real} = convert(PDMat{T}, a)
-Base.convert(::Type{AbstractArray{T}}, a::PDMat{T}) where {T<:Real} = a
+Base.convert(::Type{PDMat{T}}, a::PDMat{T}) where {T<:Real} = a
+function Base.convert(::Type{PDMat{T}}, a::PDMat) where {T<:Real}
+    chol = convert(Cholesky{T}, a.chol)
+    S = typeof(chol.factors)
+    mat = convert(S, a.mat)
+    return PDMat{T,S}(size(mat, 1), mat, chol)
+end
+Base.convert(::Type{AbstractPDMat{T}}, a::PDMat) where {T<:Real} = convert(PDMat{T}, a)
 
 ### Basics
 

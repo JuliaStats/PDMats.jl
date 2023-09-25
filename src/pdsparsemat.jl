@@ -24,7 +24,15 @@ AbstractPDMat(A::SparseMatrixCSC) = PDSparseMat(A)
 AbstractPDMat(A::CholTypeSparse) = PDSparseMat(A)
 
 ### Conversion
-Base.convert(::Type{PDSparseMat{T}}, a::PDSparseMat) where {T<:Real} = PDSparseMat(convert(SparseMatrixCSC{T}, a.mat))
+Base.convert(::Type{PDSparseMat{T}}, a::PDSparseMat{T}) where {T<:Real} = a
+function Base.convert(::Type{PDSparseMat{T}}, a::PDSparseMat) where {T<:Real}
+    # CholTypeSparse only supports Float64 and ComplexF64 type parameters!
+    # So there is no point in recomputing `cholesky(mat)` and we just reuse
+    # the existing Cholesky factorization
+    mat = convert(AbstractMatrix{T}, a.mat)
+    return PDSparseMat{T,typeof(mat)}(a.dim, mat, a.chol)
+end
+Base.convert(::Type{AbstractPDMat{T}}, a::PDSparseMat) where {T<:Real} = convert(PDSparseMat{T}, a)
 
 ### Basics
 

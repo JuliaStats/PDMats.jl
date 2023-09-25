@@ -13,8 +13,12 @@ AbstractPDMat(A::Symmetric{<:Real,<:Diagonal{<:Real}}) = PDiagMat(A.data.diag)
 AbstractPDMat(A::Hermitian{<:Real,<:Diagonal{<:Real}}) = PDiagMat(A.data.diag)
 
 ### Conversion
-Base.convert(::Type{PDiagMat{T}},      a::PDiagMat) where {T<:Real} = PDiagMat(convert(AbstractArray{T}, a.diag))
-Base.convert(::Type{AbstractArray{T}}, a::PDiagMat) where {T<:Real} = convert(PDiagMat{T}, a)
+Base.convert(::Type{PDiagMat{T}}, a::PDiagMat{T}) where {T<:Real} = a
+function Base.convert(::Type{PDiagMat{T}}, a::PDiagMat) where {T<:Real}
+    diag = convert(AbstractVector{T}, a.diag)
+    return PDiagMat{T,typeof(diag)}(a.dim, diag)
+end
+Base.convert(::Type{AbstractPDMat{T}}, a::PDiagMat) where {T<:Real} = convert(PDiagMat{T}, a)
 
 ### Basics
 

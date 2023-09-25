@@ -7,8 +7,9 @@ struct ScalMat{T<:Real} <: AbstractPDMat{T}
 end
 
 ### Conversion
+Base.convert(::Type{ScalMat{T}}, a::ScalMat{T}) where {T<:Real} = a
 Base.convert(::Type{ScalMat{T}}, a::ScalMat) where {T<:Real} = ScalMat(a.dim, T(a.value))
-Base.convert(::Type{AbstractArray{T}}, a::ScalMat) where {T<:Real} = convert(ScalMat{T}, a)
+Base.convert(::Type{AbstractPDMat{T}}, a::ScalMat) where {T<:Real} = convert(ScalMat{T}, a)
 
 ### Basics
 
