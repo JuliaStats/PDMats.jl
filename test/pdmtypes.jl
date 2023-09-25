@@ -45,23 +45,49 @@ using Test
     end
 
     @testset "float type conversions" begin
-        m = Matrix{Float32}(I, 2, 2)
-        @test convert(PDMat{Float64}, PDMat(m)).mat == PDMat(convert(Array{Float64}, m)).mat
-        @test convert(AbstractArray{Float64}, PDMat(m)).mat == PDMat(convert(Array{Float64}, m)).mat
-        m = ones(Float32,2)
-        @test convert(PDiagMat{Float64}, PDiagMat(m)).diag == PDiagMat(convert(Array{Float64}, m)).diag
-        @test convert(AbstractArray{Float64}, PDiagMat(m)).diag == PDiagMat(convert(Array{Float64}, m)).diag
-        x = one(Float32); d = 4
-        @test convert(ScalMat{Float64}, ScalMat(d, x)).value == ScalMat(d, convert(Float64, x)).value
-        @test convert(AbstractArray{Float64}, ScalMat(d, x)).value == ScalMat(d, convert(Float64, x)).value
-        s = SparseMatrixCSC{Float32}(I, 2, 2)
-        @test convert(PDSparseMat{Float64}, PDSparseMat(s)).mat == PDSparseMat(convert(SparseMatrixCSC{Float64}, s)).mat
-    end
+        for T in (Float32, Float64), S in (Float32, Float64)
+            A = PDMat(Matrix{T}(I, 2, 2))
+            for R in (AbstractArray{S}, AbstractMatrix{S}, AbstractPDMat{S}, PDMat{S})
+                B = @inferred(convert(R, A))
+                @test B isa PDMat{S}
+                @test B == A
+                @test (B === A) === (S === T)
+                @test (B.mat === A.mat) === (S === T)
+                @test (B.chol === A.chol) === (S === T)
+            end
 
-    @testset "no-op conversion with correct eltype (#101)" begin
-        X = PDMat((Y->Y'Y)(randn(Float32, 4, 4)))
-        @test convert(AbstractArray{Float32}, X) === X
-        @test convert(AbstractArray{Float64}, X) !== X
+            A = PDiagMat(ones(T, 2))
+            for R in (AbstractArray{S}, AbstractMatrix{S}, AbstractPDMat{S}, PDiagMat{S})
+                B = @inferred(convert(R, A))
+                @test B isa PDiagMat{S}
+                @test B == A
+                @test (B === A) === (S === T)
+                @test (B.diag === A.diag) === (S === T)
+            end
+
+            A = ScalMat(4, T(1))
+            for R in (AbstractArray{S}, AbstractMatrix{S}, AbstractPDMat{S}, ScalMat{S})
+                B = @inferred(convert(R, A))
+                @test B isa ScalMat{S}
+                @test B == A
+                @test (B === A) === (S === T)
+                @test (B.value === A.value) === (S === T)
+            end
+
+            if HAVE_CHOLMOD
+                A = PDSparseMat(SparseMatrixCSC{T}(I, 2, 2))
+                for R in (AbstractArray{S}, AbstractMatrix{S}, AbstractPDMat{S}, PDSparseMat{S})
+                    B = @inferred(convert(R, A))
+                    @test B isa PDSparseMat{S}
+                    @test B == A
+                    @test (B === A) === (S === T)
+                    @test (B.mat === A.mat) === (S === T)
+                    # CholMOD only supports Float64 and ComplexF64 type parameters!
+                    # Hence the Cholesky factorization is reused
+                    @test B.chol === A.chol
+                end
+            end
+        end
     end
 
     @testset "type stability of whiten! and unwhiten!" begin
