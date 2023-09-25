@@ -8,8 +8,6 @@ struct PDMat{T<:Real,S<:AbstractMatrix} <: AbstractPDMat{T}
     PDMat{T,S}(m::AbstractMatrix{T},c::Cholesky{T,S}) where {T,S} = new{T,S}(m,c)
 end
 
-@deprecate PDMat{T,S}(d::Int, m::AbstractMatrix{T}, c::Cholesky{T,S}) where {T,S} PDMat{T,S}(m, c)
-
 function PDMat(mat::AbstractMatrix,chol::Cholesky{T,S}) where {T,S}
     d = LinearAlgebra.checksquare(mat)
     if size(chol, 1) != d

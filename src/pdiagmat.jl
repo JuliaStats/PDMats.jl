@@ -4,7 +4,6 @@ Positive definite diagonal matrix.
 struct PDiagMat{T<:Real,V<:AbstractVector{T}} <: AbstractPDMat{T}
     diag::V
 end
-@deprecate PDiagMat(dim, diag) PDiagMat(diag)
 
 function Base.getproperty(a::PDiagMat, s::Symbol)
     if s === :dim
