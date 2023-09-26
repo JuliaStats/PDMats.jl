@@ -56,4 +56,7 @@ module PDMats
 
     include("deprecates.jl")
 
+    if !isdefined(Base, :get_extension)
+        include("../ext/PDMatsFillArraysExt.jl")
+    end
 end # module
