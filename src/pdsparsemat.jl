@@ -70,20 +70,41 @@ LinearAlgebra.sqrt(A::PDSparseMat) = PDMat(sqrt(Hermitian(Matrix(A))))
 ### whiten and unwhiten
 
 function whiten!(r::AbstractVecOrMat, a::PDSparseMat, x::AbstractVecOrMat)
-    r[:] = sparse(chol_lower(a.chol)) \ x
-    return r
+    @check_argdims axes(r) == axes(x)
+    @check_argdims a.dim == size(x, 1)
+    # ldiv! is not defined for SparseMatrixCSC
+    return copyto!(r, sparse(chol_lower(a.chol)) \ x)
 end
 
 function unwhiten!(r::AbstractVecOrMat, a::PDSparseMat, x::AbstractVecOrMat)
-    r[:] = sparse(chol_lower(a.chol)) * x
-    return r
+    @check_argdims axes(r) == axes(x)
+    @check_argdims a.dim == size(x, 1)
+    # lmul! is not defined for SparseMatrixCSC
+    return copyto!(r, sparse(chol_lower(a.chol)) * x)
 end
 
+function whiten(a::PDSparseMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    return sparse(chol_lower(cholesky(a))) \ x
+end
+
+function unwhiten(a::PDSparseMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    return sparse(chol_lower(cholesky(a))) * x
+end
 
 ### quadratic forms
 
-quad(a::PDSparseMat, x::AbstractVector) = dot(x, a * x)
-invquad(a::PDSparseMat, x::AbstractVector) = dot(x, a \ x)
+function quad(a::PDSparseMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    z = sparse(chol_lower(cholesky(a)))' * x
+    return x isa AbstractVector ? sum(abs2, z) : vec(sum(abs2, z; dims = 1))
+end
+function invquad(a::PDSparseMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    z = sparse(chol_lower(cholesky(a))) \ x
+    return x isa AbstractVector ? sum(abs2, z) : vec(sum(abs2, z; dims = 1))
+end
 
 function quad!(r::AbstractArray, a::PDSparseMat, x::AbstractMatrix)
     @check_argdims eachindex(r) == axes(x, 2)

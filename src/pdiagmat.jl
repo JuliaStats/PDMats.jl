@@ -86,45 +86,48 @@ LinearAlgebra.sqrt(a::PDiagMat) = PDiagMat(map(sqrt, a.diag))
 
 ### whiten and unwhiten
 
-function whiten!(r::StridedVector, a::PDiagMat, x::StridedVector)
-    n = a.dim
-    @check_argdims length(r) == length(x) == n
-    v = a.diag
-    for i = 1:n
-        r[i] = x[i] / sqrt(v[i])
-    end
-    return r
+function whiten!(r::AbstractVecOrMat, a::PDiagMat, x::AbstractVecOrMat)
+    @check_argdims axes(r) == axes(x)
+    @check_argdims a.dim == size(x, 1)
+    return r .= x ./ sqrt.(a.diag)
+end
+function unwhiten!(r::AbstractVecOrMat, a::PDiagMat, x::AbstractVecOrMat)
+    @check_argdims axes(r) == axes(x)
+    @check_argdims a.dim == size(x, 1)
+    return r .= x .* sqrt.(a.diag)
 end
 
-function unwhiten!(r::StridedVector, a::PDiagMat, x::StridedVector)
-    n = a.dim
-    @check_argdims length(r) == length(x) == n
-    v = a.diag
-    for i = 1:n
-        r[i] = x[i] * sqrt(v[i])
-    end
-    return r
+function whiten(a::PDiagMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    return x ./ sqrt.(a.diag)
 end
-
-function whiten!(r::StridedMatrix, a::PDiagMat, x::StridedMatrix)
-    r .= x ./ sqrt.(a.diag)
-    return r
+function unwhiten(a::PDiagMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    return x .* sqrt.(a.diag)
 end
-
-function unwhiten!(r::StridedMatrix, a::PDiagMat, x::StridedMatrix)
-    r .= x .* sqrt.(a.diag)
-    return r
-end
-
-
-whiten!(r::AbstractVecOrMat, a::PDiagMat, x::AbstractVecOrMat) = r .= x ./ sqrt.(a.diag)
-unwhiten!(r::AbstractVecOrMat, a::PDiagMat, x::AbstractVecOrMat) = r .= x .* sqrt.(a.diag)
-
 
 ### quadratic forms
 
-quad(a::PDiagMat, x::AbstractVector) = wsumsq(a.diag, x)
-invquad(a::PDiagMat, x::AbstractVector) = invwsumsq(a.diag, x)
+function quad(a::PDiagMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    if x isa AbstractVector
+        return wsumsq(a.diag, x)
+    else
+        # map(Base.Fix1(invquad, a), eachcol(x)) or similar alternatives
+        # do NOT return a `SVector` for inputs `x::SMatrix`.
+        return vec(sum(abs2.(x) .* a.diag; dims = 1))
+    end
+end
+function invquad(a::PDiagMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    if x isa AbstractVector
+        return invwsumsq(a.diag, x)
+    else
+        # map(Base.Fix1(invquad, a), eachcol(x)) or similar alternatives
+        # do NOT return a `SVector` for inputs `x::SMatrix`.
+        return vec(sum(abs2.(x) ./ a.diag; dims = 1))
+    end
+end
 
 function quad!(r::AbstractArray, a::PDiagMat, x::AbstractMatrix)
     ad = a.diag

@@ -33,19 +33,6 @@ LinearAlgebra.checksquare(a::AbstractPDMat) = size(a, 1)
 
 ## whiten and unwhiten
 
-whiten!(a::AbstractMatrix, x::AbstractVecOrMat) = whiten!(x, a, x)
-unwhiten!(a::AbstractMatrix, x::AbstractVecOrMat) = unwhiten!(x, a, x)
-
-function whiten!(r::AbstractVecOrMat, a::AbstractMatrix, x::AbstractVecOrMat)
-    v = _rcopy!(r, x)
-    ldiv!(chol_lower(cholesky(a)), v)
-end
-
-function unwhiten!(r::AbstractVecOrMat, a::AbstractMatrix, x::AbstractVecOrMat)
-    v = _rcopy!(r, x)
-    lmul!(chol_lower(cholesky(a)), v)
-end
-
 """
     whiten(a::AbstractMatrix, x::AbstractVecOrMat)
     unwhiten(a::AbstractMatrix, x::AbstractVecOrMat)
@@ -80,35 +67,41 @@ julia> W * W'
  0.0  1.0
 ```
 """
-whiten(a::AbstractMatrix, x::AbstractVecOrMat) = whiten!(similar(x), a, x)
-unwhiten(a::AbstractMatrix, x::AbstractVecOrMat) = unwhiten!(similar(x), a, x)
+whiten(a::AbstractMatrix{<:Real}, x::AbstractVecOrMat) = whiten(AbstractPDMat(a), x)
+unwhiten(a::AbstractMatrix{<:Real}, x::AbstractVecOrMat) = unwhiten(AbstractPDMat(a), x)
 
+whiten!(a::AbstractMatrix{<:Real}, x::AbstractVecOrMat) = whiten!(x, a, x)
+unwhiten!(a::AbstractMatrix{<:Real}, x::AbstractVecOrMat) = unwhiten!(x, a, x)
+
+function whiten!(r::AbstractVecOrMat, a::AbstractMatrix{<:Real}, x::AbstractVecOrMat)
+    return whiten!(r, AbstractPDMat(a), x)
+end
+function unwhiten!(r::AbstractVecOrMat, a::AbstractMatrix{<:Real}, x::AbstractVecOrMat)
+    return unwhiten!(r, AbstractPDMat(a), x)
+end
 
 ## quad
 
 """
     quad(a::AbstractMatrix, x::AbstractVecOrMat)
 
-Return the value of the quadratic form defined by `a` applied to `x`
+Return the value of the quadratic form defined by `a` applied to `x`.
 
 If `x` is a vector the quadratic form is `x' * a * x`.  If `x` is a matrix
 the quadratic form is applied column-wise.
 """
-function quad(a::AbstractMatrix{T}, x::AbstractMatrix{S}) where {T<:Real, S<:Real}
-    @check_argdims LinearAlgebra.checksquare(a) == size(x, 1)
-    quad!(Array{promote_type(T, S)}(undef, size(x,2)), a, x)
+function quad(a::AbstractMatrix{<:Real}, x::AbstractVecOrMat)
+    return quad(AbstractPDMat(a), x)
 end
-
-quad(a::AbstractMatrix, x::AbstractVector) = sum(abs2, chol_upper(cholesky(a)) * x)
-invquad(a::AbstractMatrix, x::AbstractVector) = sum(abs2, chol_lower(cholesky(a)) \ x)
 
 """
     quad!(r::AbstractArray, a::AbstractMatrix, x::AbstractMatrix)
 
-Overwrite `r` with the value of the quadratic form defined by `a` applied columnwise to `x`
+Overwrite `r` with the value of the quadratic form defined by `a` applied columnwise to `x`.
 """
-quad!(r::AbstractArray, a::AbstractMatrix, x::AbstractMatrix) = colwise_dot!(r, x, a * x)
-
+function quad!(r::AbstractArray, a::AbstractMatrix{<:Real}, x::AbstractMatrix)
+    return quad!(r, AbstractPDMat(a), x)
+end
 
 """
     invquad(a::AbstractMatrix, x::AbstractVecOrMat)
@@ -120,10 +113,8 @@ For most `PDMat` types this is done in a way that does not require evaluation of
 If `x` is a vector the quadratic form is `x' * a * x`.  If `x` is a matrix
 the quadratic form is applied column-wise.
 """
-invquad(a::AbstractMatrix, x::AbstractVecOrMat) = x' / a * x
-function invquad(a::AbstractMatrix{T}, x::AbstractMatrix{S}) where {T<:Real, S<:Real}
-    @check_argdims LinearAlgebra.checksquare(a) == size(x, 1)
-    invquad!(Array{promote_type(T, S)}(undef, size(x,2)), a, x)
+function invquad(a::AbstractMatrix{<:Real}, x::AbstractVecOrMat)
+    return invquad(AbstractPDMat(a), x)
 end
 
 """
@@ -131,4 +122,7 @@ end
 
 Overwrite `r` with the value of the quadratic form defined by `inv(a)` applied columnwise to `x`
 """
-invquad!(r::AbstractArray, a::AbstractMatrix, x::AbstractMatrix) = colwise_dot!(r, x, a \ x)
+function invquad!(r::AbstractArray, a::AbstractMatrix{<:Real}, x::AbstractMatrix)
+    return invquad!(r, AbstractPDMat(a), x)
+end
+

@@ -78,6 +78,76 @@ LinearAlgebra.eigmin(a::PDMat) = eigmin(a.mat)
 Base.kron(A::PDMat, B::PDMat) = PDMat(kron(A.mat, B.mat), Cholesky(kron(A.chol.U, B.chol.U), 'U', A.chol.info))
 LinearAlgebra.sqrt(A::PDMat) = PDMat(sqrt(Hermitian(A.mat)))
 
+### (un)whitening
+
+function whiten!(r::AbstractVecOrMat, a::PDMat, x::AbstractVecOrMat)
+    @check_argdims axes(r) == axes(x)
+    @check_argdims a.dim == size(x, 1)
+    v = _rcopy!(r, x)
+    return ldiv!(chol_lower(cholesky(a)), v)
+end
+function unwhiten!(r::AbstractVecOrMat, a::PDMat, x::AbstractVecOrMat)
+    @check_argdims axes(r) == axes(x)
+    @check_argdims a.dim == size(x, 1)
+    v = _rcopy!(r, x)
+    return lmul!(chol_lower(cholesky(a)), v)
+end
+
+function whiten(a::PDMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    return chol_lower(cholesky(a)) \ x
+end
+function unwhiten(a::PDMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    return chol_lower(cholesky(a)) * x
+end
+
+## quad/invquad
+
+function quad(a::PDMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    aU_x = chol_upper(cholesky(a)) * x
+    if x isa AbstractVector
+        return sum(abs2, aU_x)
+    else
+        return vec(sum(abs2, aU_x; dims = 1))
+    end
+end
+function invquad(a::PDMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    inv_aL_x = chol_lower(cholesky(a)) \ x
+    if x isa AbstractVector
+        return sum(abs2, inv_aL_x)
+    else
+        return vec(sum(abs2, inv_aL_x; dims = 1))
+    end
+end
+
+function quad!(r::AbstractArray, a::PDMat, x::AbstractMatrix)
+    @check_argdims axes(r) == axes(x, 2)
+    @check_argdims a.dim == size(x, 1)
+    aU = chol_upper(cholesky(a))
+    z = similar(r, a.dim) # buffer to save allocations
+    @inbounds for i in axes(x, 2)
+        copyto!(z, view(x, :, i))
+        lmul!(aU, z)
+        r[i] = sum(abs2, z)
+    end
+    return r
+end
+function invquad!(r::AbstractArray, a::PDMat, x::AbstractMatrix)
+    @check_argdims axes(r) == axes(x, 2)
+    @check_argdims a.dim == size(x, 1)
+    aL = chol_lower(cholesky(a))
+    z = similar(r, a.dim) # buffer to save allocations
+    @inbounds for i in axes(x, 2)
+        copyto!(z, view(x, :, i))
+        ldiv!(aL, z)
+        r[i] = sum(abs2, z)
+    end
+    return r
+end
+
 ### tri products
 
 function X_A_Xt(a::PDMat, x::AbstractMatrix)

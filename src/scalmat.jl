@@ -76,23 +76,65 @@ LinearAlgebra.sqrt(a::ScalMat) = ScalMat(a.dim, sqrt(a.value))
 ### whiten and unwhiten
 
 function whiten!(r::AbstractVecOrMat, a::ScalMat, x::AbstractVecOrMat)
-    @check_argdims LinearAlgebra.checksquare(a) == size(x, 1)
+    @check_argdims axes(r) == axes(x)
+    @check_argdims a.dim == size(x, 1)
     _ldiv!(r, sqrt(a.value), x)
 end
 
 function unwhiten!(r::AbstractVecOrMat, a::ScalMat, x::AbstractVecOrMat)
-    @check_argdims LinearAlgebra.checksquare(a) == size(x, 1)
+    @check_argdims axes(r) == axes(x)
+    @check_argdims a.dim == size(x, 1)
     mul!(r, x, sqrt(a.value))
 end
 
+function whiten(a::ScalMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    return x / sqrt(a.value)
+end
+function unwhiten(a::ScalMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    return sqrt(a.value) * x
+end
 
 ### quadratic forms
 
-quad(a::ScalMat, x::AbstractVector) = sum(abs2, x) * a.value
-invquad(a::ScalMat, x::AbstractVector) = sum(abs2, x) / a.value
+function quad(a::ScalMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    if x isa AbstractVector
+        return sum(abs2, x) * a.value
+    else
+        # map(Base.Fix1(quad, a), eachcol(x)) or similar alternatives
+        # do NOT return a `SVector` for inputs `x::SMatrix`.
+        wsq = let w = a.value
+            x -> w * abs2(x)
+        end 
+        return vec(sum(wsq, x; dims=1))
+    end
+end
+function invquad(a::ScalMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    if x isa AbstractVector
+        return sum(abs2, x) / a.value
+    else
+        # map(Base.Fix1(invquad, a), eachcol(x)) or similar alternatives
+        # do NOT return a `SVector` for inputs `x::SMatrix`.
+        wsq = let w = a.value
+            x -> abs2(x) / w
+        end 
+        return vec(sum(wsq, x; dims=1))
+    end
+end
 
-quad!(r::AbstractArray, a::ScalMat, x::AbstractMatrix) = colwise_sumsq!(r, x, a.value)
-invquad!(r::AbstractArray, a::ScalMat, x::AbstractMatrix) = colwise_sumsqinv!(r, x, a.value)
+function quad!(r::AbstractArray, a::ScalMat, x::AbstractMatrix)
+    @check_argdims eachindex(r) == axes(x, 2)
+    @check_argdims a.dim == size(x, 1)
+    return map!(Base.Fix1(quad, a), r, eachcol(x))
+end
+function invquad!(r::AbstractArray, a::ScalMat, x::AbstractMatrix)
+    @check_argdims eachindex(r) == axes(x, 2)
+    @check_argdims a.dim == size(x, 1)
+    return map!(Base.Fix1(invquad, a), r, eachcol(x))
+end
 
 
 ### tri products
