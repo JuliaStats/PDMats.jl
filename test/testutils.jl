@@ -230,10 +230,9 @@ function pdtest_div(C, Imat::Matrix, X::Matrix, verbose::Int)
     @assert d == size(C, 1) == size(C, 2)
     @assert size(Imat) == size(C)
     @test C \ X ≈ Imat * X
-    # Right division with Choleskyrequires https://github.com/JuliaLang/julia/pull/32594
     # CHOLMOD throws error since no method is found for
     # `rdiv!(::Matrix{Float64}, ::SuiteSparse.CHOLMOD.Factor{Float64})`
-    check_rdiv = !(C isa PDMat && VERSION < v"1.3.0-DEV.562") && !(C isa PDSparseMat && HAVE_CHOLMOD)
+    check_rdiv = !(C isa PDSparseMat && HAVE_CHOLMOD)
     check_rdiv && @test Matrix(X') / C ≈ (C \ X)'
 
     for i = 1:n
