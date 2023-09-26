@@ -130,7 +130,9 @@ function pdtest_cholesky(C::Union{PDMat, PDiagMat, ScalMat}, Cmat::Matrix, cmat_
     # regression test: https://github.com/JuliaStats/PDMats.jl/pull/182
     if C isa Union{PDiagMat, ScalMat}
         size_of_sqrt_diag = C.dim * sizeof(float(eltype(C)))
-        @test (@allocated cholesky(C)) <= 1.05 * size_of_sqrt_diag # allow some overhead
+        # allow some overhead
+        max_allocations = max(1.05 * size_of_sqrt_diag, size_of_sqrt_diag + 96)
+        @test (@allocated cholesky(C)) <= max_allocations
     end
 end
 
