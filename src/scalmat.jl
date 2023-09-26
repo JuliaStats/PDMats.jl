@@ -99,20 +99,20 @@ invquad!(r::AbstractArray, a::ScalMat, x::AbstractMatrix) = colwise_sumsqinv!(r,
 
 function X_A_Xt(a::ScalMat, x::AbstractMatrix)
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 2)
-    lmul!(a.value, x * transpose(x))
+    a.value * (x * transpose(x))
 end
 
 function Xt_A_X(a::ScalMat, x::AbstractMatrix)
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 1)
-    lmul!(a.value, transpose(x) * x)
+    a.value * (transpose(x) * x)
 end
 
 function X_invA_Xt(a::ScalMat, x::AbstractMatrix)
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 2)
-    _rdiv!(x * transpose(x), a.value)
+    (x * transpose(x)) / a.value
 end
 
 function Xt_invA_X(a::ScalMat, x::AbstractMatrix)
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 1)
-    _rdiv!(transpose(x) * x, a.value)
+    (transpose(x) * x) / a.value
 end
