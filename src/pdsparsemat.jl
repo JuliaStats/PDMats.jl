@@ -100,11 +100,6 @@ function quad(a::PDSparseMat, x::AbstractVecOrMat)
     z = sparse(chol_lower(cholesky(a)))' * x
     return x isa AbstractVector ? sum(abs2, z) : vec(sum(abs2, z; dims = 1))
 end
-function invquad(a::PDSparseMat, x::AbstractVecOrMat)
-    @check_argdims a.dim == size(x, 1)
-    z = sparse(chol_lower(cholesky(a))) \ x
-    return x isa AbstractVector ? sum(abs2, z) : vec(sum(abs2, z; dims = 1))
-end
 
 function quad!(r::AbstractArray, a::PDSparseMat, x::AbstractMatrix)
     @check_argdims eachindex(r) == axes(x, 2)
@@ -112,6 +107,12 @@ function quad!(r::AbstractArray, a::PDSparseMat, x::AbstractMatrix)
         r[i] = quad(a, x[:,i])
     end
     return r
+end
+
+function invquad(a::PDSparseMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    z = sparse(chol_lower(cholesky(a))) \ x
+    return x isa AbstractVector ? sum(abs2, z) : vec(sum(abs2, z; dims = 1))
 end
 
 function invquad!(r::AbstractArray, a::PDSparseMat, x::AbstractMatrix)

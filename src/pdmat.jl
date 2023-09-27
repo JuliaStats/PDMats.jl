@@ -113,15 +113,6 @@ function quad(a::PDMat, x::AbstractVecOrMat)
         return vec(sum(abs2, aU_x; dims = 1))
     end
 end
-function invquad(a::PDMat, x::AbstractVecOrMat)
-    @check_argdims a.dim == size(x, 1)
-    inv_aL_x = chol_lower(cholesky(a)) \ x
-    if x isa AbstractVector
-        return sum(abs2, inv_aL_x)
-    else
-        return vec(sum(abs2, inv_aL_x; dims = 1))
-    end
-end
 
 function quad!(r::AbstractArray, a::PDMat, x::AbstractMatrix)
     @check_argdims axes(r) == axes(x, 2)
@@ -135,6 +126,17 @@ function quad!(r::AbstractArray, a::PDMat, x::AbstractMatrix)
     end
     return r
 end
+
+function invquad(a::PDMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    inv_aL_x = chol_lower(cholesky(a)) \ x
+    if x isa AbstractVector
+        return sum(abs2, inv_aL_x)
+    else
+        return vec(sum(abs2, inv_aL_x; dims = 1))
+    end
+end
+
 function invquad!(r::AbstractArray, a::PDMat, x::AbstractMatrix)
     @check_argdims axes(r) == axes(x, 2)
     @check_argdims a.dim == size(x, 1)
@@ -173,3 +175,18 @@ function Xt_invA_X(a::PDMat, x::AbstractMatrix)
     z = chol_lower(a.chol) \ x
     return transpose(z) * z
 end
+
+### Specializations for `Array` arguments with reduced allocations
+
+function quad(a::PDMat{<:Real,<:Vector}, x::Matrix)
+    @check_argdims a.dim == size(x, 1)
+    T = typeof(zero(eltype(a)) * abs2(zero(eltype(x))))
+    return quad!(Vector{T}(undef, size(x, 2)), a, x)
+end
+
+function invquad(a::PDMat{<:Real,<:Vector}, x::Matrix)
+    @check_argdims a.dim == size(x, 1)
+    T = typeof(abs2(zero(eltype(x))) / zero(eltype(a)))
+    return invquad!(Vector{T}(undef, size(x, 2)), a, x)
+end
+

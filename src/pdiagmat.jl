@@ -118,16 +118,6 @@ function quad(a::PDiagMat, x::AbstractVecOrMat)
         return vec(sum(abs2.(x) .* a.diag; dims = 1))
     end
 end
-function invquad(a::PDiagMat, x::AbstractVecOrMat)
-    @check_argdims a.dim == size(x, 1)
-    if x isa AbstractVector
-        return invwsumsq(a.diag, x)
-    else
-        # map(Base.Fix1(invquad, a), eachcol(x)) or similar alternatives
-        # do NOT return a `SVector` for inputs `x::SMatrix`.
-        return vec(sum(abs2.(x) ./ a.diag; dims = 1))
-    end
-end
 
 function quad!(r::AbstractArray, a::PDiagMat, x::AbstractMatrix)
     ad = a.diag
@@ -143,8 +133,18 @@ function quad!(r::AbstractArray, a::PDiagMat, x::AbstractMatrix)
     r
 end
 
+function invquad(a::PDiagMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    if x isa AbstractVector
+        return invwsumsq(a.diag, x)
+    else
+        # map(Base.Fix1(invquad, a), eachcol(x)) or similar alternatives
+        # do NOT return a `SVector` for inputs `x::SMatrix`.
+        return vec(sum(abs2.(x) ./ a.diag; dims = 1))
+    end
+end
+
 function invquad!(r::AbstractArray, a::PDiagMat, x::AbstractMatrix)
-    m, n = size(x)
     ad = a.diag
     @check_argdims eachindex(ad) == axes(x, 1)
     @check_argdims eachindex(r) == axes(x, 2)
@@ -184,3 +184,18 @@ function Xt_invA_X(a::PDiagMat, x::AbstractMatrix)
     z = x ./ sqrt.(a.diag)
     transpose(z) * z
 end
+
+### Specializations for `Array` arguments with reduced allocations
+
+function quad(a::PDiagMat{<:Real,<:Vector}, x::Matrix)
+    @check_argdims a.dim == size(x, 1)
+    T = typeof(zero(eltype(a)) * abs2(zero(eltype(x))))
+    return quad!(Vector{T}(undef, size(x, 2)), a, x)
+end
+
+function invquad(a::PDiagMat{<:Real,<:Vector}, x::Matrix)
+    @check_argdims a.dim == size(x, 1)
+    T = typeof(abs2(zero(eltype(x))) / zero(eltype(a)))
+    return invquad!(Vector{T}(undef, size(x, 2)), a, x)
+end
+

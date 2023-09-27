@@ -111,6 +111,13 @@ function quad(a::ScalMat, x::AbstractVecOrMat)
         return vec(sum(wsq, x; dims=1))
     end
 end
+
+function quad!(r::AbstractArray, a::ScalMat, x::AbstractMatrix)
+    @check_argdims eachindex(r) == axes(x, 2)
+    @check_argdims a.dim == size(x, 1)
+    return map!(Base.Fix1(quad, a), r, eachcol(x))
+end
+
 function invquad(a::ScalMat, x::AbstractVecOrMat)
     @check_argdims a.dim == size(x, 1)
     if x isa AbstractVector
@@ -125,11 +132,6 @@ function invquad(a::ScalMat, x::AbstractVecOrMat)
     end
 end
 
-function quad!(r::AbstractArray, a::ScalMat, x::AbstractMatrix)
-    @check_argdims eachindex(r) == axes(x, 2)
-    @check_argdims a.dim == size(x, 1)
-    return map!(Base.Fix1(quad, a), r, eachcol(x))
-end
 function invquad!(r::AbstractArray, a::ScalMat, x::AbstractMatrix)
     @check_argdims eachindex(r) == axes(x, 2)
     @check_argdims a.dim == size(x, 1)
