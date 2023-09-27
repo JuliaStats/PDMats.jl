@@ -160,8 +160,8 @@ end
 
 function X_A_Xt(a::PDiagMat, x::AbstractMatrix)
     @check_argdims a.dim == size(x, 2)
-    z = a.diag .* x
-    return z * transpose(x)
+    z = a.diag .* transpose(x)
+    return x * z
 end
 
 function Xt_A_X(a::PDiagMat, x::AbstractMatrix)
@@ -172,8 +172,8 @@ end
 
 function X_invA_Xt(a::PDiagMat, x::AbstractMatrix)
     @check_argdims a.dim == size(x, 2)
-    z = x ./ a.diag
-    return z * transpose(x)
+    z = transpose(x) ./ a.diag
+    return x * z
 end
 
 function Xt_invA_X(a::PDiagMat, x::AbstractMatrix)
