@@ -104,7 +104,12 @@ end
 
 function quad(a::PDSparseMat, x::AbstractVecOrMat)
     @check_argdims a.dim == size(x, 1)
-    z = sparse(chol_lower(cholesky(a)))' * x
+    # `*` is not defined for `UP` factor components,
+    # so we can't use `chol_upper(a.chol) * x`
+    # Moreover, `sparse` is only defined for `L` factor components
+    C = a.chol
+    UP = transpose(sparse(C.L))[:, C.p]
+    z = UP * x
     return x isa AbstractVector ? sum(abs2, z) : vec(sum(abs2, z; dims = 1))
 end
 
@@ -118,7 +123,7 @@ end
 
 function invquad(a::PDSparseMat, x::AbstractVecOrMat)
     @check_argdims a.dim == size(x, 1)
-    z = sparse(chol_lower(cholesky(a))) \ x
+    z = chol_lower(cholesky(a)) \ x
     return x isa AbstractVector ? sum(abs2, z) : vec(sum(abs2, z; dims = 1))
 end
 
