@@ -20,11 +20,14 @@ using StaticArrays
         @test D isa PDiagMat{Float64, <:SVector{4, Float64}}
         @test @inferred(kron(D, D)) isa PDiagMat{Float64, <:SVector{16, Float64}}
 
+        # Scaled identity matrix
+        E = ScalMat(4, 1.2)
+
         x = @SVector rand(4)
         X = @SMatrix rand(10, 4)
         Y = @SMatrix rand(4, 10)
 
-        for A in (PDS, D)
+        for A in (PDS, D, E)
             @test A * x isa SVector{4, Float64}
             @test A * x ≈ Matrix(A) * Vector(x)
 
