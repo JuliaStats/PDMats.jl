@@ -114,9 +114,17 @@ function quad(a::PDSparseMat, x::AbstractVecOrMat)
 end
 
 function quad!(r::AbstractArray, a::PDSparseMat, x::AbstractMatrix)
-    @check_argdims eachindex(r) == axes(x, 2)
-    for i in axes(x, 2)
-        r[i] = quad(a, x[:,i])
+    @check_argdims axes(r) == axes(x, 2)
+    # `*` is not defined for `UP` factor components,
+    # so we can't use `chol_upper(a.chol) * x`
+    # Moreover, `sparse` is only defined for `L` factor components
+    C = a.chol
+    UP = transpose(sparse(C.L))[:, C.p]
+    z = similar(r, a.dim) # buffer to save allocations
+    @inbounds for i in axes(x, 2)
+        copyto!(z, view(x, :, i))
+        lmul!(UP, z)
+        r[i] = sum(abs2, z)
     end
     return r
 end
@@ -128,9 +136,15 @@ function invquad(a::PDSparseMat, x::AbstractVecOrMat)
 end
 
 function invquad!(r::AbstractArray, a::PDSparseMat, x::AbstractMatrix)
-    @check_argdims eachindex(r) == axes(x, 2)
-    for i in axes(x, 2)
-        r[i] = invquad(a, x[:,i])
+    @check_argdims axes(r) == axes(x, 2)
+    @check_argdims a.dim == size(x, 1)
+    aL = chol_lower(cholesky(a))
+    # `\` with `PtL` factor components is not implemented for views
+    # and the generic fallback requires indexing which is not supported
+    xi = similar(x, a.dim)
+    @inbounds for i in axes(x, 2)
+        copyto!(xi, view(x, :, i))
+        r[i] = sum(abs2, aL \ xi)
     end
     return r
 end
