@@ -130,10 +130,10 @@ end
 
 function X_invA_Xt(a::ScalMat, x::Matrix)
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 2)
-    _rdiv!(x * transpose(x), a.value)
+    rdiv!(x * transpose(x), a.value)
 end
 
 function Xt_invA_X(a::ScalMat, x::Matrix)
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 1)
-    _rdiv!(transpose(x) * x, a.value)
+    rdiv!(transpose(x) * x, a.value)
 end
