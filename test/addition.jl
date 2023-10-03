@@ -3,11 +3,16 @@
 using PDMats
 
 
-struct ScalMat2D{T<:Real} <: AbstractPDMat{T}
+# New AbstractPDMat type for the tests below
+# Supports only functions needed in the tests below
+struct ScalMat3D{T<:Real} <: AbstractPDMat{T}
     value::T
 end
-
-Base.Matrix(a::ScalMat2D) = Matrix(Diagonal(fill(a.value, 2)))
+Base.Matrix(a::ScalMat3D) = Matrix(Diagonal(fill(a.value, 3)))
+Base.size(::ScalMat3D) = (3, 3)
+# Not generally correct
+Base.:*(a::ScalMat3D, c::Real) = ScalMat3D(a.value * c)
+Base.getindex(a::ScalMat3D, i::Int, j::Int) = i == j ? a.value : zero(a.value)
 
 @testset "addition" begin
     for T in (Float64, Float32)
@@ -18,36 +23,35 @@ Base.Matrix(a::ScalMat2D) = Matrix(Diagonal(fill(a.value, 2)))
 
         pm1 = PDMat(M)
         pm2 = PDiagMat(V)
-        pm3 = ScalMat(3, X)
-        pm4 = X * I
+        pm3 = PDiagMat(sparse(V))
+        pm4 = ScalMat(3, X)
         pm5 = PDSparseMat(sparse(M))
+        pm6 = ScalMat3D(X)
 
-        pmats = Any[pm1, pm2, pm3] #, pm5]
+        pmats = Any[pm1, pm2, pm3, pm4, pm5, pm6]
 
         for p1 in pmats, p2 in pmats
             pr = p1 + p2
             @test size(pr) == size(p1)
             @test Matrix(pr) ≈ Matrix(p1) + Matrix(p2)
 
-            pr = pdadd(p1, p2, convert(T, 1.5))
-            @test size(pr) == size(p1)
-            @test Matrix(pr) ≈ Matrix(p1) + Matrix(p2) * convert(T, 1.5)
+            if p1 isa ScalMat3D
+                @test_broken pdadd(p1, p2, convert(T, 1.5))
+            else
+                pr = pdadd(p1, p2, convert(T, 1.5))
+                @test size(pr) == size(p1)
+                @test Matrix(pr) ≈ Matrix(p1) + Matrix(p2) * convert(T, 1.5)
+            end
         end
 
         for p1 in pmats
-            pr = p1 + pm4
-            @test size(pr) == size(p1)
-            @test Matrix(pr) ≈ Matrix(p1) + pm4
+            if p1 isa ScalMat3D
+                @test_broken p1 + X * I
+            else
+                pr = p1 + X * I
+                @test size(pr) == size(p1)
+                @test Matrix(pr) ≈ Matrix(p1) + X * I
+            end
         end
-    end
-    @testset "Abstract + Diag" for a in [PDiagMat([1,2]), ScalMat(2,1), PDiagMat(sparsevec([1.,0]))]
-        M = ScalMat2D(1)
-        @test Matrix(a + M) == Matrix(a) + Matrix(M)
-    end
-    @testset "PDMat + PDiagMat(sparse)" begin
-        A = randn(2, 2)
-        M = PDMat(A * A')
-        Dsp = PDiagMat(sparsevec([1.0, 0]))
-        @test Matrix(M + Dsp) == Matrix(M) + Matrix(Dsp)
     end
 end

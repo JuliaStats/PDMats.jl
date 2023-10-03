@@ -45,7 +45,7 @@ function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector, c::Real
 end
 
 _adddiag(a::Union{Matrix, SparseMatrixCSC}, v::Real) = _adddiag!(copy(a), v)
-_adddiag(a::Union{Matrix, SparseMatrixCSC}, v::Vector, c::Real) = _adddiag!(copy(a), v, c)
+_adddiag(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector, c::Real) = _adddiag!(copy(a), v, c)
 _adddiag(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector{T}) where {T<:Real} = _adddiag!(copy(a), v, one(T))
 
 
