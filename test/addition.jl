@@ -42,9 +42,12 @@ Base.Matrix(a::ScalMat2D) = Matrix(Diagonal(fill(a.value, 2)))
     end
     @testset "Abstract + Diag" for a in [PDiagMat([1,2]), ScalMat(2,1), PDiagMat(sparsevec([1.,0]))]
         M = ScalMat2D(1)
-        a + M
+        @test Matrix(a + M) == Matrix(a) + Matrix(M)
     end
-    A = randn(2,2)
-    M = PDMat(A*A')
-    M + PDiagMat(sparsevec([1.,0]))
+    @testset "PDMat + PDiagMat(sparse)" begin
+        A = randn(2, 2)
+        M = PDMat(A * A')
+        Dsp = PDiagMat(sparsevec([1.0, 0]))
+        @test Matrix(M + Dsp) == Matrix(M) + Matrix(Dsp)
+    end
 end
