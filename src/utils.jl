@@ -30,7 +30,7 @@ function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::Real)
     return a
 end
 
-function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::Vector, c::Real)
+function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector, c::Real)
     @check_argdims eachindex(v) == axes(a, 1) == axes(a, 2)
     if c == one(c)
         for i in eachindex(v)

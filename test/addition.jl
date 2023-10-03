@@ -40,7 +40,7 @@ Base.Matrix(a::ScalMat2D) = Matrix(Diagonal(fill(a.value, 2)))
             @test Matrix(pr) ≈ Matrix(p1) + pm4
         end
     end
-    @testset "Abstract + Diag" for a in [PDiagMat([1,2]), ScalMat(2,1)]
+    @testset "Abstract + Diag" for a in [PDiagMat([1,2]), ScalMat(2,1), PDiagMat(sparsevec([1.,0]))]
         M = ScalMat2D(1)
         a + M
     end
