@@ -2,6 +2,13 @@
 
 using PDMats
 
+
+struct ScalMat2D{T<:Real} <: AbstractPDMat{T}
+    value::T
+end
+
+Base.Matrix(a::ScalMat2D) = Matrix(Diagonal(fill(a.value, 2)))
+
 @testset "addition" begin
     for T in (Float64, Float32)
         printstyled("Testing addition with eltype = $T\n"; color=:blue)
@@ -32,5 +39,9 @@ using PDMats
             @test size(pr) == size(p1)
             @test Matrix(pr) ≈ Matrix(p1) + pm4
         end
+    end
+    @testset "Abstract + Diag" for a in [PDiagMat([1,2]), ScalMat(2,1)]
+        M = ScalMat2D(1)
+        a + M
     end
 end

@@ -2,8 +2,8 @@
 # between pdmat and pdmat
 
 +(a::PDMat, b::AbstractPDMat) = PDMat(a.mat + Matrix(b))
-+(a::PDiagMat, b::AbstractPDMat) = PDMat(_adddiag(Matrix(b), a.diag))
-+(a::ScalMat, b::AbstractPDMat) = PDMat(_adddiag(Matrix(b), a.value))
++(a::PDiagMat, b::AbstractPDMat) = PDMat(_adddiag!(Matrix(b), a.diag, true))
++(a::ScalMat, b::AbstractPDMat) = PDMat(_adddiag!(Matrix(b), a.value))
 if HAVE_CHOLMOD
     +(a::PDSparseMat, b::AbstractPDMat) = PDMat(a.mat + Matrix(b))
 end
