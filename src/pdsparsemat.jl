@@ -72,25 +72,32 @@ LinearAlgebra.sqrt(A::PDSparseMat) = PDMat(sqrt(Hermitian(Matrix(A))))
 function whiten!(r::AbstractVecOrMat, a::PDSparseMat, x::AbstractVecOrMat)
     @check_argdims axes(r) == axes(x)
     @check_argdims a.dim == size(x, 1)
-    # ldiv! is not defined for SparseMatrixCSC
-    return copyto!(r, sparse(chol_lower(a.chol)) \ x)
+    # Can't use `ldiv!` due to missing support in SparseArrays
+    return copyto!(r, chol_lower(a.chol) \ x)
 end
 
 function unwhiten!(r::AbstractVecOrMat, a::PDSparseMat, x::AbstractVecOrMat)
     @check_argdims axes(r) == axes(x)
     @check_argdims a.dim == size(x, 1)
-    # lmul! is not defined for SparseMatrixCSC
-    return copyto!(r, sparse(chol_lower(a.chol)) * x)
+    # `*` is not defined for `PtL` factor components,
+    # so we can't use `chol_lower(a.chol) * x`
+    C = a.chol
+    PtL = sparse(C.L)[C.p, :]
+    return copyto!(r, PtL * x)
 end
 
 function whiten(a::PDSparseMat, x::AbstractVecOrMat)
     @check_argdims a.dim == size(x, 1)
-    return sparse(chol_lower(cholesky(a))) \ x
+    return chol_lower(cholesky(a)) \ x
 end
 
 function unwhiten(a::PDSparseMat, x::AbstractVecOrMat)
     @check_argdims a.dim == size(x, 1)
-    return sparse(chol_lower(cholesky(a))) * x
+    # `*` is not defined for `PtL` factor components,
+    # so we can't use `chol_lower(a.chol) * x`
+    C = a.chol
+    PtL = sparse(C.L)[C.p, :]
+    return PtL * x
 end
 
 ### quadratic forms
@@ -127,14 +134,23 @@ end
 ### tri products
 
 function X_A_Xt(a::PDSparseMat, x::AbstractMatrix)
-    z = x * sparse(chol_lower(a.chol))
+    # `*` is not defined for `PtL` factor components,
+    # so we can't use `x * chol_lower(a.chol)`
+    C = a.chol
+    PtL = sparse(C.L)[C.p, :]
+    z = x * PtL
     z * transpose(z)
 end
 
 
 function Xt_A_X(a::PDSparseMat, x::AbstractMatrix)
-    z = transpose(x) * sparse(chol_lower(a.chol))
-    z * transpose(z)
+    # `*` is not defined for `UP` factor components,
+    # so we can't use `chol_upper(a.chol) * x`
+    # Moreover, `sparse` is only defined for `L` factor components
+    C = a.chol
+    UP = transpose(sparse(C.L))[:, C.p]
+    z = UP * x
+    transpose(z) * z
 end
 
 
