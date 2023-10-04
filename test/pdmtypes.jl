@@ -1,4 +1,4 @@
-using LinearAlgebra, PDMats, SparseArrays, SuiteSparse
+using LinearAlgebra, PDMats, SparseArrays
 using Test
 
 @testset "pd matrix types" begin
@@ -10,8 +10,10 @@ using Test
             @test @test_deprecated(PDiagMat(d, d)) == PDiagMat(d)
             x = one(T)
             @test @test_deprecated(ScalMat(2, x, x)) == ScalMat(2, x)
-            s = SparseMatrixCSC{T}(I, 2, 2)
-            @test PDSparseMat(s, cholesky(s)).mat == PDSparseMat(s).mat == PDSparseMat(cholesky(s)).mat
+            if HAVE_CHOLMOD
+                s = SparseMatrixCSC{T}(I, 2, 2)
+                @test PDMat(s, cholesky(s)).mat == PDMat(s).mat == PDMat(cholesky(s)).mat
+            end
         end
 
         @testset "test the functionality" begin
@@ -32,8 +34,10 @@ using Test
             @testset "ScalMat" begin
                 test_pdmat(ScalMat(3,X), X*Matrix{T}(I, 3, 3), cmat_eq=true, verbose=1)
             end
-            @testset "PDSparseMat" begin
-                test_pdmat(PDSparseMat(sparse(M)), M,          cmat_eq=true, verbose=1, t_eig=false)
+            if HAVE_CHOLMOD
+                @testset "PDMat from sparse matrix" begin
+                    test_pdmat(PDMat(sparse(M)), M, cmat_eq=true, verbose=1, t_eig=false)
+                end
             end
         end
     end
@@ -75,10 +79,10 @@ using Test
             end
 
             if HAVE_CHOLMOD
-                A = PDSparseMat(SparseMatrixCSC{T}(I, 2, 2))
-                for R in (AbstractArray{S}, AbstractMatrix{S}, AbstractPDMat{S}, PDSparseMat{S})
+                A = PDMat(SparseMatrixCSC{T}(I, 2, 2))
+                for R in (AbstractArray{S}, AbstractMatrix{S}, AbstractPDMat{S}, PDMat{S})
                     B = @inferred(convert(R, A))
-                    @test B isa PDSparseMat{S}
+                    @test B isa PDMat{S}
                     @test B == A
                     @test (B === A) === (S === T)
                     @test (B.mat === A.mat) === (S === T)
@@ -122,18 +126,15 @@ using Test
             @test z ≈ y
         end
 
-        # requires https://github.com/JuliaLang/julia/pull/32594
-        if VERSION >= v"1.3.0-DEV.562"
-            z = x / PDMat(A)
-            @test typeof(z) === typeof(y)
-            @test size(z) == size(y)
-            @test z ≈ y
-        end
+        z = x / PDMat(A)
+        @test typeof(z) === typeof(y)
+        @test size(z) == size(y)
+        @test z ≈ y
 
         # right division not defined for CHOLMOD:
-        # `rdiv!(::Matrix{Float64}, ::SuiteSparse.CHOLMOD.Factor{Float64})` not defined
+        # `rdiv!(::Matrix{Float64}, ::SparseArrays.CHOLMOD.Factor{Float64})` not defined
         if !HAVE_CHOLMOD
-            z = x / PDSparseMat(sparse(first(A), 1, 1)) 
+            z = x / PDMat(sparse(first(A), 1, 1)) 
             @test typeof(z) === typeof(y)
             @test size(z) == size(y)
             @test z ≈ y
@@ -141,15 +142,11 @@ using Test
     end
 
     @testset "PDMat from Cholesky decomposition of diagonal matrix (#137)" begin
-        # U'*U where U isa UpperTriangular etc.
-        # requires https://github.com/JuliaLang/julia/pull/33334
-        if VERSION >= v"1.4.0-DEV.286"
-            x = rand(10, 10)
-            A = Diagonal(x' * x)
-            M = PDMat(cholesky(A))
-            @test M isa PDMat{Float64, typeof(A)}
-            @test Matrix(M) ≈ A
-        end
+        x = rand(10, 10)
+        A = Diagonal(x' * x)
+        M = PDMat(cholesky(A))
+        @test M isa PDMat{Float64, typeof(A)}
+        @test Matrix(M) ≈ A
     end
 
     @testset "AbstractPDMat constructors (#136)" begin
@@ -158,10 +155,12 @@ using Test
 
         M = @inferred AbstractPDMat(A)
         @test M isa PDMat
+        @test cholesky(M) isa Cholesky
         @test Matrix(M) ≈ A
 
         M = @inferred AbstractPDMat(cholesky(A))
         @test M isa PDMat
+        @test cholesky(M) isa Cholesky
         @test Matrix(M) ≈ A
 
         M = @inferred AbstractPDMat(Diagonal(A))
@@ -177,16 +176,13 @@ using Test
         @test Matrix(M) ≈ Diagonal(A)
 
         M = @inferred AbstractPDMat(sparse(A))
-        @test M isa PDSparseMat
+        @test M isa PDMat
+        @test cholesky(M) isa SparseArrays.CHOLMOD.Factor
         @test Matrix(M) ≈ A
 
-        if VERSION < v"1.6"
-            # inference fails e.g. on Julia 1.0
-            M = AbstractPDMat(cholesky(sparse(A)))
-        else
-            M = @inferred AbstractPDMat(cholesky(sparse(A)))
-        end
-        @test M isa PDSparseMat
+        M = @inferred AbstractPDMat(cholesky(sparse(A)))
+        @test M isa PDMat
+        @test cholesky(M) isa SparseArrays.CHOLMOD.Factor
         @test Matrix(M) ≈ A
     end
 end

@@ -10,27 +10,27 @@ end
 _rcopy!(r, x) = (r === x || copyto!(r, x); r)
 
 
-function _addscal!(r::Matrix, a::Matrix, b::Union{Matrix, SparseMatrixCSC}, c::Real)
-    if c == one(c)
-        for i in eachindex(a)
+function _addscal!(r::AbstractMatrix, a::AbstractMatrix, b::AbstractMatrix, c::Real)
+    if isone(c)
+        for i in eachindex(r, a, b)
             @inbounds r[i] = a[i] + b[i]
         end
     else
-        for i in eachindex(a)
-            @inbounds r[i] = a[i] + b[i] * c
+        for i in eachindex(r, a, b)
+            @inbounds r[i] = muladd(b[i], c, a[i])
         end
     end
     return r
 end
 
-function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::Real)
+function _adddiag!(a::AbstractMatrix, v::Real)
     for i in diagind(a)
         @inbounds a[i] += v
     end
     return a
 end
 
-function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector, c::Real)
+function _adddiag!(a::AbstractMatrix, v::AbstractVector, c::Real)
     @check_argdims eachindex(v) == axes(a, 1) == axes(a, 2)
     if c == one(c)
         for i in eachindex(v)
@@ -44,9 +44,9 @@ function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector, c::Real
     return a
 end
 
-_adddiag(a::Union{Matrix, SparseMatrixCSC}, v::Real) = _adddiag!(copy(a), v)
-_adddiag(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector, c::Real) = _adddiag!(copy(a), v, c)
-_adddiag(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector{T}) where {T<:Real} = _adddiag!(copy(a), v, one(T))
+_adddiag(a::AbstractMatrix, v::Real) = _adddiag!(copy(a), v)
+_adddiag(a::AbstractMatrix, v::AbstractVector, c::Real) = _adddiag!(copy(a), v, c)
+_adddiag(a::AbstractMatrix, v::AbstractVector{T}) where {T<:Real} = _adddiag!(copy(a), v, one(T))
 
 
 function wsumsq(w::AbstractVector, a::AbstractVector)
@@ -104,23 +104,3 @@ function colwise_sumsqinv!(r::AbstractArray, a::AbstractMatrix, c::Real)
     return r
 end
 
-# `rdiv!(::AbstractArray, ::Number)` was introduced in Julia 1.2
-# https://github.com/JuliaLang/julia/pull/31179
-@static if VERSION < v"1.2.0-DEV.385"
-    function _rdiv!(X::AbstractArray, s::Number)
-        @simd for I in eachindex(X)
-            @inbounds X[I] /= s
-        end
-        X
-    end
-else
-    _rdiv!(X::AbstractArray, s::Number) = rdiv!(X, s)
-end
-
-# `ldiv!(::AbstractArray, ::Number, ::AbstractArray)` was introduced in Julia 1.4
-# https://github.com/JuliaLang/julia/pull/33806
-@static if VERSION < v"1.4.0-DEV.635"
-    _ldiv!(Y::AbstractArray, s::Number, X::AbstractArray) = Y .= s .\ X
-else
-    _ldiv!(Y::AbstractArray, s::Number, X::AbstractArray) = ldiv!(Y, s, X)
-end

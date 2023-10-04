@@ -27,17 +27,17 @@ Elemenent types are in princple all Real types, but in practice this is limited 
 * `PDMat`: full covariance matrix, defined as
 
 ```julia
-struct PDMat{T<:Real,S<:AbstractMatrix} <: AbstractPDMat{T}
-    dim::Int                    # matrix dimension
-    mat::S                      # input matrix
-    chol::Cholesky{T,S}         # Cholesky factorization of mat
+struct PDMat{T<:Real,S<:AbstractMatrix,C<:Factorization} <: AbstractPDMat{T}
+    dim::Int        # matrix dimension
+    mat::S          # input matrix
+    chol::C         # Cholesky factorization of mat
 end
 
 # Constructors
 
 PDMat(mat, chol)    # with both the input matrix and a Cholesky factorization
 
-PDMat(mat)          # with the input matrix, of type Matrix or Symmetric
+PDMat(mat)          # with the input matrix
                     # Remarks: the Cholesky factorization will be computed
                     # upon construction.
 
@@ -73,29 +73,6 @@ end
 # Constructors
 
 ScalMat(d, v)        # with dimension d and diagonal value v
-```
-
-
-* `PDSparseMat`: sparse covariance matrix, defined as
-
-```julia
-struct PDSparseMat{T<:Real,S<:AbstractSparseMatrix} <: AbstractPDMat{T}
-    dim::Int                       # matrix dimension
-    mat::SparseMatrixCSC           # input matrix
-    chol::CholTypeSparse           # Cholesky factorization of mat
-end
-
-# Constructors
-
-PDSparseMat(mat, chol)    # with both the input matrix and a Cholesky factorization
-
-PDSparseMat(mat)          # with the sparse input matrix, of type SparseMatrixCSC
-                          # Remarks: the Cholesky factorization will be computed
-                          # upon construction.
-
-PDSparseMat(chol)         # with the Cholesky factorization
-                          # Remarks: the sparse matrix 'mat' will be computed upon
-                          # construction.
 ```
 
 

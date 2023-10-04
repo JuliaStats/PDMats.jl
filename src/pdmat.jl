@@ -1,19 +1,19 @@
 """
 Full positive definite matrix together with a Cholesky factorization object.
 """
-struct PDMat{T<:Real,S<:AbstractMatrix} <: AbstractPDMat{T}
+struct PDMat{T<:Real,S<:AbstractMatrix,C<:Factorization} <: AbstractPDMat{T}
     dim::Int
     mat::S
-    chol::Cholesky{T,S}
+    chol::C
 
-    PDMat{T,S}(d::Int,m::AbstractMatrix{T},c::Cholesky{T,S}) where {T,S} = new{T,S}(d,m,c)
+    PDMat{T,S,C}(d::Int, m::AbstractMatrix{T}, c::Factorization) where {T,S,C} = new{T,S,C}(d,m,c)
 end
 
 function PDMat(mat::AbstractMatrix,chol::Cholesky{T,S}) where {T,S}
     d = size(mat, 1)
     size(chol, 1) == d ||
         throw(DimensionMismatch("Dimensions of mat and chol are inconsistent."))
-    PDMat{T,S}(d, convert(S, mat), chol)
+    PDMat{T,S,Cholesky{T,S}}(d, convert(S, mat), chol)
 end
 
 PDMat(mat::AbstractMatrix) = PDMat(mat, cholesky(mat))
@@ -24,17 +24,16 @@ AbstractPDMat(A::Cholesky) = PDMat(A)
 ### Conversion
 Base.convert(::Type{PDMat{T}}, a::PDMat{T}) where {T<:Real} = a
 function Base.convert(::Type{PDMat{T}}, a::PDMat) where {T<:Real}
-    chol = convert(Cholesky{T}, a.chol)
-    S = typeof(chol.factors)
-    mat = convert(S, a.mat)
-    return PDMat{T,S}(size(mat, 1), mat, chol)
+    chol = convert(Factorization{float(T)}, a.chol)
+    mat = convert(AbstractMatrix{T}, a.mat)
+    return PDMat{T,typeof(mat),typeof(chol)}(size(mat, 1), mat, chol)
 end
 Base.convert(::Type{AbstractPDMat{T}}, a::PDMat) where {T<:Real} = convert(PDMat{T}, a)
 
 ### Basics
 
 Base.size(a::PDMat) = (a.dim, a.dim)
-Base.Matrix(a::PDMat) = copy(a.mat)
+Base.Matrix(a::PDMat) = Matrix(a.mat)
 LinearAlgebra.diag(a::PDMat) = diag(a.mat)
 LinearAlgebra.cholesky(a::PDMat) = a.chol
 
@@ -55,17 +54,7 @@ end
 *(a::PDMat, x::AbstractMatrix) = a.mat * x
 \(a::PDMat, x::AbstractVecOrMat) = a.chol \ x
 function /(x::AbstractVecOrMat, a::PDMat)
-    # /(::AbstractVector, ::Cholesky) is not defined
-    if VERSION < v"1.9-"
-        # return matrix for 1-element vectors `x`, consistent with LinearAlgebra
-        return reshape(x, Val(2)) / a.chol
-    else
-        if x isa AbstractVector
-            return vec(reshape(x, Val(2)) / a.chol)
-        else
-            return x / a.chol
-        end
-    end
+    return x isa AbstractVector ? vec(reshape(x, Val(2)) / a.chol) : x / a.chol
 end
 
 ### Algebra
@@ -75,8 +64,14 @@ LinearAlgebra.det(a::PDMat) = det(a.chol)
 LinearAlgebra.logdet(a::PDMat) = logdet(a.chol)
 LinearAlgebra.eigmax(a::PDMat) = eigmax(a.mat)
 LinearAlgebra.eigmin(a::PDMat) = eigmin(a.mat)
-Base.kron(A::PDMat, B::PDMat) = PDMat(kron(A.mat, B.mat), Cholesky(kron(A.chol.U, B.chol.U), 'U', A.chol.info))
 LinearAlgebra.sqrt(A::PDMat) = PDMat(sqrt(Hermitian(A.mat)))
+
+function Base.kron(
+    A::PDMat{<:Real,<:AbstractMatrix,<:Cholesky},
+    B::PDMat{<:Real,<:AbstractMatrix,<:Cholesky},
+)
+    return PDMat(kron(A.mat, B.mat), Cholesky(kron(A.chol.U, B.chol.U), 'U', A.chol.info))
+end
 
 ### tri products
 
