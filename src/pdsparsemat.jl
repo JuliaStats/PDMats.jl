@@ -2,23 +2,31 @@
 Sparse positive definite matrix together with a Cholesky factorization object.
 """
 struct PDSparseMat{T<:Real,S<:AbstractSparseMatrix} <: AbstractPDMat{T}
-    dim::Int
     mat::S
     chol::CholTypeSparse
 
-    PDSparseMat{T,S}(d::Int,m::AbstractSparseMatrix{T},c::CholTypeSparse) where {T,S} =
-        new{T,S}(d,m,c) #add {T} to CholTypeSparse argument once #14076 is implemented
+    PDSparseMat{T,S}(m::AbstractSparseMatrix{T},c::CholTypeSparse) where {T,S} =
+        new{T,S}(m,c) #add {T} to CholTypeSparse argument once #14076 is implemented
 end
+@deprecate PDSparseMat{T,S}(d::Int, m::AbstractSparseMatrix{T}, c::CholTypeSparse) where {T,S} PDSparseMat{T,S}(m, c)
 
 function PDSparseMat(mat::AbstractSparseMatrix,chol::CholTypeSparse)
-    d = size(mat, 1)
+    d = LinearAlgebra.checksquare(mat)
     size(chol, 1) == d ||
         throw(DimensionMismatch("Dimensions of mat and chol are inconsistent."))
-    PDSparseMat{eltype(mat),typeof(mat)}(d, mat, chol)
+    PDSparseMat{eltype(mat),typeof(mat)}(mat, chol)
 end
 
 PDSparseMat(mat::SparseMatrixCSC) = PDSparseMat(mat, cholesky(mat))
 PDSparseMat(fac::CholTypeSparse) = PDSparseMat(sparse(fac), fac)
+
+function Base.getproperty(a::PDSparseMat, s::Symbol)
+    if s === :dim
+        return size(getfield(a, :mat), 1)
+    end
+    return getfield(a, s)
+end
+Base.propertynames(::PDSparseMat) = (:mat, :chol, :dim)
 
 AbstractPDMat(A::SparseMatrixCSC) = PDSparseMat(A)
 AbstractPDMat(A::CholTypeSparse) = PDSparseMat(A)

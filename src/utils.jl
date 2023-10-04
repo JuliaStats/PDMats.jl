@@ -30,7 +30,7 @@ function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::Real)
     return a
 end
 
-function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::Vector, c::Real)
+function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector, c::Real)
     @check_argdims eachindex(v) == axes(a, 1) == axes(a, 2)
     if c == one(c)
         for i in eachindex(v)
@@ -45,8 +45,8 @@ function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::Vector, c::Real)
 end
 
 _adddiag(a::Union{Matrix, SparseMatrixCSC}, v::Real) = _adddiag!(copy(a), v)
-_adddiag(a::Union{Matrix, SparseMatrixCSC}, v::Vector, c::Real) = _adddiag!(copy(a), v, c)
-_adddiag(a::Union{Matrix, SparseMatrixCSC}, v::Vector{T}) where {T<:Real} = _adddiag!(copy(a), v, one(T))
+_adddiag(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector, c::Real) = _adddiag!(copy(a), v, c)
+_adddiag(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector{T}) where {T<:Real} = _adddiag!(copy(a), v, one(T))
 
 
 function wsumsq(w::AbstractVector, a::AbstractVector)
@@ -123,4 +123,9 @@ end
     _ldiv!(Y::AbstractArray, s::Number, X::AbstractArray) = Y .= s .\ X
 else
     _ldiv!(Y::AbstractArray, s::Number, X::AbstractArray) = ldiv!(Y, s, X)
+end
+
+# https://github.com/JuliaLang/julia/pull/29749
+if VERSION < v"1.1.0-DEV.792"
+    eachcol(A::AbstractVecOrMat) = (view(A, :, i) for i in axes(A, 2))
 end
