@@ -23,7 +23,7 @@ function test_pdmat(C, Cmat::Matrix;
                     t_cholesky::Bool=true,      # whether to test cholesky method
                     t_scale::Bool=true,         # whether to test scaling
                     t_add::Bool=true,           # whether to test pdadd
-		            t_det::Bool=true,           # whether to test det method
+                    t_det::Bool=true,           # whether to test det method
                     t_logdet::Bool=true,        # whether to test logdet method
                     t_eig::Bool=true,           # whether to test eigmax and eigmin
                     t_mul::Bool=true,           # whether to test multiplication
@@ -175,7 +175,7 @@ function pdtest_det(C, Cmat::Matrix, verbose::Int)
 
     # generic fallback in LinearAlgebra performs LU decomposition
     if C isa Union{PDMatCholesky,PDiagMat,ScalMat}
-	@test iszero(@allocated det(C))
+        @test iszero(@allocated det(C))
     end
 end
 
@@ -185,7 +185,7 @@ function pdtest_logdet(C, Cmat::Matrix, verbose::Int)
 
     # generic fallback in LinearAlgebra performs LU decomposition
     if C isa Union{PDMatCholesky,PDiagMat,ScalMat}
-	@test iszero(@allocated logdet(C))
+        @test iszero(@allocated logdet(C))
     end
 end
 
