@@ -16,7 +16,7 @@ Base.convert(::Type{AbstractPDMat{T}}, a::ScalMat) where {T<:Real} = convert(Sca
 Base.size(a::ScalMat) = (a.dim, a.dim)
 Base.Matrix(a::ScalMat) = Matrix(Diagonal(fill(a.value, a.dim)))
 LinearAlgebra.diag(a::ScalMat) = fill(a.value, a.dim)
-LinearAlgebra.cholesky(a::ScalMat) = cholesky(Diagonal(fill(a.value, a.dim)))
+LinearAlgebra.cholesky(a::ScalMat) = Cholesky(Diagonal(fill(sqrt(a.value), a.dim)), 'U', 0)
 
 ### Inheriting from AbstractMatrix
 
