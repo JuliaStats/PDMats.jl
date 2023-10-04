@@ -126,10 +126,13 @@ using Test
             @test z ≈ y
         end
 
-        z = x / PDMat(A)
-        @test typeof(z) === typeof(y)
-        @test size(z) == size(y)
-        @test z ≈ y
+        # requires https://github.com/JuliaLang/julia/pull/32594
+        if VERSION >= v"1.3.0-DEV.562"
+            z = x / PDMat(A)
+            @test typeof(z) === typeof(y)
+            @test size(z) == size(y)
+            @test z ≈ y
+        end
 
         # right division not defined for CHOLMOD:
         # `rdiv!(::Matrix{Float64}, ::SparseArrays.CHOLMOD.Factor{Float64})` not defined
@@ -142,11 +145,15 @@ using Test
     end
 
     @testset "PDMat from Cholesky decomposition of diagonal matrix (#137)" begin
-        x = rand(10, 10)
-        A = Diagonal(x' * x)
-        M = PDMat(cholesky(A))
-        @test M isa PDMat{Float64, typeof(A)}
-        @test Matrix(M) ≈ A
+        # U'*U where U isa UpperTriangular etc.
+        # requires https://github.com/JuliaLang/julia/pull/33334
+        if VERSION >= v"1.4.0-DEV.286"
+            x = rand(10, 10)
+            A = Diagonal(x' * x)
+            M = PDMat(cholesky(A))
+            @test M isa PDMat{Float64, typeof(A)}
+            @test Matrix(M) ≈ A
+        end
     end
 
     @testset "AbstractPDMat constructors (#136)" begin
@@ -180,7 +187,12 @@ using Test
         @test cholesky(M) isa SparseArrays.CHOLMOD.Factor
         @test Matrix(M) ≈ A
 
-        M = @inferred AbstractPDMat(cholesky(sparse(A)))
+        if VERSION < v"1.6"
+            # inference fails e.g. on Julia 1.0
+            M = AbstractPDMat(cholesky(sparse(A)))
+        else
+            M = @inferred AbstractPDMat(cholesky(sparse(A)))
+        end
         @test M isa PDMat
         @test cholesky(M) isa SparseArrays.CHOLMOD.Factor
         @test Matrix(M) ≈ A

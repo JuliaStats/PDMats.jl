@@ -239,7 +239,7 @@ function pdtest_div(C, Imat::Matrix, X::Matrix, verbose::Int)
     # Right division with Cholesky requires https://github.com/JuliaLang/julia/pull/32594
     # CHOLMOD throws error since no method is found for
     # `rdiv!(::Matrix{Float64}, ::SparseArrays.CHOLMOD.Factor{Float64})`
-    check_rdiv = !(HAVE_CHOLMOD && C isa PDSparseMat)
+    check_rdiv = !(C isa PDMatCholesky && VERSION < v"1.3.0-DEV.562") && !(HAVE_CHOLMOD && C isa PDSparseMat)
     check_rdiv && @test Matrix(X') / C ≈ (C \ X)'
 
     for i = 1:n
