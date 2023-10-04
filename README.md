@@ -28,7 +28,6 @@ Elemenent types are in princple all Real types, but in practice this is limited 
 
 ```julia
 struct PDMat{T<:Real,S<:AbstractMatrix} <: AbstractPDMat{T}
-    dim::Int                    # matrix dimension
     mat::S                      # input matrix
     chol::Cholesky{T,S}         # Cholesky factorization of mat
 end
@@ -51,7 +50,6 @@ PDMat(chol)         # with the Cholesky factorization
 
 ```julia
 struct PDiagMat{T<:Real,V<:AbstractVector{T}} <: AbstractPDMat{T}
-    dim::Int                    # matrix dimension
     diag::V                     # the vector of diagonal elements
 end
 
@@ -80,7 +78,6 @@ ScalMat(d, v)        # with dimension d and diagonal value v
 
 ```julia
 struct PDSparseMat{T<:Real,S<:AbstractSparseMatrix} <: AbstractPDMat{T}
-    dim::Int                       # matrix dimension
     mat::SparseMatrixCSC           # input matrix
     chol::CholTypeSparse           # Cholesky factorization of mat
 end
