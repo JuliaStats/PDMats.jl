@@ -2,11 +2,16 @@
 Positive definite diagonal matrix.
 """
 struct PDiagMat{T<:Real,V<:AbstractVector{T}} <: AbstractPDMat{T}
-    dim::Int
     diag::V
 end
 
-PDiagMat(v::AbstractVector{<:Real}) = PDiagMat{eltype(v),typeof(v)}(length(v), v)
+function Base.getproperty(a::PDiagMat, s::Symbol)
+    if s === :dim
+        return length(getfield(a, :diag))
+    end
+    return getfield(a, s)
+end
+Base.propertynames(::PDiagMat) = (:diag, :dim)
 
 AbstractPDMat(A::Diagonal{<:Real}) = PDiagMat(A.diag)
 AbstractPDMat(A::Symmetric{<:Real,<:Diagonal{<:Real}}) = PDiagMat(A.data.diag)

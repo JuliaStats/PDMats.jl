@@ -36,6 +36,18 @@ using Test
                 test_pdmat(PDSparseMat(sparse(M)), M,          cmat_eq=true, verbose=1, t_eig=false)
             end
         end
+
+        @testset "test deprecated internal constructors" begin
+            m = Matrix{T}(I, 2, 2)
+            C = cholesky(m)
+            @test @test_deprecated(PDMat{T,typeof(m)}(2, m, C)) == PDMat(m)
+            d = ones(T,2)
+            @test @test_deprecated(PDiagMat(2, d)) == @test_deprecated(PDiagMat{T,Vector{T}}(2, d)) == PDiagMat(d)
+            if HAVE_CHOLMOD
+                s = SparseMatrixCSC{T}(I, 2, 2)
+                @test @test_deprecated(PDSparseMat{T, typeof(s)}(2, s, cholesky(s))) == PDSparseMat(s)
+            end
+        end
     end
 
     @testset "zero-dimensional matrices" begin
@@ -188,5 +200,60 @@ using Test
         end
         @test M isa PDSparseMat
         @test Matrix(M) ≈ A
+    end
+
+    @testset "properties and fields" begin
+        for dim in (1, 5, 10)
+            x = rand(dim, dim)
+            M = PDMat(x' * x + I)
+            @test fieldnames(typeof(M)) == (:mat, :chol)
+            @test propertynames(M) == (fieldnames(typeof(M))..., :dim)
+            @test getproperty(M, :dim) === dim
+            for p in fieldnames(typeof(M))
+                @test getproperty(M, p) === getfield(M, p)
+            end
+
+            M = PDiagMat(rand(dim))
+            @test fieldnames(typeof(M)) == (:diag,)
+            @test propertynames(M) == (fieldnames(typeof(M))..., :dim)
+            @test getproperty(M, :dim) === dim
+            for p in fieldnames(typeof(M))
+                @test getproperty(M, p) === getfield(M, p)
+            end
+
+            M = ScalMat(dim, rand())
+            @test fieldnames(typeof(M)) == (:dim, :value)
+            @test propertynames(M) == fieldnames(typeof(M))
+            for p in fieldnames(typeof(M))
+                @test getproperty(M, p) === getfield(M, p)
+            end
+
+            if HAVE_CHOLMOD
+                x = sprand(dim, dim, 0.2)
+                M = PDSparseMat(x' * x + I)
+                @test fieldnames(typeof(M)) == (:mat, :chol)
+                @test propertynames(M) == (fieldnames(typeof(M))..., :dim)
+                @test getproperty(M, :dim) === dim
+                for p in fieldnames(typeof(M))
+                    @test getproperty(M, p) === getfield(M, p)
+                end
+            end
+        end
+    end
+
+    @testset "Incorrect dimensions" begin
+        x = rand(10, 10)
+        A = x * x' + I
+        C = cholesky(A)
+        @test_throws DimensionMismatch PDMat(A[:, 1:(end - 1)], C)
+        @test_throws DimensionMismatch PDMat(A[1:(end - 1), 1:(end - 1)], C)
+
+        if HAVE_CHOLMOD
+            x = sprand(10, 10, 0.2)
+            A = x * x' + I
+            C = cholesky(A)
+            @test_throws DimensionMismatch PDSparseMat(A[:, 1:(end - 1)], C)
+            @test_throws DimensionMismatch PDSparseMat(A[1:(end - 1), 1:(end - 1)], C)
+        end
     end
 end
