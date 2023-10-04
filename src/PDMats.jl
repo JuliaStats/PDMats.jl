@@ -48,4 +48,8 @@ module PDMats
 
     include("deprecates.jl")
 
+    # Support for sparse arrays
+    if !isdefined(Base, :get_extension)
+        include("../ext/PDMatsSparseArraysExt/PDMatsSparseArraysExt.jl")
+    end
 end # module

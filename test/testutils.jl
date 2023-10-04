@@ -6,10 +6,20 @@
 
 using PDMats, LinearAlgebra, SparseArrays, Test
 
-const HAVE_CHOLMOD = isdefined(SparseArrays, :CHOLMOD)
+if isdefined(Base, :get_extension)
+    const HAVE_CHOLMOD = isdefined(SparseArrays, :CHOLMOD)
+else
+    import SuiteSparse
+    const HAVE_CHOLMOD = isdefined(SuiteSparse, :CHOLMOD)
+end
 const PDMatCholesky{T<:Real, S<:AbstractMatrix, C<:Cholesky} = PDMat{T, S, C}
 if HAVE_CHOLMOD
-    const PDSparseMat{T<:Real, S<:AbstractSparseMatrix, C<:SparseArrays.CHOLMOD.Factor} = PDMat{T, S, C}
+    if isdefined(Base, :get_extension)
+        const CHOLMOD = SparseArrays.CHOLMOD
+    else
+        const CHOLMOD = SuiteSparse.CHOLMOD
+    end
+    const PDSparseMat{T<:Real, S<:AbstractSparseMatrix, C<:CHOLMOD.Factor} = PDMat{T, S, C}
     const PDMatType = Union{PDMatCholesky, PDSparseMat, PDiagMat, ScalMat}
 else
     const PDMatType = Union{PDMatCholesky, PDiagMat, ScalMat}

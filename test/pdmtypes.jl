@@ -184,7 +184,7 @@ using Test
 
         M = @inferred AbstractPDMat(sparse(A))
         @test M isa PDMat
-        @test cholesky(M) isa SparseArrays.CHOLMOD.Factor
+        @test cholesky(M) isa CHOLMOD.Factor
         @test Matrix(M) ≈ A
 
         if VERSION < v"1.6"
@@ -194,7 +194,7 @@ using Test
             M = @inferred AbstractPDMat(cholesky(sparse(A)))
         end
         @test M isa PDMat
-        @test cholesky(M) isa SparseArrays.CHOLMOD.Factor
+        @test cholesky(M) isa CHOLMOD.Factor
         @test Matrix(M) ≈ A
     end
 end
