@@ -35,7 +35,7 @@ function Base.convert(::Type{PDMat{T}}, a::PDMat) where {T<:Real}
     chol = convert(Cholesky{T}, a.chol)
     S = typeof(chol.factors)
     mat = convert(S, a.mat)
-    return PDMat{T,S}(size(mat, 1), mat, chol)
+    return PDMat{T,S}(mat, chol)
 end
 Base.convert(::Type{AbstractPDMat{T}}, a::PDMat) where {T<:Real} = convert(PDMat{T}, a)
 
