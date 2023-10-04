@@ -120,12 +120,19 @@ function pdtest_diag(C, Cmat::Matrix, cmat_eq::Bool, verbose::Int)
     end
 end
 
-function pdtest_cholesky(C::Union{PDMat, PDiagMat}, Cmat::Matrix, cmat_eq::Bool, verbose::Int)
+function pdtest_cholesky(C::Union{PDMat, PDiagMat, ScalMat}, Cmat::Matrix, cmat_eq::Bool, verbose::Int)
     _pdt(verbose, "cholesky")
     if cmat_eq
         @test cholesky(C).U == cholesky(Cmat).U
     else
         @test cholesky(C).U ≈ cholesky(Cmat).U
+    end
+    # regression test: https://github.com/JuliaStats/PDMats.jl/pull/182
+    if C isa Union{PDiagMat, ScalMat}
+        size_of_sqrt_diag = C.dim * sizeof(float(eltype(C)))
+        # allow some overhead for wrapper types
+        max_allocations = max(1.05 * size_of_sqrt_diag, 128 + size_of_sqrt_diag)
+        @test (@allocated cholesky(C)) <= max_allocations
     end
 end
 
