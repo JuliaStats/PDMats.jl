@@ -104,47 +104,50 @@ end
 
 function quad(a::PDSparseMat, x::AbstractVecOrMat)
     @check_argdims a.dim == size(x, 1)
-    # `*` is not defined for `UP` factor components,
-    # so we can't use `chol_upper(a.chol) * x`
-    # Moreover, `sparse` is only defined for `L` factor components
-    C = a.chol
-    UP = transpose(sparse(C.L))[:, C.p]
-    z = UP * x
-    return x isa AbstractVector ? sum(abs2, z) : vec(sum(abs2, z; dims = 1))
+    # https://github.com/JuliaLang/julia/commit/2425ae760fb5151c5c7dd0554e87c5fc9e24de73
+    if VERSION < v"1.4.0-DEV.92"
+        z = a.mat * x
+        return x isa AbstractVector ? dot(x, z) : map(dot, eachcol(x), eachcol(z))
+    else
+        return x isa AbstractVector ? dot(x, a.mat, x) : map(Base.Fix1(quad, a), eachcol(x))
+    end
 end
 
 function quad!(r::AbstractArray, a::PDSparseMat, x::AbstractMatrix)
     @check_argdims axes(r) == axes(x, 2)
-    # `*` is not defined for `UP` factor components,
-    # so we can't use `chol_upper(a.chol) * x`
-    # Moreover, `sparse` is only defined for `L` factor components
-    C = a.chol
-    UP = transpose(sparse(C.L))[:, C.p]
-    z = similar(r, a.dim) # buffer to save allocations
-    @inbounds for i in axes(x, 2)
-        copyto!(z, view(x, :, i))
-        lmul!(UP, z)
-        r[i] = sum(abs2, z)
+    # https://github.com/JuliaLang/julia/commit/2425ae760fb5151c5c7dd0554e87c5fc9e24de73
+    if VERSION < v"1.4.0-DEV.92"
+       z = similar(r, a.dim) # buffer to save allocations
+        @inbounds for i in axes(x, 2)
+            xi = view(x, :, i)
+            copyto!(z, xi)
+            lmul!(a.mat, z)
+            r[i] = dot(xi, z)
+        end
+    else
+        @inbounds for i in axes(x, 2)
+            xi = view(x, :, i)
+            r[i] = dot(xi, a.mat, xi)
+        end
     end
     return r
 end
 
 function invquad(a::PDSparseMat, x::AbstractVecOrMat)
     @check_argdims a.dim == size(x, 1)
-    z = chol_lower(cholesky(a)) \ x
-    return x isa AbstractVector ? sum(abs2, z) : vec(sum(abs2, z; dims = 1))
+    z = a.chol \ x
+    return x isa AbstractVector ? dot(x, z) : map(dot, eachcol(x), eachcol(z))
 end
 
 function invquad!(r::AbstractArray, a::PDSparseMat, x::AbstractMatrix)
     @check_argdims axes(r) == axes(x, 2)
     @check_argdims a.dim == size(x, 1)
-    aL = chol_lower(cholesky(a))
-    # `\` with `PtL` factor components is not implemented for views
-    # and the generic fallback requires indexing which is not supported
-    xi = similar(x, a.dim)
+    z = similar(r, a.dim) # buffer to save allocations
     @inbounds for i in axes(x, 2)
-        copyto!(xi, view(x, :, i))
-        r[i] = sum(abs2, aL \ xi)
+        xi = view(x, :, i)
+        copyto!(z, xi)
+        ldiv!(a.chol, z)
+        r[i] = dot(xi, z)
     end
     return r
 end
