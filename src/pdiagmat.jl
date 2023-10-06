@@ -21,7 +21,7 @@ AbstractPDMat(A::Hermitian{<:Real,<:Diagonal{<:Real}}) = PDiagMat(A.data.diag)
 Base.convert(::Type{PDiagMat{T}}, a::PDiagMat{T}) where {T<:Real} = a
 function Base.convert(::Type{PDiagMat{T}}, a::PDiagMat) where {T<:Real}
     diag = convert(AbstractVector{T}, a.diag)
-    return PDiagMat{T,typeof(diag)}(a.dim, diag)
+    return PDiagMat{T,typeof(diag)}(diag)
 end
 Base.convert(::Type{AbstractPDMat{T}}, a::PDiagMat) where {T<:Real} = convert(PDiagMat{T}, a)
 

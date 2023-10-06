@@ -38,7 +38,7 @@ function Base.convert(::Type{PDSparseMat{T}}, a::PDSparseMat) where {T<:Real}
     # So there is no point in recomputing `cholesky(mat)` and we just reuse
     # the existing Cholesky factorization
     mat = convert(AbstractMatrix{T}, a.mat)
-    return PDSparseMat{T,typeof(mat)}(a.dim, mat, a.chol)
+    return PDSparseMat{T,typeof(mat)}(mat, a.chol)
 end
 Base.convert(::Type{AbstractPDMat{T}}, a::PDSparseMat) where {T<:Real} = convert(PDSparseMat{T}, a)
 
