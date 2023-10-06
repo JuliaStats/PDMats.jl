@@ -7,15 +7,16 @@ struct ScalMat{T<:Real} <: AbstractPDMat{T}
 end
 
 ### Conversion
+Base.convert(::Type{ScalMat{T}}, a::ScalMat{T}) where {T<:Real} = a
 Base.convert(::Type{ScalMat{T}}, a::ScalMat) where {T<:Real} = ScalMat(a.dim, T(a.value))
-Base.convert(::Type{AbstractArray{T}}, a::ScalMat) where {T<:Real} = convert(ScalMat{T}, a)
+Base.convert(::Type{AbstractPDMat{T}}, a::ScalMat) where {T<:Real} = convert(ScalMat{T}, a)
 
 ### Basics
 
 Base.size(a::ScalMat) = (a.dim, a.dim)
 Base.Matrix(a::ScalMat) = Matrix(Diagonal(fill(a.value, a.dim)))
 LinearAlgebra.diag(a::ScalMat) = fill(a.value, a.dim)
-LinearAlgebra.cholesky(a::ScalMat) = cholesky(Diagonal(fill(a.value, a.dim)))
+LinearAlgebra.cholesky(a::ScalMat) = Cholesky(Diagonal(fill(sqrt(a.value), a.dim)), 'U', 0)
 
 ### Inheriting from AbstractMatrix
 
@@ -98,20 +99,41 @@ invquad!(r::AbstractArray, a::ScalMat, x::AbstractMatrix) = colwise_sumsqinv!(r,
 
 function X_A_Xt(a::ScalMat, x::AbstractMatrix)
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 2)
-    lmul!(a.value, x * transpose(x))
+    a.value * (x * transpose(x))
 end
 
 function Xt_A_X(a::ScalMat, x::AbstractMatrix)
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 1)
-    lmul!(a.value, transpose(x) * x)
+    a.value * (transpose(x) * x)
 end
 
 function X_invA_Xt(a::ScalMat, x::AbstractMatrix)
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 2)
-    _rdiv!(x * transpose(x), a.value)
+    (x * transpose(x)) / a.value
 end
 
 function Xt_invA_X(a::ScalMat, x::AbstractMatrix)
+    @check_argdims LinearAlgebra.checksquare(a) == size(x, 1)
+    (transpose(x) * x) / a.value
+end
+
+# Specializations for `x::Matrix` with reduced allocations
+function X_A_Xt(a::ScalMat, x::Matrix)
+    @check_argdims LinearAlgebra.checksquare(a) == size(x, 2)
+    lmul!(a.value, x * transpose(x))
+end
+
+function Xt_A_X(a::ScalMat, x::Matrix)
+    @check_argdims LinearAlgebra.checksquare(a) == size(x, 1)
+    lmul!(a.value, transpose(x) * x)
+end
+
+function X_invA_Xt(a::ScalMat, x::Matrix)
+    @check_argdims LinearAlgebra.checksquare(a) == size(x, 2)
+    _rdiv!(x * transpose(x), a.value)
+end
+
+function Xt_invA_X(a::ScalMat, x::Matrix)
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 1)
     _rdiv!(transpose(x) * x, a.value)
 end

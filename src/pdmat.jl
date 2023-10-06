@@ -2,29 +2,42 @@
 Full positive definite matrix together with a Cholesky factorization object.
 """
 struct PDMat{T<:Real,S<:AbstractMatrix} <: AbstractPDMat{T}
-    dim::Int
     mat::S
     chol::Cholesky{T,S}
 
-    PDMat{T,S}(d::Int,m::AbstractMatrix{T},c::Cholesky{T,S}) where {T,S} = new{T,S}(d,m,c)
+    PDMat{T,S}(m::AbstractMatrix{T},c::Cholesky{T,S}) where {T,S} = new{T,S}(m,c)
 end
 
 function PDMat(mat::AbstractMatrix,chol::Cholesky{T,S}) where {T,S}
-    d = size(mat, 1)
-    size(chol, 1) == d ||
+    d = LinearAlgebra.checksquare(mat)
+    if size(chol, 1) != d
         throw(DimensionMismatch("Dimensions of mat and chol are inconsistent."))
-    PDMat{T,S}(d, convert(S, mat), chol)
+    end
+    PDMat{T,S}(convert(S, mat), chol)
 end
 
 PDMat(mat::AbstractMatrix) = PDMat(mat, cholesky(mat))
 PDMat(fac::Cholesky) = PDMat(AbstractMatrix(fac), fac)
 
+function Base.getproperty(a::PDMat, s::Symbol)
+    if s === :dim
+        return size(getfield(a, :mat), 1)
+    end
+    return getfield(a, s)
+end
+Base.propertynames(::PDMat) = (:mat, :chol, :dim)
+
 AbstractPDMat(A::Cholesky) = PDMat(A)
 
 ### Conversion
-Base.convert(::Type{PDMat{T}},         a::PDMat) where {T<:Real} = PDMat(convert(AbstractArray{T}, a.mat))
-Base.convert(::Type{AbstractArray{T}}, a::PDMat) where {T<:Real} = convert(PDMat{T}, a)
-Base.convert(::Type{AbstractArray{T}}, a::PDMat{T}) where {T<:Real} = a
+Base.convert(::Type{PDMat{T}}, a::PDMat{T}) where {T<:Real} = a
+function Base.convert(::Type{PDMat{T}}, a::PDMat) where {T<:Real}
+    chol = convert(Cholesky{T}, a.chol)
+    S = typeof(chol.factors)
+    mat = convert(S, a.mat)
+    return PDMat{T,S}(mat, chol)
+end
+Base.convert(::Type{AbstractPDMat{T}}, a::PDMat) where {T<:Real} = convert(PDMat{T}, a)
 
 ### Basics
 

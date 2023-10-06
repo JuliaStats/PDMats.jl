@@ -15,11 +15,14 @@ chol_lower(a::Matrix) = cholesky(Symmetric(a, :L)).L
 # NOTE: Formally, the line above should use Hermitian() instead of Symmetric(),
 # but this currently has an AutoDiff issue in Zygote.jl, and PDMat is
 # type-restricted to be Real, so they are equivalent.
+chol_upper(a::Matrix) = cholesky(Symmetric(a, :U)).U
 
 if HAVE_CHOLMOD
     CholTypeSparse{T} = SuiteSparse.CHOLMOD.Factor{T}
 
-    chol_lower(cf::CholTypeSparse) = cf.L
+    # Take into account pivoting!
+    chol_lower(cf::CholTypeSparse) = cf.PtL
+    chol_upper(cf::CholTypeSparse) = cf.UP
 end
 
 # Interface for `Cholesky`

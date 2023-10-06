@@ -2,29 +2,45 @@
 Sparse positive definite matrix together with a Cholesky factorization object.
 """
 struct PDSparseMat{T<:Real,S<:AbstractSparseMatrix} <: AbstractPDMat{T}
-    dim::Int
     mat::S
     chol::CholTypeSparse
 
-    PDSparseMat{T,S}(d::Int,m::AbstractSparseMatrix{T},c::CholTypeSparse) where {T,S} =
-        new{T,S}(d,m,c) #add {T} to CholTypeSparse argument once #14076 is implemented
+    PDSparseMat{T,S}(m::AbstractSparseMatrix{T},c::CholTypeSparse) where {T,S} =
+        new{T,S}(m,c) #add {T} to CholTypeSparse argument once #14076 is implemented
 end
+@deprecate PDSparseMat{T,S}(d::Int, m::AbstractSparseMatrix{T}, c::CholTypeSparse) where {T,S} PDSparseMat{T,S}(m, c)
 
 function PDSparseMat(mat::AbstractSparseMatrix,chol::CholTypeSparse)
-    d = size(mat, 1)
+    d = LinearAlgebra.checksquare(mat)
     size(chol, 1) == d ||
         throw(DimensionMismatch("Dimensions of mat and chol are inconsistent."))
-    PDSparseMat{eltype(mat),typeof(mat)}(d, mat, chol)
+    PDSparseMat{eltype(mat),typeof(mat)}(mat, chol)
 end
 
 PDSparseMat(mat::SparseMatrixCSC) = PDSparseMat(mat, cholesky(mat))
 PDSparseMat(fac::CholTypeSparse) = PDSparseMat(sparse(fac), fac)
 
+function Base.getproperty(a::PDSparseMat, s::Symbol)
+    if s === :dim
+        return size(getfield(a, :mat), 1)
+    end
+    return getfield(a, s)
+end
+Base.propertynames(::PDSparseMat) = (:mat, :chol, :dim)
+
 AbstractPDMat(A::SparseMatrixCSC) = PDSparseMat(A)
 AbstractPDMat(A::CholTypeSparse) = PDSparseMat(A)
 
 ### Conversion
-Base.convert(::Type{PDSparseMat{T}}, a::PDSparseMat) where {T<:Real} = PDSparseMat(convert(SparseMatrixCSC{T}, a.mat))
+Base.convert(::Type{PDSparseMat{T}}, a::PDSparseMat{T}) where {T<:Real} = a
+function Base.convert(::Type{PDSparseMat{T}}, a::PDSparseMat) where {T<:Real}
+    # CholTypeSparse only supports Float64 and ComplexF64 type parameters!
+    # So there is no point in recomputing `cholesky(mat)` and we just reuse
+    # the existing Cholesky factorization
+    mat = convert(AbstractMatrix{T}, a.mat)
+    return PDSparseMat{T,typeof(mat)}(mat, a.chol)
+end
+Base.convert(::Type{AbstractPDMat{T}}, a::PDSparseMat) where {T<:Real} = convert(PDSparseMat{T}, a)
 
 ### Basics
 
@@ -62,13 +78,17 @@ LinearAlgebra.sqrt(A::PDSparseMat) = PDMat(sqrt(Hermitian(Matrix(A))))
 ### whiten and unwhiten
 
 function whiten!(r::AbstractVecOrMat, a::PDSparseMat, x::AbstractVecOrMat)
-    r[:] = sparse(chol_lower(a.chol)) \ x
-    return r
+    # Can't use `ldiv!` due to missing support in SparseArrays
+    return copyto!(r, chol_lower(a.chol) \ x)
 end
 
 function unwhiten!(r::AbstractVecOrMat, a::PDSparseMat, x::AbstractVecOrMat)
-    r[:] = sparse(chol_lower(a.chol)) * x
-    return r
+    # `*` is not defined for `PtL` factor components,
+    # so we can't use `chol_lower(a.chol) * x`
+    C = a.chol
+    PtL = sparse(C.L)[C.p, :]
+    # Can't use `lmul!` due to missing support in SparseArrays
+    return copyto!(r, PtL * x)
 end
 
 
@@ -97,14 +117,23 @@ end
 ### tri products
 
 function X_A_Xt(a::PDSparseMat, x::AbstractMatrix)
-    z = x * sparse(chol_lower(a.chol))
+    # `*` is not defined for `PtL` factor components,
+    # so we can't use `x * chol_lower(a.chol)`
+    C = a.chol
+    PtL = sparse(C.L)[C.p, :]
+    z = x * PtL
     z * transpose(z)
 end
 
 
 function Xt_A_X(a::PDSparseMat, x::AbstractMatrix)
-    z = transpose(x) * sparse(chol_lower(a.chol))
-    z * transpose(z)
+    # `*` is not defined for `UP` factor components,
+    # so we can't use `chol_upper(a.chol) * x`
+    # Moreover, `sparse` is only defined for `L` factor components
+    C = a.chol
+    UP = transpose(sparse(C.L))[:, C.p]
+    z = UP * x
+    transpose(z) * z
 end
 
 
