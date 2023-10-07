@@ -5,6 +5,7 @@ using PDMats: chol_lower, chol_upper
     @testset "allocations" begin
         A = rand(100, 100)
         C = A'A
+        invC = inv(C)
         size_of_one_copy = sizeof(C)
         @assert size_of_one_copy > 100  # ensure the matrix is large enough that few-byte allocations don't matter
 
