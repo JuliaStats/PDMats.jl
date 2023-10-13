@@ -3,11 +3,12 @@ using PDMats: chol_lower, chol_upper
 
 @testset "chol_lower and chol_upper" begin
     @testset "allocations" begin
-        A = rand(100, 100)
+        d = 100
+        A = rand(d, d)
         C = A'A
         invC = inv(C)
         size_of_one_copy = sizeof(C)
-        @assert size_of_one_copy > 100  # ensure the matrix is large enough that few-byte allocations don't matter
+        @assert size_of_one_copy > d  # ensure the matrix is large enough that few-byte allocations don't matter
 
         @test chol_lower(C) ≈ chol_upper(C)'
         @test (@allocated chol_lower(C)) < 1.05 * size_of_one_copy  # allow 5% overhead
