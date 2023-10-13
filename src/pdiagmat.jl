@@ -21,7 +21,7 @@ AbstractPDMat(A::Hermitian{<:Real,<:Diagonal{<:Real}}) = PDiagMat(A.data.diag)
 Base.convert(::Type{PDiagMat{T}}, a::PDiagMat{T}) where {T<:Real} = a
 function Base.convert(::Type{PDiagMat{T}}, a::PDiagMat) where {T<:Real}
     diag = convert(AbstractVector{T}, a.diag)
-    return PDiagMat{T,typeof(diag)}(a.dim, diag)
+    return PDiagMat{T,typeof(diag)}(diag)
 end
 Base.convert(::Type{AbstractPDMat{T}}, a::PDiagMat) where {T<:Real} = convert(PDiagMat{T}, a)
 
@@ -91,45 +91,38 @@ LinearAlgebra.sqrt(a::PDiagMat) = PDiagMat(map(sqrt, a.diag))
 
 ### whiten and unwhiten
 
-function whiten!(r::StridedVector, a::PDiagMat, x::StridedVector)
-    n = a.dim
-    @check_argdims length(r) == length(x) == n
-    v = a.diag
-    for i = 1:n
-        r[i] = x[i] / sqrt(v[i])
-    end
-    return r
+function whiten!(r::AbstractVecOrMat, a::PDiagMat, x::AbstractVecOrMat)
+    @check_argdims axes(r) == axes(x)
+    @check_argdims a.dim == size(x, 1)
+    return r .= x ./ sqrt.(a.diag)
+end
+function unwhiten!(r::AbstractVecOrMat, a::PDiagMat, x::AbstractVecOrMat)
+    @check_argdims axes(r) == axes(x)
+    @check_argdims a.dim == size(x, 1)
+    return r .= x .* sqrt.(a.diag)
 end
 
-function unwhiten!(r::StridedVector, a::PDiagMat, x::StridedVector)
-    n = a.dim
-    @check_argdims length(r) == length(x) == n
-    v = a.diag
-    for i = 1:n
-        r[i] = x[i] * sqrt(v[i])
-    end
-    return r
+function whiten(a::PDiagMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    return x ./ sqrt.(a.diag)
 end
-
-function whiten!(r::StridedMatrix, a::PDiagMat, x::StridedMatrix)
-    r .= x ./ sqrt.(a.diag)
-    return r
+function unwhiten(a::PDiagMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    return x .* sqrt.(a.diag)
 end
-
-function unwhiten!(r::StridedMatrix, a::PDiagMat, x::StridedMatrix)
-    r .= x .* sqrt.(a.diag)
-    return r
-end
-
-
-whiten!(r::AbstractVecOrMat, a::PDiagMat, x::AbstractVecOrMat) = r .= x ./ sqrt.(a.diag)
-unwhiten!(r::AbstractVecOrMat, a::PDiagMat, x::AbstractVecOrMat) = r .= x .* sqrt.(a.diag)
-
 
 ### quadratic forms
 
-quad(a::PDiagMat, x::AbstractVector) = wsumsq(a.diag, x)
-invquad(a::PDiagMat, x::AbstractVector) = invwsumsq(a.diag, x)
+function quad(a::PDiagMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    if x isa AbstractVector
+        return wsumsq(a.diag, x)
+    else
+        # map(Base.Fix1(invquad, a), eachcol(x)) or similar alternatives
+        # do NOT return a `SVector` for inputs `x::SMatrix`.
+        return vec(sum(abs2.(x) .* a.diag; dims = 1))
+    end
+end
 
 function quad!(r::AbstractArray, a::PDiagMat, x::AbstractMatrix)
     ad = a.diag
@@ -145,8 +138,18 @@ function quad!(r::AbstractArray, a::PDiagMat, x::AbstractMatrix)
     r
 end
 
+function invquad(a::PDiagMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    if x isa AbstractVector
+        return invwsumsq(a.diag, x)
+    else
+        # map(Base.Fix1(invquad, a), eachcol(x)) or similar alternatives
+        # do NOT return a `SVector` for inputs `x::SMatrix`.
+        return vec(sum(abs2.(x) ./ a.diag; dims = 1))
+    end
+end
+
 function invquad!(r::AbstractArray, a::PDiagMat, x::AbstractMatrix)
-    m, n = size(x)
     ad = a.diag
     @check_argdims eachindex(ad) == axes(x, 1)
     @check_argdims eachindex(r) == axes(x, 2)
@@ -165,24 +168,39 @@ end
 
 function X_A_Xt(a::PDiagMat, x::AbstractMatrix)
     @check_argdims a.dim == size(x, 2)
-    z = x .* sqrt.(permutedims(a.diag))
-    z * transpose(z)
+    z = a.diag .* transpose(x)
+    return x * z
 end
 
 function Xt_A_X(a::PDiagMat, x::AbstractMatrix)
     @check_argdims a.dim == size(x, 1)
-    z = x .* sqrt.(a.diag)
-    transpose(z) * z
+    z = a.diag .* x
+    return transpose(x) * z
 end
 
 function X_invA_Xt(a::PDiagMat, x::AbstractMatrix)
     @check_argdims a.dim == size(x, 2)
-    z = x ./ sqrt.(permutedims(a.diag))
-    z * transpose(z)
+    z = transpose(x) ./ a.diag
+    return x * z
 end
 
 function Xt_invA_X(a::PDiagMat, x::AbstractMatrix)
     @check_argdims a.dim == size(x, 1)
-    z = x ./ sqrt.(a.diag)
-    transpose(z) * z
+    z = x ./ a.diag
+    return transpose(x) * z
 end
+
+### Specializations for `Array` arguments with reduced allocations
+
+function quad(a::PDiagMat{<:Real,<:Vector}, x::Matrix)
+    @check_argdims a.dim == size(x, 1)
+    T = typeof(zero(eltype(a)) * abs2(zero(eltype(x))))
+    return quad!(Vector{T}(undef, size(x, 2)), a, x)
+end
+
+function invquad(a::PDiagMat{<:Real,<:Vector}, x::Matrix)
+    @check_argdims a.dim == size(x, 1)
+    T = typeof(abs2(zero(eltype(x))) / zero(eltype(a)))
+    return invquad!(Vector{T}(undef, size(x, 2)), a, x)
+end
+

@@ -38,7 +38,7 @@ function Base.convert(::Type{PDSparseMat{T}}, a::PDSparseMat) where {T<:Real}
     # So there is no point in recomputing `cholesky(mat)` and we just reuse
     # the existing Cholesky factorization
     mat = convert(AbstractMatrix{T}, a.mat)
-    return PDSparseMat{T,typeof(mat)}(a.dim, mat, a.chol)
+    return PDSparseMat{T,typeof(mat)}(mat, a.chol)
 end
 Base.convert(::Type{AbstractPDMat{T}}, a::PDSparseMat) where {T<:Real} = convert(PDSparseMat{T}, a)
 
@@ -78,37 +78,84 @@ LinearAlgebra.sqrt(A::PDSparseMat) = PDMat(sqrt(Hermitian(Matrix(A))))
 ### whiten and unwhiten
 
 function whiten!(r::AbstractVecOrMat, a::PDSparseMat, x::AbstractVecOrMat)
+    @check_argdims axes(r) == axes(x)
+    @check_argdims a.dim == size(x, 1)
     # Can't use `ldiv!` due to missing support in SparseArrays
     return copyto!(r, chol_lower(a.chol) \ x)
 end
 
 function unwhiten!(r::AbstractVecOrMat, a::PDSparseMat, x::AbstractVecOrMat)
+    @check_argdims axes(r) == axes(x)
+    @check_argdims a.dim == size(x, 1)
     # `*` is not defined for `PtL` factor components,
     # so we can't use `chol_lower(a.chol) * x`
     C = a.chol
     PtL = sparse(C.L)[C.p, :]
-    # Can't use `lmul!` due to missing support in SparseArrays
     return copyto!(r, PtL * x)
 end
 
+function whiten(a::PDSparseMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    return chol_lower(cholesky(a)) \ x
+end
+
+function unwhiten(a::PDSparseMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    # `*` is not defined for `PtL` factor components,
+    # so we can't use `chol_lower(a.chol) * x`
+    C = a.chol
+    PtL = sparse(C.L)[C.p, :]
+    return PtL * x
+end
 
 ### quadratic forms
 
-quad(a::PDSparseMat, x::AbstractVector) = dot(x, a * x)
-invquad(a::PDSparseMat, x::AbstractVector) = dot(x, a \ x)
+function quad(a::PDSparseMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    # https://github.com/JuliaLang/julia/commit/2425ae760fb5151c5c7dd0554e87c5fc9e24de73
+    if VERSION < v"1.4.0-DEV.92"
+        z = a.mat * x
+        return x isa AbstractVector ? dot(x, z) : map(dot, eachcol(x), eachcol(z))
+    else
+        return x isa AbstractVector ? dot(x, a.mat, x) : map(Base.Fix1(quad, a), eachcol(x))
+    end
+end
 
 function quad!(r::AbstractArray, a::PDSparseMat, x::AbstractMatrix)
-    @check_argdims eachindex(r) == axes(x, 2)
-    for i in axes(x, 2)
-        r[i] = quad(a, x[:,i])
+    @check_argdims axes(r) == axes(x, 2)
+    # https://github.com/JuliaLang/julia/commit/2425ae760fb5151c5c7dd0554e87c5fc9e24de73
+    if VERSION < v"1.4.0-DEV.92"
+       z = similar(r, a.dim) # buffer to save allocations
+        @inbounds for i in axes(x, 2)
+            xi = view(x, :, i)
+            copyto!(z, xi)
+            lmul!(a.mat, z)
+            r[i] = dot(xi, z)
+        end
+    else
+        @inbounds for i in axes(x, 2)
+            xi = view(x, :, i)
+            r[i] = dot(xi, a.mat, xi)
+        end
     end
     return r
 end
 
+function invquad(a::PDSparseMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    z = a.chol \ x
+    return x isa AbstractVector ? dot(x, z) : map(dot, eachcol(x), eachcol(z))
+end
+
 function invquad!(r::AbstractArray, a::PDSparseMat, x::AbstractMatrix)
-    @check_argdims eachindex(r) == axes(x, 2)
-    for i in axes(x, 2)
-        r[i] = invquad(a, x[:,i])
+    @check_argdims axes(r) == axes(x, 2)
+    @check_argdims a.dim == size(x, 1)
+    z = similar(r, a.dim) # buffer to save allocations
+    @inbounds for i in axes(x, 2)
+        xi = view(x, :, i)
+        copyto!(z, xi)
+        ldiv!(a.chol, z)
+        r[i] = dot(xi, z)
     end
     return r
 end
