@@ -4,7 +4,7 @@ using StaticArrays
 @testset "Special matrix types" begin
     @testset "StaticArrays" begin
         # Full matrix
-        S = (x -> x * x')(@SMatrix(randn(4, 7)))
+        S = (x -> x * x' + I)(@SMatrix(randn(4, 7)))
         PDS = PDMat(S)
         @test PDS isa PDMat{Float64, <:SMatrix{4, 4, Float64}}
         @test isbits(PDS)
@@ -27,12 +27,15 @@ using StaticArrays
         X = @SMatrix rand(10, 4)
         Y = @SMatrix rand(4, 10)
 
-        for A in (PDS, D, E)
-            @test A * x isa SVector{4, Float64}
-            @test A * x ≈ Matrix(A) * Vector(x)
+        for A in (PDS, D, E, C)
+            if !(A isa Cholesky)
+                # `*(::Cholesky, ::SArray)` is not defined
+                @test A * x isa SVector{4, Float64}
+                @test A * x ≈ Matrix(A) * Vector(x)
 
-            @test A * Y isa SMatrix{4, 10, Float64}
-            @test A * Y ≈ Matrix(A) * Matrix(Y)
+                @test A * Y isa SMatrix{4, 10, Float64}
+                @test A * Y ≈ Matrix(A) * Matrix(Y)
+            end
 
             @test X / A isa SMatrix{10, 4, Float64}
             @test X / A ≈ Matrix(X) / Matrix(A)
