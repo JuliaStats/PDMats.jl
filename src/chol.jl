@@ -53,7 +53,7 @@ function quad(A::Cholesky, X::AbstractMatrix)
 end
 function quad!(r::AbstractArray, A::Cholesky, X::AbstractMatrix)
     Z = chol_upper(A) * X
-    return map!(Base.Fix1(sum, abs2), r, _eachcol(Z))
+    return map!(Base.Fix1(sum, abs2), r, eachcol(Z))
 end
 
 # invquad
@@ -64,7 +64,7 @@ function invquad(A::Cholesky, X::AbstractMatrix)
 end
 function invquad!(r::AbstractArray, A::Cholesky, X::AbstractMatrix)
     Z = chol_lower(A) * X
-    return map!(Base.Fix1(sum, abs2), r, _eachcol(Z))
+    return map!(Base.Fix1(sum, abs2), r, eachcol(Z))
 end
 
 # tri products

@@ -13,6 +13,7 @@ using PDMats: chol_lower, chol_upper
         @test (@allocated chol_lower(C)) < 1.05 * size_of_one_copy  # allow 5% overhead
         @test (@allocated chol_upper(C)) < 1.05 * size_of_one_copy
 
+        X = randn(d, 10)
         for uplo in (:L, :U)
             ch = cholesky(Symmetric(C, uplo))
             @test chol_lower(ch) ≈ chol_upper(ch)'
