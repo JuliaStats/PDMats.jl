@@ -46,6 +46,30 @@ using StaticArrays
             @test A \ Y isa SMatrix{4, 10, Float64}
             @test A \ Y ≈ Matrix(A) \ Matrix(Y)
 
+            @test whiten(A, x) isa SVector{4, Float64}
+            @test whiten(A, x) ≈ cholesky(Matrix(A)).L \ Vector(x)
+
+            @test whiten(A, Y) isa SMatrix{4, 10, Float64}
+            @test whiten(A, Y) ≈ cholesky(Matrix(A)).L \ Matrix(Y)
+
+            @test unwhiten(A, x) isa SVector{4, Float64}
+            @test unwhiten(A, x) ≈ cholesky(Matrix(A)).L * Vector(x)
+
+            @test unwhiten(A, Y) isa SMatrix{4, 10, Float64}
+            @test unwhiten(A, Y) ≈ cholesky(Matrix(A)).L * Matrix(Y)
+
+            @test quad(A, x) isa Float64
+            @test quad(A, x) ≈ Vector(x)' * Matrix(A) * Vector(x)
+
+            @test quad(A, Y) isa SVector{10, Float64}
+            @test quad(A, Y) ≈ diag(Matrix(Y)' * Matrix(A) * Matrix(Y))
+
+            @test invquad(A, x) isa Float64
+            @test invquad(A, x) ≈ Vector(x)' * (Matrix(A) \ Vector(x))
+
+            @test invquad(A, Y) isa SVector{10, Float64}
+            @test invquad(A, Y) ≈ diag(Matrix(Y)' * (Matrix(A) \ Matrix(Y)))
+
             @test X_A_Xt(A, X) isa SMatrix{10, 10, Float64}
             @test X_A_Xt(A, X) ≈ Matrix(X) * Matrix(A) *  Matrix(X)'
 
