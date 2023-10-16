@@ -156,33 +156,28 @@ end
 
 ### tri products
 
-function X_A_Xt(a::PDSparseMat, x::AbstractMatrix)
-    # `*` is not defined for `PtL` factor components,
-    # so we can't use `x * chol_lower(a.chol)`
-    C = a.chol
-    PtL = sparse(C.L)[C.p, :]
-    z = x * PtL
-    z * transpose(z)
+function X_A_Xt(a::PDSparseMat, x::AbstractMatrix{<:Real})
+    @check_argdims a.dim == size(x, 2)
+    z = a.mat * transpose(x)
+    return Symmetric(x * z)
 end
 
 
-function Xt_A_X(a::PDSparseMat, x::AbstractMatrix)
-    # `*` is not defined for `UP` factor components,
-    # so we can't use `chol_upper(a.chol) * x`
-    # Moreover, `sparse` is only defined for `L` factor components
-    C = a.chol
-    UP = transpose(sparse(C.L))[:, C.p]
-    z = UP * x
-    transpose(z) * z
+function Xt_A_X(a::PDSparseMat, x::AbstractMatrix{<:Real})
+    @check_argdims a.dim == size(x, 1)
+    z = a.mat * x
+    return Symmetric(transpose(x) * z)
 end
 
 
-function X_invA_Xt(a::PDSparseMat, x::AbstractMatrix)
+function X_invA_Xt(a::PDSparseMat, x::AbstractMatrix{<:Real})
+    @check_argdims a.dim == size(x, 2)
     z = a.chol \ collect(transpose(x))
-    x * z
+    return Symmetric(x * z)
 end
 
-function Xt_invA_X(a::PDSparseMat, x::AbstractMatrix)
+function Xt_invA_X(a::PDSparseMat, x::AbstractMatrix{<:Real})
+    @check_argdims a.dim == size(x, 1)
     z = a.chol \ x
-    transpose(x) * z
+    return Symmetric(transpose(x) * z)
 end

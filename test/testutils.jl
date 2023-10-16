@@ -297,23 +297,27 @@ function pdtest_triprod(C, Cmat::Matrix, Imat::Matrix, X::Matrix, verbose::Int)
     Xt = copy(transpose(X))
 
     _pdt(verbose, "X_A_Xt")
-    # default tolerance in isapprox is different on 0.4. rtol argument can be deleted
-    # ≈ form used when 0.4 is no longer supported
-    lhs, rhs = X_A_Xt(C, Xt), Xt * Cmat * X
-    @test isapprox(lhs, rhs, rtol=sqrt(max(eps(real(float(eltype(lhs)))), eps(real(float(eltype(rhs)))))))
+    M = X_A_Xt(C, Xt)
+    @test M ≈ Xt * Cmat * X
+    @test issymmetric(M)
     @test_throws DimensionMismatch X_A_Xt(C, rand(n, d + 1))
 
     _pdt(verbose, "Xt_A_X")
-    lhs, rhs = Xt_A_X(C, X), Xt * Cmat * X
-    @test isapprox(lhs, rhs, rtol=sqrt(max(eps(real(float(eltype(lhs)))), eps(real(float(eltype(rhs)))))))
+    M = Xt_A_X(C, X)
+    @test M ≈ Xt * Cmat * X
+    @test issymmetric(M)
     @test_throws DimensionMismatch Xt_A_X(C, rand(d + 1, n))
 
     _pdt(verbose, "X_invA_Xt")
-    @test X_invA_Xt(C, Xt) ≈ Xt * Imat * X
+    M = X_invA_Xt(C, Xt)
+    @test M ≈ Xt * Imat * X
+    @test issymmetric(M)
     @test_throws DimensionMismatch X_invA_Xt(C, rand(n, d + 1))
 
     _pdt(verbose, "Xt_invA_X")
-    @test Xt_invA_X(C, X) ≈ Xt * Imat * X
+    M = Xt_invA_X(C, X)
+    @test M ≈ Xt * Imat * X
+    @test issymmetric(M)
     @test_throws DimensionMismatch Xt_invA_X(C, rand(d + 1, n))
 end
 

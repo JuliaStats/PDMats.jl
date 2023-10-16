@@ -147,43 +147,43 @@ end
 
 ### tri products
 
-function X_A_Xt(a::ScalMat, x::AbstractMatrix)
+function X_A_Xt(a::ScalMat, x::AbstractMatrix{<:Real})
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 2)
-    a.value * (x * transpose(x))
+    return Symmetric(a.value * (x * transpose(x)))
 end
 
-function Xt_A_X(a::ScalMat, x::AbstractMatrix)
+function Xt_A_X(a::ScalMat, x::AbstractMatrix{<:Real})
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 1)
-    a.value * (transpose(x) * x)
+    return Symmetric(a.value * (transpose(x) * x))
 end
 
-function X_invA_Xt(a::ScalMat, x::AbstractMatrix)
+function X_invA_Xt(a::ScalMat, x::AbstractMatrix{<:Real})
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 2)
-    (x * transpose(x)) / a.value
+    return Symmetric((x * transpose(x)) / a.value)
 end
 
-function Xt_invA_X(a::ScalMat, x::AbstractMatrix)
+function Xt_invA_X(a::ScalMat, x::AbstractMatrix{<:Real})
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 1)
-    (transpose(x) * x) / a.value
+    return Symmetric((transpose(x) * x) / a.value)
 end
 
 # Specializations for `x::Matrix` with reduced allocations
-function X_A_Xt(a::ScalMat, x::Matrix)
+function X_A_Xt(a::ScalMat, x::Matrix{<:Real})
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 2)
-    lmul!(a.value, x * transpose(x))
+    return Symmetric(lmul!(a.value, x * transpose(x)))
 end
 
-function Xt_A_X(a::ScalMat, x::Matrix)
+function Xt_A_X(a::ScalMat, x::Matrix{<:Real})
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 1)
-    lmul!(a.value, transpose(x) * x)
+    return Symmetric(lmul!(a.value, transpose(x) * x))
 end
 
-function X_invA_Xt(a::ScalMat, x::Matrix)
+function X_invA_Xt(a::ScalMat, x::Matrix{<:Real})
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 2)
-    _rdiv!(x * transpose(x), a.value)
+    return Symmetric(_rdiv!(x * transpose(x), a.value))
 end
 
-function Xt_invA_X(a::ScalMat, x::Matrix)
+function Xt_invA_X(a::ScalMat, x::Matrix{<:Real})
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 1)
-    _rdiv!(transpose(x) * x, a.value)
+    return Symmetric(_rdiv!(transpose(x) * x, a.value))
 end

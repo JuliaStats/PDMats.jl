@@ -166,28 +166,28 @@ end
 
 ### tri products
 
-function X_A_Xt(a::PDiagMat, x::AbstractMatrix)
+function X_A_Xt(a::PDiagMat, x::AbstractMatrix{<:Real})
     @check_argdims a.dim == size(x, 2)
     z = a.diag .* transpose(x)
-    return x * z
+    return Symmetric(x * z)
 end
 
-function Xt_A_X(a::PDiagMat, x::AbstractMatrix)
+function Xt_A_X(a::PDiagMat, x::AbstractMatrix{<:Real})
     @check_argdims a.dim == size(x, 1)
     z = a.diag .* x
-    return transpose(x) * z
+    return Symmetric(transpose(x) * z)
 end
 
-function X_invA_Xt(a::PDiagMat, x::AbstractMatrix)
+function X_invA_Xt(a::PDiagMat, x::AbstractMatrix{<:Real})
     @check_argdims a.dim == size(x, 2)
     z = transpose(x) ./ a.diag
-    return x * z
+    return Symmetric(x * z)
 end
 
-function Xt_invA_X(a::PDiagMat, x::AbstractMatrix)
+function Xt_invA_X(a::PDiagMat, x::AbstractMatrix{<:Real})
     @check_argdims a.dim == size(x, 1)
     z = x ./ a.diag
-    return transpose(x) * z
+    return Symmetric(transpose(x) * z)
 end
 
 ### Specializations for `Array` arguments with reduced allocations

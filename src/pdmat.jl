@@ -160,28 +160,28 @@ end
 
 ### tri products
 
-function X_A_Xt(a::PDMat, x::AbstractMatrix)
+function X_A_Xt(a::PDMat, x::AbstractMatrix{<:Real})
     @check_argdims a.dim == size(x, 2)
     z = x * chol_lower(a.chol)
-    return z * transpose(z)
+    return Symmetric(z * transpose(z))
 end
 
-function Xt_A_X(a::PDMat, x::AbstractMatrix)
+function Xt_A_X(a::PDMat, x::AbstractMatrix{<:Real})
     @check_argdims a.dim == size(x, 1)
     z = chol_upper(a.chol) * x
-    return transpose(z) * z
+    return Symmetric(transpose(z) * z)
 end
 
-function X_invA_Xt(a::PDMat, x::AbstractMatrix)
+function X_invA_Xt(a::PDMat, x::AbstractMatrix{<:Real})
     @check_argdims a.dim == size(x, 2)
     z = x / chol_upper(a.chol)
-    return z * transpose(z)
+    return Symmetric(z * transpose(z))
 end
 
-function Xt_invA_X(a::PDMat, x::AbstractMatrix)
+function Xt_invA_X(a::PDMat, x::AbstractMatrix{<:Real})
     @check_argdims a.dim == size(x, 1)
     z = chol_lower(a.chol) \ x
-    return transpose(z) * z
+    return Symmetric(transpose(z) * z)
 end
 
 ### Specializations for `Array` arguments with reduced allocations
