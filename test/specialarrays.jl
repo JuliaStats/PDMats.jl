@@ -47,16 +47,16 @@ using StaticArrays
             @test A \ Y ≈ Matrix(A) \ Matrix(Y)
 
             @test whiten(A, x) isa SVector{4, Float64}
-            @test whiten(A, x) ≈ cholesky(Matrix(A)).L \ Vector(x)
+            @test whiten(A, x) ≈ cholesky(Symmetric(Matrix(A))).L \ Vector(x)
 
             @test whiten(A, Y) isa SMatrix{4, 10, Float64}
-            @test whiten(A, Y) ≈ cholesky(Matrix(A)).L \ Matrix(Y)
+            @test whiten(A, Y) ≈ cholesky(Symmetric(Matrix(A))).L \ Matrix(Y)
 
             @test unwhiten(A, x) isa SVector{4, Float64}
-            @test unwhiten(A, x) ≈ cholesky(Matrix(A)).L * Vector(x)
+            @test unwhiten(A, x) ≈ cholesky(Symmetric(Matrix(A))).L * Vector(x)
 
             @test unwhiten(A, Y) isa SMatrix{4, 10, Float64}
-            @test unwhiten(A, Y) ≈ cholesky(Matrix(A)).L * Matrix(Y)
+            @test unwhiten(A, Y) ≈ cholesky(Symmetric(Matrix(A))).L * Matrix(Y)
 
             @test quad(A, x) isa Float64
             @test quad(A, x) ≈ Vector(x)' * Matrix(A) * Vector(x)

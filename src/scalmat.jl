@@ -115,7 +115,10 @@ end
 function quad!(r::AbstractArray, a::ScalMat, x::AbstractMatrix)
     @check_argdims eachindex(r) == axes(x, 2)
     @check_argdims a.dim == size(x, 1)
-    return map!(Base.Fix1(quad, a), r, eachcol(x))
+    @inbounds for i in axes(x, 2)
+        r[i] = quad(a, view(x, :, i))
+    end
+    return r
 end
 
 function invquad(a::ScalMat, x::AbstractVecOrMat)
@@ -135,7 +138,10 @@ end
 function invquad!(r::AbstractArray, a::ScalMat, x::AbstractMatrix)
     @check_argdims eachindex(r) == axes(x, 2)
     @check_argdims a.dim == size(x, 1)
-    return map!(Base.Fix1(invquad, a), r, eachcol(x))
+    @inbounds for i in axes(x, 2)
+        r[i] = invquad(a, view(x, :, i))
+    end
+    return r
 end
 
 
