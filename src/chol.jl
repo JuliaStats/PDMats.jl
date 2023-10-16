@@ -46,22 +46,22 @@ for T in (:AbstractVector, :AbstractMatrix)
 end
 
 # quad
-function quad(A::Cholesky, x::AbstractVecOrMat)
-    @check_argdims size(A, 1) == size(x, 1)
-    if x isa AbstractVector
-        return sum(abs2, chol_upper(A) * x)
-    else
-        Z = chol_upper(A) * x
-        return vec(sum(abs2, Z; dims=1))
-    end
+function quad(A::Cholesky, x::AbstractVector)
+    @check_argdims size(A, 1) == length(x)
+    return sum(abs2, chol_upper(A) * x)
 end
-function quad!(r::AbstractArray, A::Cholesky, x::AbstractMatrix)
-    @check_argdims eachindex(r) == axes(x, 2)
-    @check_argdims size(A, 1) == size(x, 1)
+function quad(A::Cholesky, X::AbstractMatrix)
+    @check_argdims size(A, 1) == size(X, 1)
+    Z = chol_upper(A) * X
+    return vec(sum(abs2, Z; dims=1))
+end
+function quad!(r::AbstractArray, A::Cholesky, X::AbstractMatrix)
+    @check_argdims eachindex(r) == axes(X, 2)
+    @check_argdims size(A, 1) == size(X, 1)
     aU = chol_upper(A)
     z = similar(r, size(A, 1)) # buffer to save allocations
-    @inbounds for i in axes(x, 2)
-        copyto!(z, view(x, :, i))
+    @inbounds for i in axes(X, 2)
+        copyto!(z, view(X, :, i))
         lmul!(aU, z)
         r[i] = sum(abs2, z)
     end
@@ -69,22 +69,22 @@ function quad!(r::AbstractArray, A::Cholesky, x::AbstractMatrix)
 end
 
 # invquad
-function invquad(A::Cholesky, x::AbstractVecOrMat)
+function invquad(A::Cholesky, x::AbstractVector)
     @check_argdims size(A, 1) == size(x, 1)
-    if x isa AbstractVector
-        return sum(abs2, chol_lower(A) \ x)
-    else
-        Z = chol_lower(A) \ x
-        return vec(sum(abs2, Z; dims=1))
-    end
+    return sum(abs2, chol_lower(A) \ x)
 end
-function invquad!(r::AbstractArray, A::Cholesky, x::AbstractMatrix)
-    @check_argdims eachindex(r) == axes(x, 2)
-    @check_argdims size(A, 1) == size(x, 1)
+function invquad(A::Cholesky, X::AbstractMatrix) 
+    @check_argdims size(A, 1) == size(X, 1)
+    Z = chol_lower(A) \ X
+    return vec(sum(abs2, Z; dims=1))
+end
+function invquad!(r::AbstractArray, A::Cholesky, X::AbstractMatrix)
+    @check_argdims eachindex(r) == axes(X, 2)
+    @check_argdims size(A, 1) == size(X, 1)
     aL = chol_lower(A)
     z = similar(r, size(A, 1)) # buffer to save allocations
-    @inbounds for i in axes(x, 2)
-        copyto!(z, view(x, :, i))
+    @inbounds for i in axes(X, 2)
+        copyto!(z, view(X, :, i))
         ldiv!(aL, z)
         r[i] = sum(abs2, z)
     end
