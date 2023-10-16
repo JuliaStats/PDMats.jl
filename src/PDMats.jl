@@ -39,8 +39,8 @@ module PDMats
 
     # source files
 
-    include("chol.jl")
     include("utils.jl")
+    include("chol.jl")
 
     include("pdmat.jl")
 

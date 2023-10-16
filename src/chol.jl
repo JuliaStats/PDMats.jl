@@ -46,45 +46,73 @@ for T in (:AbstractVector, :AbstractMatrix)
 end
 
 # quad
-quad(A::Cholesky, x::AbstractVector) = sum(abs2, chol_upper(A) * x)
-function quad(A::Cholesky, X::AbstractMatrix)
-    Z = chol_upper(A) * X
-    return vec(sum(abs2, Z; dims=1))
+function quad(A::Cholesky, x::AbstractVecOrMat)
+    @check_argdims size(A, 1) == size(x, 1)
+    if x isa AbstractVector
+        return sum(abs2, chol_upper(A) * x)
+    else
+        Z = chol_upper(A) * x
+        return vec(sum(abs2, Z; dims=1))
+    end
 end
-function quad!(r::AbstractArray, A::Cholesky, X::AbstractMatrix)
-    Z = chol_upper(A) * X
-    return map!(Base.Fix1(sum, abs2), r, eachcol(Z))
+function quad!(r::AbstractArray, A::Cholesky, x::AbstractMatrix)
+    @check_argdims eachindex(r) == axes(x, 2)
+    @check_argdims size(A, 1) == size(x, 1)
+    aU = chol_upper(A)
+    z = similar(r, size(A, 1)) # buffer to save allocations
+    @inbounds for i in axes(x, 2)
+        copyto!(z, view(x, :, i))
+        lmul!(aU, z)
+        r[i] = sum(abs2, z)
+    end
+    return r
 end
 
 # invquad
-invquad(A::Cholesky, x::AbstractVector) = sum(abs2, chol_lower(A) \ x)
-function invquad(A::Cholesky, X::AbstractMatrix)
-    Z = chol_lower(A) \ X
-    return vec(sum(abs2, Z; dims=1))
+function invquad(A::Cholesky, x::AbstractVecOrMat)
+    @check_argdims size(A, 1) == size(x, 1)
+    if x isa AbstractVector
+        return sum(abs2, chol_lower(A) \ x)
+    else
+        Z = chol_lower(A) \ x
+        return vec(sum(abs2, Z; dims=1))
+    end
 end
-function invquad!(r::AbstractArray, A::Cholesky, X::AbstractMatrix)
-    Z = chol_lower(A) \ X
-    return map!(Base.Fix1(sum, abs2), r, eachcol(Z))
+function invquad!(r::AbstractArray, A::Cholesky, x::AbstractMatrix)
+    @check_argdims eachindex(r) == axes(x, 2)
+    @check_argdims size(A, 1) == size(x, 1)
+    aL = chol_lower(A)
+    z = similar(r, size(A, 1)) # buffer to save allocations
+    @inbounds for i in axes(x, 2)
+        copyto!(z, view(x, :, i))
+        ldiv!(aL, z)
+        r[i] = sum(abs2, z)
+    end
+    return r
 end
 
 # tri products
 
 function X_A_Xt(A::Cholesky, X::AbstractMatrix)
+    @check_argdims size(A, 1) == size(X, 2)
     Z = X * chol_lower(A)
     return Z * transpose(Z)
 end
 
 function Xt_A_X(A::Cholesky, X::AbstractMatrix)
+    @check_argdims size(A, 1) == size(X, 1)
     Z = chol_upper(A) * X
     return transpose(Z) * Z
 end
 
 function X_invA_Xt(A::Cholesky, X::AbstractMatrix)
+    @check_argdims size(A, 1) == size(X, 2)
     Z = X / chol_upper(A)
     return Z * transpose(Z)
 end
 
 function Xt_invA_X(A::Cholesky, X::AbstractMatrix)
+    @check_argdims size(A, 1) == size(X, 1)
     Z = chol_lower(A) \ X
     return transpose(Z) * Z
 end
