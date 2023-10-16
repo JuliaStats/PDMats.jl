@@ -122,7 +122,7 @@ function quad(a::PDSparseMat, x::AbstractVecOrMat)
 end
 
 function quad!(r::AbstractArray, a::PDSparseMat, x::AbstractMatrix)
-    @check_argdims axes(r) == axes(x, 2)
+    @check_argdims eachindex(r) == axes(x, 2)
     # https://github.com/JuliaLang/julia/commit/2425ae760fb5151c5c7dd0554e87c5fc9e24de73
     if VERSION < v"1.4.0-DEV.92"
        z = similar(r, a.dim) # buffer to save allocations
@@ -148,16 +148,11 @@ function invquad(a::PDSparseMat, x::AbstractVecOrMat)
 end
 
 function invquad!(r::AbstractArray, a::PDSparseMat, x::AbstractMatrix)
-    @check_argdims axes(r) == axes(x, 2)
+    @check_argdims eachindex(r) == axes(x, 2)
     @check_argdims a.dim == size(x, 1)
-    z = similar(r, a.dim) # buffer to save allocations
-    @inbounds for i in axes(x, 2)
-        xi = view(x, :, i)
-        copyto!(z, xi)
-        ldiv!(a.chol, z)
-        r[i] = dot(xi, z)
-    end
-    return r
+    # Can't use `ldiv!` with buffer due to missing support in SparseArrays
+    z = a.chol \ x
+    return map!(dot, r, eachcol(x), eachcol(z))
 end
 
 

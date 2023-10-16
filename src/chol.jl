@@ -63,7 +63,7 @@ function invquad(A::Cholesky, X::AbstractMatrix)
     return vec(sum(abs2, Z; dims=1))
 end
 function invquad!(r::AbstractArray, A::Cholesky, X::AbstractMatrix)
-    Z = chol_lower(A) * X
+    Z = chol_lower(A) \ X
     return map!(Base.Fix1(sum, abs2), r, eachcol(Z))
 end
 

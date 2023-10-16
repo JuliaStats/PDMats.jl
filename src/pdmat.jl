@@ -123,7 +123,7 @@ function quad(a::PDMat, x::AbstractVecOrMat)
 end
 
 function quad!(r::AbstractArray, a::PDMat, x::AbstractMatrix)
-    @check_argdims axes(r) == axes(x, 2)
+    @check_argdims eachindex(r) == axes(x, 2)
     @check_argdims a.dim == size(x, 1)
     aU = chol_upper(cholesky(a))
     z = similar(r, a.dim) # buffer to save allocations
@@ -146,7 +146,7 @@ function invquad(a::PDMat, x::AbstractVecOrMat)
 end
 
 function invquad!(r::AbstractArray, a::PDMat, x::AbstractMatrix)
-    @check_argdims axes(r) == axes(x, 2)
+    @check_argdims eachindex(r) == axes(x, 2)
     @check_argdims a.dim == size(x, 1)
     aL = chol_lower(cholesky(a))
     z = similar(r, a.dim) # buffer to save allocations

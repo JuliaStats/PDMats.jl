@@ -272,6 +272,9 @@ function pdtest_quad(C, Cmat::Matrix, Imat::Matrix, X::Matrix, verbose::Int)
         @test quad(C, view(X,:,i)) ≈ r_quad[i]
     end
     @test quad(C, X) ≈ r_quad
+    r = similar(r_quad)
+    @test quad!(r, C, X) === r
+    @test r ≈ r_quad
 
     _pdt(verbose, "invquad")
     r_invquad = zeros(eltype(C),n)
@@ -282,6 +285,9 @@ function pdtest_quad(C, Cmat::Matrix, Imat::Matrix, X::Matrix, verbose::Int)
         @test invquad(C, view(X,:,i)) ≈ r_invquad[i]
     end
     @test invquad(C, X) ≈ r_invquad
+    r = similar(r_invquad)
+    @test invquad!(r, C, X) === r
+    @test r ≈ r_invquad
 end
 
 
