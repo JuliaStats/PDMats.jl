@@ -70,16 +70,16 @@ using StaticArrays
             @test invquad(A, Y) isa SVector{10, Float64}
             @test invquad(A, Y) ≈ diag(Matrix(Y)' * (Matrix(A) \ Matrix(Y)))
 
-            @test X_A_Xt(A, X) isa SMatrix{10, 10, Float64}
+            @test X_A_Xt(A, X) isa Symmetric{Float64,<:SMatrix{10, 10, Float64}}
             @test X_A_Xt(A, X) ≈ Matrix(X) * Matrix(A) *  Matrix(X)'
 
-            @test X_invA_Xt(A, X) isa SMatrix{10, 10, Float64}
+            @test X_invA_Xt(A, X) isa Symmetric{Float64,<:SMatrix{10, 10, Float64}}
             @test X_invA_Xt(A, X) ≈ Matrix(X) * (Matrix(A) \ Matrix(X)')
 
-            @test Xt_A_X(A, Y) isa SMatrix{10, 10, Float64}
+            @test Xt_A_X(A, Y) isa Symmetric{Float64,<:SMatrix{10, 10, Float64}}
             @test Xt_A_X(A, Y) ≈ Matrix(Y)' * Matrix(A) * Matrix(Y)
 
-            @test Xt_invA_X(A, Y) isa SMatrix{10, 10, Float64}
+            @test Xt_invA_X(A, Y) isa Symmetric{Float64,<:SMatrix{10, 10, Float64}}
             @test Xt_invA_X(A, Y) ≈ Matrix(Y)' * (Matrix(A) \ Matrix(Y))
         end
     end

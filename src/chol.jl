@@ -93,26 +93,26 @@ end
 
 # tri products
 
-function X_A_Xt(A::Cholesky, X::AbstractMatrix)
+function X_A_Xt(A::Cholesky, X::AbstractMatrix{<:Real})
     @check_argdims size(A, 1) == size(X, 2)
     Z = X * chol_lower(A)
-    return Z * transpose(Z)
+    return Symmetric(Z * transpose(Z))
 end
 
-function Xt_A_X(A::Cholesky, X::AbstractMatrix)
+function Xt_A_X(A::Cholesky, X::AbstractMatrix{<:Real})
     @check_argdims size(A, 1) == size(X, 1)
     Z = chol_upper(A) * X
-    return transpose(Z) * Z
+    return Symmetric(transpose(Z) * Z)
 end
 
-function X_invA_Xt(A::Cholesky, X::AbstractMatrix)
+function X_invA_Xt(A::Cholesky, X::AbstractMatrix{<:Real})
     @check_argdims size(A, 1) == size(X, 2)
     Z = X / chol_upper(A)
-    return Z * transpose(Z)
+    return Symmetric(Z * transpose(Z))
 end
 
-function Xt_invA_X(A::Cholesky, X::AbstractMatrix)
+function Xt_invA_X(A::Cholesky, X::AbstractMatrix{<:Real})
     @check_argdims size(A, 1) == size(X, 1)
     Z = chol_lower(A) \ X
-    return transpose(Z) * Z
+    return Symmetric(transpose(Z) * Z)
 end
