@@ -49,7 +49,7 @@ jobs:
             ${{ runner.os }}-
       - uses: julia-actions/julia-buildpkg@v1
       - name: Downgrade FillArrays on Julia 1.0 to fix compat conflicts with BandedMatrices
-        if: ${{ matrix.version }} == '1.0'
+        if: ${{ matrix.version == '1.0' }}
         run: |
           import Pkg
           Pkg.instantiate()
