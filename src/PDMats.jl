@@ -56,4 +56,8 @@ module PDMats
 
     include("deprecates.jl")
 
+    # FillArrays support on Julia < 1.9
+    if !isdefined(Base, :get_extension)
+        include("../ext/PDMatsFillArraysExt.jl")
+    end
 end # module
