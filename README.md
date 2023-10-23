@@ -28,9 +28,8 @@ Elemenent types are in princple all Real types, but in practice this is limited 
 
 ```julia
 struct PDMat{T<:Real,S<:AbstractMatrix,C<:Factorization} <: AbstractPDMat{T}
-    dim::Int        # matrix dimension
-    mat::S          # input matrix
-    chol::C         # Cholesky factorization of mat
+    mat::S                      # input matrix
+    chol::Cholesky{T,S}         # Cholesky factorization of mat
 end
 
 # Constructors
@@ -51,7 +50,6 @@ PDMat(chol)         # with the Cholesky factorization
 
 ```julia
 struct PDiagMat{T<:Real,V<:AbstractVector{T}} <: AbstractPDMat{T}
-    dim::Int                    # matrix dimension
     diag::V                     # the vector of diagonal elements
 end
 
@@ -74,7 +72,6 @@ end
 
 ScalMat(d, v)        # with dimension d and diagonal value v
 ```
-
 
 ## Common interface
 
@@ -193,6 +190,17 @@ While in theory all of them can be defined, at present only the following subset
  - `invquad`, `invquad!`
 
 PRs to implement more generic fallbacks are welcome.
+
+### Fallbacks for `LinearAlgebra.Cholesky`
+
+For Cholesky decompositions of type `Cholesky` the following functions are defined as well:
+
+ - `dim`
+ - `whiten`, `whiten!`
+ - `unwhiten`, `unwhiten!`
+ - `quad`, `quad!`
+ - `invquad`, `invquad!`
+ - `X_A_Xt`, `Xt_A_X`, `X_invA_Xt`, `Xt_invA_X`
 
 ## Define Customized Subtypes
 

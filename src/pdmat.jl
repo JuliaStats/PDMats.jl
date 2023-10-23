@@ -2,22 +2,30 @@
 Full positive definite matrix together with a Cholesky factorization object.
 """
 struct PDMat{T<:Real,S<:AbstractMatrix,C<:Factorization} <: AbstractPDMat{T}
-    dim::Int
     mat::S
     chol::C
 
-    PDMat{T,S,C}(d::Int, m::AbstractMatrix{T}, c::Factorization) where {T,S,C} = new{T,S,C}(d,m,c)
+    PDMat{T,S,C}(m::AbstractMatrix{T}, c::Factorization) where {T,S,C} = new{T,S,C}(m,c)
 end
 
-function PDMat(mat::AbstractMatrix,chol::Cholesky{T,S}) where {T,S}
-    d = size(mat, 1)
-    size(chol, 1) == d ||
+function PDMat(mat::AbstractMatrix{T}, chol::Cholesky) where {T<:Real}
+    d = LinearAlgebra.checksquare(mat)
+    if size(chol, 1) != d
         throw(DimensionMismatch("Dimensions of mat and chol are inconsistent."))
-    PDMat{T,S,Cholesky{T,S}}(d, convert(S, mat), chol)
+    end
+    PDMat{T,typeof(mat),typeof(chol)}(mat, chol)
 end
 
 PDMat(mat::AbstractMatrix) = PDMat(mat, cholesky(mat))
 PDMat(fac::Cholesky) = PDMat(AbstractMatrix(fac), fac)
+
+function Base.getproperty(a::PDMat, s::Symbol)
+    if s === :dim
+        return size(getfield(a, :mat), 1)
+    end
+    return getfield(a, s)
+end
+Base.propertynames(::PDMat) = (:mat, :chol, :dim)
 
 AbstractPDMat(A::Cholesky) = PDMat(A)
 
@@ -26,7 +34,7 @@ Base.convert(::Type{PDMat{T}}, a::PDMat{T}) where {T<:Real} = a
 function Base.convert(::Type{PDMat{T}}, a::PDMat) where {T<:Real}
     chol = convert(Factorization{float(T)}, a.chol)
     mat = convert(AbstractMatrix{T}, a.mat)
-    return PDMat{T,typeof(mat),typeof(chol)}(size(mat, 1), mat, chol)
+    return PDMat{T,typeof(mat),typeof(chol)}(mat, chol)
 end
 Base.convert(::Type{AbstractPDMat{T}}, a::PDMat) where {T<:Real} = convert(PDMat{T}, a)
 
@@ -79,28 +87,115 @@ function Base.kron(
     return PDMat(kron(A.mat, B.mat), Cholesky(kron(A.chol.U, B.chol.U), 'U', A.chol.info))
 end
 
+### (un)whitening
+
+function whiten!(r::AbstractVecOrMat, a::PDMat, x::AbstractVecOrMat)
+    @check_argdims axes(r) == axes(x)
+    @check_argdims a.dim == size(x, 1)
+    v = _rcopy!(r, x)
+    return ldiv!(chol_lower(cholesky(a)), v)
+end
+function unwhiten!(r::AbstractVecOrMat, a::PDMat, x::AbstractVecOrMat)
+    @check_argdims axes(r) == axes(x)
+    @check_argdims a.dim == size(x, 1)
+    v = _rcopy!(r, x)
+    return lmul!(chol_lower(cholesky(a)), v)
+end
+
+function whiten(a::PDMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    return chol_lower(cholesky(a)) \ x
+end
+function unwhiten(a::PDMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    return chol_lower(cholesky(a)) * x
+end
+
+## quad/invquad
+
+function quad(a::PDMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    aU_x = chol_upper(cholesky(a)) * x
+    if x isa AbstractVector
+        return sum(abs2, aU_x)
+    else
+        return vec(sum(abs2, aU_x; dims = 1))
+    end
+end
+
+function quad!(r::AbstractArray, a::PDMat, x::AbstractMatrix)
+    @check_argdims eachindex(r) == axes(x, 2)
+    @check_argdims a.dim == size(x, 1)
+    aU = chol_upper(cholesky(a))
+    z = similar(r, a.dim) # buffer to save allocations
+    @inbounds for i in axes(x, 2)
+        copyto!(z, view(x, :, i))
+        lmul!(aU, z)
+        r[i] = sum(abs2, z)
+    end
+    return r
+end
+
+function invquad(a::PDMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    inv_aL_x = chol_lower(cholesky(a)) \ x
+    if x isa AbstractVector
+        return sum(abs2, inv_aL_x)
+    else
+        return vec(sum(abs2, inv_aL_x; dims = 1))
+    end
+end
+
+function invquad!(r::AbstractArray, a::PDMat, x::AbstractMatrix)
+    @check_argdims eachindex(r) == axes(x, 2)
+    @check_argdims a.dim == size(x, 1)
+    aL = chol_lower(cholesky(a))
+    z = similar(r, a.dim) # buffer to save allocations
+    @inbounds for i in axes(x, 2)
+        copyto!(z, view(x, :, i))
+        ldiv!(aL, z)
+        r[i] = sum(abs2, z)
+    end
+    return r
+end
+
 ### tri products
 
-function X_A_Xt(a::PDMat, x::AbstractMatrix)
+function X_A_Xt(a::PDMat, x::AbstractMatrix{<:Real})
     @check_argdims a.dim == size(x, 2)
     z = x * chol_lower(a.chol)
-    return z * transpose(z)
+    return Symmetric(z * transpose(z))
 end
 
-function Xt_A_X(a::PDMat, x::AbstractMatrix)
+function Xt_A_X(a::PDMat, x::AbstractMatrix{<:Real})
     @check_argdims a.dim == size(x, 1)
     z = chol_upper(a.chol) * x
-    return transpose(z) * z
+    return Symmetric(transpose(z) * z)
 end
 
-function X_invA_Xt(a::PDMat, x::AbstractMatrix)
+function X_invA_Xt(a::PDMat, x::AbstractMatrix{<:Real})
     @check_argdims a.dim == size(x, 2)
     z = x / chol_upper(a.chol)
-    return z * transpose(z)
+    return Symmetric(z * transpose(z))
 end
 
-function Xt_invA_X(a::PDMat, x::AbstractMatrix)
+function Xt_invA_X(a::PDMat, x::AbstractMatrix{<:Real})
     @check_argdims a.dim == size(x, 1)
     z = chol_lower(a.chol) \ x
-    return transpose(z) * z
+    return Symmetric(transpose(z) * z)
 end
+
+### Specializations for `Array` arguments with reduced allocations
+
+function quad(a::PDMat{<:Real,<:Vector}, x::Matrix)
+    @check_argdims a.dim == size(x, 1)
+    T = typeof(zero(eltype(a)) * abs2(zero(eltype(x))))
+    return quad!(Vector{T}(undef, size(x, 2)), a, x)
+end
+
+function invquad(a::PDMat{<:Real,<:Vector}, x::Matrix)
+    @check_argdims a.dim == size(x, 1)
+    T = typeof(abs2(zero(eltype(x))) / zero(eltype(a)))
+    return invquad!(Vector{T}(undef, size(x, 2)), a, x)
+end
+

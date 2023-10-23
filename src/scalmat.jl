@@ -16,7 +16,7 @@ Base.convert(::Type{AbstractPDMat{T}}, a::ScalMat) where {T<:Real} = convert(Sca
 Base.size(a::ScalMat) = (a.dim, a.dim)
 Base.Matrix(a::ScalMat) = Matrix(Diagonal(fill(a.value, a.dim)))
 LinearAlgebra.diag(a::ScalMat) = fill(a.value, a.dim)
-LinearAlgebra.cholesky(a::ScalMat) = cholesky(Diagonal(fill(a.value, a.dim)))
+LinearAlgebra.cholesky(a::ScalMat) = Cholesky(Diagonal(fill(sqrt(a.value), a.dim)), 'U', 0)
 
 ### Inheriting from AbstractMatrix
 
@@ -76,64 +76,114 @@ LinearAlgebra.sqrt(a::ScalMat) = ScalMat(a.dim, sqrt(a.value))
 ### whiten and unwhiten
 
 function whiten!(r::AbstractVecOrMat, a::ScalMat, x::AbstractVecOrMat)
-    @check_argdims LinearAlgebra.checksquare(a) == size(x, 1)
+    @check_argdims axes(r) == axes(x)
+    @check_argdims a.dim == size(x, 1)
     _ldiv!(r, sqrt(a.value), x)
 end
 
 function unwhiten!(r::AbstractVecOrMat, a::ScalMat, x::AbstractVecOrMat)
-    @check_argdims LinearAlgebra.checksquare(a) == size(x, 1)
+    @check_argdims axes(r) == axes(x)
+    @check_argdims a.dim == size(x, 1)
     mul!(r, x, sqrt(a.value))
 end
 
+function whiten(a::ScalMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    return x / sqrt(a.value)
+end
+function unwhiten(a::ScalMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    return sqrt(a.value) * x
+end
 
 ### quadratic forms
 
-quad(a::ScalMat, x::AbstractVector) = sum(abs2, x) * a.value
-invquad(a::ScalMat, x::AbstractVector) = sum(abs2, x) / a.value
+function quad(a::ScalMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    if x isa AbstractVector
+        return sum(abs2, x) * a.value
+    else
+        # map(Base.Fix1(quad, a), eachcol(x)) or similar alternatives
+        # do NOT return a `SVector` for inputs `x::SMatrix`.
+        wsq = let w = a.value
+            x -> w * abs2(x)
+        end 
+        return vec(sum(wsq, x; dims=1))
+    end
+end
 
-quad!(r::AbstractArray, a::ScalMat, x::AbstractMatrix) = colwise_sumsq!(r, x, a.value)
-invquad!(r::AbstractArray, a::ScalMat, x::AbstractMatrix) = colwise_sumsqinv!(r, x, a.value)
+function quad!(r::AbstractArray, a::ScalMat, x::AbstractMatrix)
+    @check_argdims eachindex(r) == axes(x, 2)
+    @check_argdims a.dim == size(x, 1)
+    @inbounds for i in axes(x, 2)
+        r[i] = quad(a, view(x, :, i))
+    end
+    return r
+end
+
+function invquad(a::ScalMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    if x isa AbstractVector
+        return sum(abs2, x) / a.value
+    else
+        # map(Base.Fix1(invquad, a), eachcol(x)) or similar alternatives
+        # do NOT return a `SVector` for inputs `x::SMatrix`.
+        wsq = let w = a.value
+            x -> abs2(x) / w
+        end 
+        return vec(sum(wsq, x; dims=1))
+    end
+end
+
+function invquad!(r::AbstractArray, a::ScalMat, x::AbstractMatrix)
+    @check_argdims eachindex(r) == axes(x, 2)
+    @check_argdims a.dim == size(x, 1)
+    @inbounds for i in axes(x, 2)
+        r[i] = invquad(a, view(x, :, i))
+    end
+    return r
+end
 
 
 ### tri products
 
-function X_A_Xt(a::ScalMat, x::AbstractMatrix)
+function X_A_Xt(a::ScalMat, x::AbstractMatrix{<:Real})
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 2)
-    a.value * (x * transpose(x))
+    return Symmetric(a.value * (x * transpose(x)))
 end
 
-function Xt_A_X(a::ScalMat, x::AbstractMatrix)
+function Xt_A_X(a::ScalMat, x::AbstractMatrix{<:Real})
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 1)
-    a.value * (transpose(x) * x)
+    return Symmetric(a.value * (transpose(x) * x))
 end
 
-function X_invA_Xt(a::ScalMat, x::AbstractMatrix)
+function X_invA_Xt(a::ScalMat, x::AbstractMatrix{<:Real})
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 2)
-    (x * transpose(x)) / a.value
+    return Symmetric((x * transpose(x)) / a.value)
 end
 
-function Xt_invA_X(a::ScalMat, x::AbstractMatrix)
+function Xt_invA_X(a::ScalMat, x::AbstractMatrix{<:Real})
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 1)
-    (transpose(x) * x) / a.value
+    return Symmetric((transpose(x) * x) / a.value)
 end
 
 # Specializations for `x::Matrix` with reduced allocations
-function X_A_Xt(a::ScalMat, x::Matrix)
+function X_A_Xt(a::ScalMat, x::Matrix{<:Real})
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 2)
-    lmul!(a.value, x * transpose(x))
+    return Symmetric(lmul!(a.value, x * transpose(x)))
 end
 
-function Xt_A_X(a::ScalMat, x::Matrix)
+function Xt_A_X(a::ScalMat, x::Matrix{<:Real})
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 1)
-    lmul!(a.value, transpose(x) * x)
+    return Symmetric(lmul!(a.value, transpose(x) * x))
 end
 
-function X_invA_Xt(a::ScalMat, x::Matrix)
+function X_invA_Xt(a::ScalMat, x::Matrix{<:Real})
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 2)
-    _rdiv!(x * transpose(x), a.value)
+    return Symmetric(_rdiv!(x * transpose(x), a.value))
 end
 
-function Xt_invA_X(a::ScalMat, x::Matrix)
+function Xt_invA_X(a::ScalMat, x::Matrix{<:Real})
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 1)
-    _rdiv!(transpose(x) * x, a.value)
+    return Symmetric(_rdiv!(transpose(x) * x, a.value))
 end

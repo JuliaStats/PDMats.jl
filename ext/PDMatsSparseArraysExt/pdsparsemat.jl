@@ -4,11 +4,12 @@ Sparse positive definite matrix together with a Cholesky factorization object.
 const PDSparseMat{T<:Real,S<:AbstractSparseMatrix,C<:CholTypeSparse} = PDMat{T,S,C}
 
 function PDMats.PDMat(mat::AbstractSparseMatrix, chol::CholTypeSparse)
-    d = size(mat, 1)
+    d = LinearAlgebra.checksquare(mat)
     size(chol, 1) == d ||
       throw(DimensionMismatch("Dimensions of mat and chol are inconsistent."))
-    PDMat{eltype(mat),typeof(mat),typeof(chol)}(d, mat, chol)
+    PDMat{eltype(mat),typeof(mat),typeof(chol)}(mat, chol)
 end
+Base.@deprecate PDMat{T,S}(d::Int, m::AbstractSparseMatrix{T}, c::CholTypeSparse) where {T,S} PDSparseMat{T,S,typeof(c)}(m, c)
 
 PDMats.PDMat(mat::SparseMatrixCSC) = PDMat(mat, cholesky(mat))
 PDMats.PDMat(fac::CholTypeSparse) = PDMat(sparse(fac), fac)
@@ -21,7 +22,7 @@ function Base.convert(::Type{PDMat{T}}, a::PDSparseMat) where {T<:Real}
     # So there is no point in recomputing `cholesky(mat)` and we just reuse
     # the existing Cholesky factorization
     mat = convert(AbstractMatrix{T}, a.mat)
-    return PDMat{T,typeof(mat),typeof(a.chol)}(a.dim, mat, a.chol)
+    return PDMat{T,typeof(mat),typeof(a.chol)}(mat, a.chol)
 end
 
 ### Arithmetics
@@ -39,37 +40,77 @@ LinearAlgebra.sqrt(A::PDSparseMat) = PDMat(sqrt(Hermitian(Matrix(A))))
 ### whiten and unwhiten
 
 function PDMats.whiten!(r::AbstractVecOrMat, a::PDSparseMat, x::AbstractVecOrMat)
+    PDMats.@check_argdims axes(r) == axes(x)
+    PDMats.@check_argdims a.dim == size(x, 1)
     # Can't use `ldiv!` due to missing support in SparseArrays
     return copyto!(r, PDMats.chol_lower(a.chol) \ x)
 end
 
 function PDMats.unwhiten!(r::AbstractVecOrMat, a::PDSparseMat, x::AbstractVecOrMat)
+    PDMats.@check_argdims axes(r) == axes(x)
+    PDMats.@check_argdims a.dim == size(x, 1)
     # `*` is not defined for `PtL` factor components,
     # so we can't use `chol_lower(a.chol) * x`
     C = a.chol
     PtL = sparse(C.L)[C.p, :]
-    # Can't use `lmul!` due to missing support in SparseArrays
     return copyto!(r, PtL * x)
 end
 
+function PDMats.whiten(a::PDSparseMat, x::AbstractVecOrMat)
+    PDMats.@check_argdims a.dim == size(x, 1)
+    return PDMats.chol_lower(cholesky(a)) \ x
+end
+
+function PDMats.unwhiten(a::PDSparseMat, x::AbstractVecOrMat)
+    PDMats.@check_argdims a.dim == size(x, 1)
+    # `*` is not defined for `PtL` factor components,
+    # so we can't use `chol_lower(a.chol) * x`
+    C = a.chol
+    PtL = sparse(C.L)[C.p, :]
+    return PtL * x
+end
 
 ### quadratic forms
 
-PDMats.quad(a::PDSparseMat, x::AbstractVector) = dot(x, a * x)
-PDMats.invquad(a::PDSparseMat, x::AbstractVector) = dot(x, a \ x)
+function PDMats.quad(a::PDSparseMat, x::AbstractVecOrMat)
+    PDMats.@check_argdims a.dim == size(x, 1)
+    # https://github.com/JuliaLang/julia/commit/2425ae760fb5151c5c7dd0554e87c5fc9e24de73
+    if VERSION < v"1.4.0-DEV.92"
+        z = a.mat * x
+        return x isa AbstractVector ? dot(x, z) : map(dot, eachcol(x), eachcol(z))
+    else
+        return x isa AbstractVector ? dot(x, a.mat, x) : map(Base.Fix1(quad, a), eachcol(x))
+    end
+end
 
 function PDMats.quad!(r::AbstractArray, a::PDSparseMat, x::AbstractMatrix)
     PDMats.@check_argdims eachindex(r) == axes(x, 2)
-    for i in axes(x, 2)
-        r[i] = quad(a, x[:,i])
+    @inbounds for i in axes(x, 2)
+        xi = view(x, :, i)
+        # https://github.com/JuliaLang/julia/commit/2425ae760fb5151c5c7dd0554e87c5fc9e24de73
+        if VERSION < v"1.4.0-DEV.92"
+            # Can't use `lmul!` with buffer due to missing support in SparseArrays
+            r[i] = dot(xi, a.mat * xi)
+        else
+            r[i] = dot(xi, a.mat, xi)
+        end
     end
     return r
 end
 
+function PDMats.invquad(a::PDSparseMat, x::AbstractVecOrMat)
+    PDMats.@check_argdims a.dim == size(x, 1)
+    z = a.chol \ x
+    return x isa AbstractVector ? dot(x, z) : map(dot, eachcol(x), eachcol(z))
+end
+
 function PDMats.invquad!(r::AbstractArray, a::PDSparseMat, x::AbstractMatrix)
     PDMats.@check_argdims eachindex(r) == axes(x, 2)
-    for i in axes(x, 2)
-        r[i] = invquad(a, x[:,i])
+    PDMats.@check_argdims a.dim == size(x, 1)
+    # Can't use `ldiv!` with buffer due to missing support in SparseArrays
+    @inbounds for i in axes(x, 2)
+        xi = view(x, :, i)
+        r[i] = dot(xi, a.chol \ xi)
     end
     return r
 end
@@ -77,33 +118,28 @@ end
 
 ### tri products
 
-function PDMats.X_A_Xt(a::PDSparseMat, x::AbstractMatrix)
-    # `*` is not defined for `PtL` factor components,
-    # so we can't use `x * chol_lower(a.chol)`
-    C = a.chol
-    PtL = sparse(C.L)[C.p, :]
-    z = x * PtL
-    z * transpose(z)
+function PDMats.X_A_Xt(a::PDSparseMat, x::AbstractMatrix{<:Real})
+    PDMats.@check_argdims a.dim == size(x, 2)
+    z = a.mat * transpose(x)
+    return Symmetric(x * z)
 end
 
 
-function PDMats.Xt_A_X(a::PDSparseMat, x::AbstractMatrix)
-    # `*` is not defined for `UP` factor components,
-    # so we can't use `chol_upper(a.chol) * x`
-    # Moreover, `sparse` is only defined for `L` factor components
-    C = a.chol
-    UP = transpose(sparse(C.L))[:, C.p]
-    z = UP * x
-    transpose(z) * z
+function PDMats.Xt_A_X(a::PDSparseMat, x::AbstractMatrix{<:Real})
+    PDMats.@check_argdims a.dim == size(x, 1)
+    z = a.mat * x
+    return Symmetric(transpose(x) * z)
 end
 
 
-function PDMats.X_invA_Xt(a::PDSparseMat, x::AbstractMatrix)
+function PDMats.X_invA_Xt(a::PDSparseMat, x::AbstractMatrix{<:Real})
+    PDMats.@check_argdims a.dim == size(x, 2)
     z = a.chol \ collect(transpose(x))
-    x * z
+    return Symmetric(x * z)
 end
 
-function PDMats.Xt_invA_X(a::PDSparseMat, x::AbstractMatrix)
+function PDMats.Xt_invA_X(a::PDSparseMat, x::AbstractMatrix{<:Real})
+    PDMats.@check_argdims a.dim == size(x, 1)
     z = a.chol \ x
-    transpose(x) * z
+    return Symmetric(transpose(x) * z)
 end

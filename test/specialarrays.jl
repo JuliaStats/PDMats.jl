@@ -4,7 +4,7 @@ using StaticArrays
 @testset "Special matrix types" begin
     @testset "StaticArrays" begin
         # Full matrix
-        S = (x -> x * x')(@SMatrix(randn(4, 7)))
+        S = (x -> x * x' + I)(@SMatrix(randn(4, 7)))
         PDS = PDMat(S)
         @test PDS isa PDMat{Float64, <:SMatrix{4, 4, Float64}}
         @test isbits(PDS)
@@ -27,12 +27,15 @@ using StaticArrays
         X = @SMatrix rand(10, 4)
         Y = @SMatrix rand(4, 10)
 
-        for A in (PDS, D, E)
-            @test A * x isa SVector{4, Float64}
-            @test A * x ≈ Matrix(A) * Vector(x)
+        for A in (PDS, D, E, C)
+            if !(A isa Cholesky)
+                # `*(::Cholesky, ::SArray)` is not defined
+                @test A * x isa SVector{4, Float64}
+                @test A * x ≈ Matrix(A) * Vector(x)
 
-            @test A * Y isa SMatrix{4, 10, Float64}
-            @test A * Y ≈ Matrix(A) * Matrix(Y)
+                @test A * Y isa SMatrix{4, 10, Float64}
+                @test A * Y ≈ Matrix(A) * Matrix(Y)
+            end
 
             @test X / A isa SMatrix{10, 4, Float64}
             @test X / A ≈ Matrix(X) / Matrix(A)
@@ -43,16 +46,40 @@ using StaticArrays
             @test A \ Y isa SMatrix{4, 10, Float64}
             @test A \ Y ≈ Matrix(A) \ Matrix(Y)
 
-            @test X_A_Xt(A, X) isa SMatrix{10, 10, Float64}
+            @test whiten(A, x) isa SVector{4, Float64}
+            @test whiten(A, x) ≈ cholesky(Symmetric(Matrix(A))).L \ Vector(x)
+
+            @test whiten(A, Y) isa SMatrix{4, 10, Float64}
+            @test whiten(A, Y) ≈ cholesky(Symmetric(Matrix(A))).L \ Matrix(Y)
+
+            @test unwhiten(A, x) isa SVector{4, Float64}
+            @test unwhiten(A, x) ≈ cholesky(Symmetric(Matrix(A))).L * Vector(x)
+
+            @test unwhiten(A, Y) isa SMatrix{4, 10, Float64}
+            @test unwhiten(A, Y) ≈ cholesky(Symmetric(Matrix(A))).L * Matrix(Y)
+
+            @test quad(A, x) isa Float64
+            @test quad(A, x) ≈ Vector(x)' * Matrix(A) * Vector(x)
+
+            @test quad(A, Y) isa SVector{10, Float64}
+            @test quad(A, Y) ≈ diag(Matrix(Y)' * Matrix(A) * Matrix(Y))
+
+            @test invquad(A, x) isa Float64
+            @test invquad(A, x) ≈ Vector(x)' * (Matrix(A) \ Vector(x))
+
+            @test invquad(A, Y) isa SVector{10, Float64}
+            @test invquad(A, Y) ≈ diag(Matrix(Y)' * (Matrix(A) \ Matrix(Y)))
+
+            @test X_A_Xt(A, X) isa Symmetric{Float64,<:SMatrix{10, 10, Float64}}
             @test X_A_Xt(A, X) ≈ Matrix(X) * Matrix(A) *  Matrix(X)'
 
-            @test X_invA_Xt(A, X) isa SMatrix{10, 10, Float64}
+            @test X_invA_Xt(A, X) isa Symmetric{Float64,<:SMatrix{10, 10, Float64}}
             @test X_invA_Xt(A, X) ≈ Matrix(X) * (Matrix(A) \ Matrix(X)')
 
-            @test Xt_A_X(A, Y) isa SMatrix{10, 10, Float64}
+            @test Xt_A_X(A, Y) isa Symmetric{Float64,<:SMatrix{10, 10, Float64}}
             @test Xt_A_X(A, Y) ≈ Matrix(Y)' * Matrix(A) * Matrix(Y)
 
-            @test Xt_invA_X(A, Y) isa SMatrix{10, 10, Float64}
+            @test Xt_invA_X(A, Y) isa Symmetric{Float64,<:SMatrix{10, 10, Float64}}
             @test Xt_invA_X(A, Y) ≈ Matrix(Y)' * (Matrix(A) \ Matrix(Y))
         end
     end
@@ -61,7 +88,7 @@ using StaticArrays
         # Full matrix
         A = Symmetric(BandedMatrix(Eye(5), (1, 1)))
         P = PDMat(A)
-        @test P isa PDMat{Float64, <:BandedMatrix{Float64}}
+        @test P isa PDMat{Float64, <:Symmetric{Float64, <:BandedMatrix{Float64}}}
 
         x = rand(5)
         X = rand(2, 5)
