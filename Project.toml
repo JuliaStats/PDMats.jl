@@ -7,15 +7,11 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 SuiteSparse = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
 
-[weakdeps]
-SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-SuiteSparse = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
+[compat]
+julia = "1"
 
 [extensions]
 PDMatsSparseArraysExt = "SparseArrays"
-
-[compat]
-julia = "1"
 
 [extras]
 BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
@@ -26,3 +22,6 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 [targets]
 test = ["BandedMatrices", "SparseArrays", "StaticArrays", "Test"]
 
+[weakdeps]
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+SuiteSparse = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
