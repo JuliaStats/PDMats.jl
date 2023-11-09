@@ -98,6 +98,11 @@ function pdtest_basics(C, Cmat::Matrix, d::Int, verbose::Int)
     if C isa AbstractPDMat
         @test M === C
     end
+
+    _pdt(verbose, "Matrix")
+    M = Matrix(C)
+    @test M isa Matrix
+    @test M == Cmat
 end
 
 
