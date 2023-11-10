@@ -28,6 +28,8 @@ using StaticArrays
         Y = @SMatrix rand(4, 10)
 
         for A in (PDS, D, E, C)
+            @test Matrix(A) isa Matrix
+
             if !(A isa Cholesky)
                 # `*(::Cholesky, ::SArray)` is not defined
                 @test A * x isa SVector{4, Float64}

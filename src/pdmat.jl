@@ -42,7 +42,7 @@ Base.convert(::Type{AbstractPDMat{T}}, a::PDMat) where {T<:Real} = convert(PDMat
 ### Basics
 
 Base.size(a::PDMat) = (a.dim, a.dim)
-Base.Matrix(a::PDMat) = copy(a.mat)
+Base.Matrix(a::PDMat) = Matrix(a.mat)
 LinearAlgebra.diag(a::PDMat) = diag(a.mat)
 LinearAlgebra.cholesky(a::PDMat) = a.chol
 
