@@ -29,7 +29,7 @@ Elemenent types are in princple all Real types, but in practice this is limited 
 ```julia
 struct PDMat{T<:Real,S<:AbstractMatrix,C<:Factorization} <: AbstractPDMat{T}
     mat::S                      # input matrix
-    chol::Cholesky{T,S}         # Cholesky factorization of mat
+    chol::C                     # Cholesky factorization of mat
 end
 
 # Constructors
