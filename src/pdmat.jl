@@ -1,7 +1,7 @@
 """
 Full positive definite matrix together with a Cholesky factorization object.
 """
-struct PDMat{T<:Real,S<:AbstractMatrix,C<:Factorization} <: AbstractPDMat{T}
+struct PDMat{T<:Real,S<:AbstractMatrix{T},C<:Factorization} <: AbstractPDMat{T}
     mat::S
     chol::C
 
