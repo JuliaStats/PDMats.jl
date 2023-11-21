@@ -191,13 +191,13 @@ end
 
 function quad(a::PDMatCholesky{T,Matrix{T}}, x::Matrix) where {T<:Real}
     @check_argdims a.dim == size(x, 1)
-    T = typeof(zero(eltype(a)) * abs2(zero(eltype(x))))
-    return quad!(Vector{T}(undef, size(x, 2)), a, x)
+    S = typeof(zero(T) * abs2(zero(eltype(x))))
+    return quad!(Vector{S}(undef, size(x, 2)), a, x)
 end
 
 function invquad(a::PDMatCholesky{T,Matrix{T}}, x::Matrix) where {T<:Real}
     @check_argdims a.dim == size(x, 1)
-    T = typeof(abs2(zero(eltype(x))) / zero(eltype(a)))
-    return invquad!(Vector{T}(undef, size(x, 2)), a, x)
+    S = typeof(abs2(zero(eltype(x))) / zero(T))
+    return invquad!(Vector{S}(undef, size(x, 2)), a, x)
 end
 
