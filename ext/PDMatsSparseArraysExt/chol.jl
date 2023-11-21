@@ -1,4 +1,3 @@
-
 if isdefined(Base, :get_extension)
     const CholTypeSparse{T} = SparseArrays.CHOLMOD.Factor{T}
 else

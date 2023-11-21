@@ -27,9 +27,9 @@ Elemenent types are in princple all Real types, but in practice this is limited 
 * `PDMat`: full covariance matrix, defined as
 
 ```julia
-struct PDMat{T<:Real,S<:AbstractMatrix,C<:Factorization} <: AbstractPDMat{T}
+struct PDMat{T<:Real,S<:AbstractMatrix{T},F<:Factorization} <: AbstractPDMat{T}
     mat::S                      # input matrix
-    chol::C                     # Cholesky factorization of mat
+    fact::F                     # factorization of mat
 end
 
 # Constructors

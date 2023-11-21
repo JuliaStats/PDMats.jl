@@ -69,7 +69,7 @@ using Test
                 @test B == A
                 @test (B === A) === (S === T)
                 @test (B.mat === A.mat) === (S === T)
-                @test (B.chol === A.chol) === (S === T)
+                @test (B.fact === A.fact) === (S === T)
             end
 
             A = PDiagMat(ones(T, 2))
@@ -100,7 +100,7 @@ using Test
                     @test (B.mat === A.mat) === (S === T)
                     # CholMOD only supports Float64 and ComplexF64 type parameters!
                     # Hence the Cholesky factorization is reused
-                    @test B.chol === A.chol
+                    @test B.fact === A.fact
                 end
             end
         end
