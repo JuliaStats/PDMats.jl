@@ -214,7 +214,7 @@ using Test
         for dim in (1, 5, 10)
             x = rand(dim, dim)
             M = PDMat(x' * x + I)
-            @test fieldnames(typeof(M)) == (:mat, :chol)
+            @test fieldnames(typeof(M)) == (:mat, :fact)
             @test propertynames(M) == (fieldnames(typeof(M))..., :dim)
             @test getproperty(M, :dim) === dim
             for p in fieldnames(typeof(M))
@@ -239,7 +239,7 @@ using Test
             if HAVE_CHOLMOD
                 x = sprand(dim, dim, 0.2)
                 M = PDMat(x' * x + I)
-                @test fieldnames(typeof(M)) == (:mat, :chol)
+                @test fieldnames(typeof(M)) == (:mat, :fact)
                 @test propertynames(M) == (fieldnames(typeof(M))..., :dim)
                 @test getproperty(M, :dim) === dim
                 for p in fieldnames(typeof(M))

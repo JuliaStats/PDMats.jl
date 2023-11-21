@@ -48,7 +48,7 @@ Base.convert(::Type{AbstractPDMat{T}}, a::PDMat) where {T<:Real} = convert(PDMat
 Base.size(a::PDMat) = (a.dim, a.dim)
 Base.Matrix(a::PDMat) = Matrix(a.mat)
 LinearAlgebra.diag(a::PDMat) = diag(a.mat)
-LinearAlgebra.cholesky(a::PDMatCholesky) = a.chol
+LinearAlgebra.cholesky(a::PDMatCholesky) = a.fact
 
 ### Inheriting from AbstractMatrix
 
