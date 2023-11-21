@@ -5,7 +5,7 @@ struct PDMat{T<:Real,S<:AbstractMatrix{T},F<:Factorization} <: AbstractPDMat{T}
     mat::S
     fact::F
 
-    function PDMat{T,S,C}(mat::S, fact::F) where {T,S<:AbstractMatrix{T},F<:Factorization}
+    function PDMat{T,S,F}(mat::S, fact::F) where {T,S<:AbstractMatrix{T},F<:Factorization}
         d = LinearAlgebra.checksquare(mat)
         if size(fact) != (d, d)
             throw(DimensionMismatch("Dimensions of the matrix and the factorization are inconsistent."))
