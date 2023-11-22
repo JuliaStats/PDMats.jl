@@ -31,6 +31,7 @@ Base.:/(x::AbstractVecOrMat{T}, a::PDSparseMat{T}) where {T<:Real} = convert(Arr
 
 Base.inv(a::PDSparseMat) = PDMat(inv(a.mat))
 LinearAlgebra.cholesky(a::PDSparseMat) = a.fact
+Base.sqrt(A::PDSparseMat) = PDMat(sqrt(Hermitian(Matrix(A))))
 
 ### whiten and unwhiten
 

@@ -83,7 +83,7 @@ LinearAlgebra.det(a::PDMat) = det(a.fact)
 LinearAlgebra.logdet(a::PDMat) = logdet(a.fact)
 LinearAlgebra.eigmax(a::PDMat) = eigmax(a.mat)
 LinearAlgebra.eigmin(a::PDMat) = eigmin(a.mat)
-LinearAlgebra.sqrt(A::PDMat) = PDMat(sqrt(Hermitian(A.mat)))
+Base.sqrt(A::PDMat) = PDMat(sqrt(Hermitian(A.mat)))
 
 function Base.kron(A::PDMatCholesky, B::PDMatCholesky)
     return PDMat(kron(A.mat, B.mat), Cholesky(kron(A.fact.U, B.fact.U), 'U', A.fact.info))
