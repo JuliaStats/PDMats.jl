@@ -84,6 +84,22 @@ using StaticArrays
             @test Xt_invA_X(A, Y) isa Symmetric{Float64,<:SMatrix{10, 10, Float64}}
             @test Xt_invA_X(A, Y) ≈ Matrix(Y)' * (Matrix(A) \ Matrix(Y))
         end
+
+        # Subtraction falls back to the generic method in Base which is based on broadcasting
+        @test Base.broadcastable(PDS) == PDS.mat
+        @test Base.broadcastable(D) == Diagonal(D.diag)
+        for A in (PDS, D), B in (PDS, D)
+            @test A - B isa SMatrix{4, 4, Float64}
+            @test A - B ≈ Matrix(A) - Matrix(B)
+        end
+
+        # ScalMat does not behave nicely with broadcasting currently
+        for A in (PDS, D)
+            @test_broken A - E isa SMatrix{4, 4, Float64}
+            @test_broken E - A isa SMatrix{4, 4, Float64}
+            @test A - E ≈ Matrix(A) - Matrix(E)
+            @test E - A ≈ Matrix(E) - Matrix(A)
+        end
     end
 
     @testset "BandedMatrices" begin

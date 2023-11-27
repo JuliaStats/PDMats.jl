@@ -50,6 +50,9 @@ Base.Matrix(a::PDMat) = Matrix(a.mat)
 LinearAlgebra.diag(a::PDMat) = diag(a.mat)
 LinearAlgebra.cholesky(a::PDMatCholesky) = a.fact
 
+### Work with the underlying matrix in broadcasting
+Base.broadcastable(a::PDMat) = Base.broadcastable(a.mat)
+
 ### Inheriting from AbstractMatrix
 
 Base.getindex(a::PDMat, i::Int) = getindex(a.mat, i)

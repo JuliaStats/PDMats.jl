@@ -32,6 +32,9 @@ Base.Matrix(a::PDiagMat) = Matrix(Diagonal(a.diag))
 LinearAlgebra.diag(a::PDiagMat) = copy(a.diag)
 LinearAlgebra.cholesky(a::PDiagMat) = Cholesky(Diagonal(map(sqrt, a.diag)), 'U', 0)
 
+### Treat as a `Diagonal` matrix in broadcasting since that is better supported
+Base.broadcastable(a::PDiagMat) = Base.broadcastable(Diagonal(a.diag))
+
 ### Inheriting from AbstractMatrix
 
 function Base.getindex(a::PDiagMat, i::Integer)

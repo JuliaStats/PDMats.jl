@@ -264,4 +264,32 @@ using Test
             @test_throws DimensionMismatch PDMat(A[1:(end - 1), 1:(end - 1)], C)
         end
     end
+
+    @testset "Subtraction" begin
+        # This falls back to the generic method in Julia based on broadcasting
+        dim = 4
+        x = rand(dim, dim)
+        A = PDMat(x' * x + I)
+        @test Base.broadcastable(A) == A.mat
+
+        B = PDiagMat(rand(dim))
+        @test Base.broadcastable(B) == Diagonal(B.diag)
+
+        for X in (A, B), Y in (A, B)
+            @test X - Y isa (X === Y === B ? Diagonal{Float64, Vector{Float64}} : Matrix{Float64})
+            @test X - Y ≈ Matrix(X) - Matrix(Y)
+        end
+
+        C = ScalMat(dim, rand())
+        @test A - C isa Matrix{Float64}
+        @test A - C ≈ Matrix(A) - Matrix(C)
+        @test C - A isa Matrix{Float64}
+        @test C - A ≈ Matrix(C) - Matrix(A)
+
+        # ScalMat does not behave nicely with PDiagMat
+        @test_broken B - C isa Diagonal{Float64, Vector{Float64}}
+        @test B - C ≈ Matrix(B) - Matrix(C)
+        @test_broken C - B isa Diagonal{Float64, Vector{Float64}}
+        @test C - B ≈ Matrix(C) - Matrix(B)
+    end
 end
