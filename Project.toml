@@ -8,7 +8,7 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 SuiteSparse = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
 
 [compat]
-BandedMatrices = "0.15, 0.17, 1"
+BandedMatrices = "0.15, 1"
 Random = "<0.0.1, 1"
 StaticArrays = "1"
 Test = "<0.0.1, 1"
