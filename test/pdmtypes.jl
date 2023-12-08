@@ -186,7 +186,7 @@ using Test
         @test M isa PDiagMat
         @test Matrix(M) ≈ Diagonal(A)
         Mat32 = @inferred Matrix{Float32}(M)
-        @test eltype(Mat32) == Float32
+        @test Mat32 isa Matrix{Float32}
         @test Mat32 ≈ Float32.(Diagonal(A))
 
         M = @inferred AbstractPDMat(Symmetric(Diagonal(A)))
