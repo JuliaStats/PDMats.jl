@@ -166,7 +166,7 @@ using Test
 
     @testset "AbstractPDMat constructors (#136)" begin
         x = rand(10, 10)
-        A = Array(Hermitian(x' * x + I))
+        A = Array(Symmetric(x' * x + I))
 
         M = @inferred AbstractPDMat(A)
         @test M isa PDMat
