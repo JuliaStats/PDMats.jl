@@ -84,8 +84,8 @@ end
 Base.inv(a::PDMat) = PDMat(inv(a.chol))
 LinearAlgebra.det(a::PDMat) = det(a.chol)
 LinearAlgebra.logdet(a::PDMat) = logdet(a.chol)
-LinearAlgebra.eigmax(a::PDMat) = eigmax(a.mat)
-LinearAlgebra.eigmin(a::PDMat) = eigmin(a.mat)
+LinearAlgebra.eigmax(a::PDMat) = eigmax(Hermitian(a.mat))
+LinearAlgebra.eigmin(a::PDMat) = eigmin(Hermitian(a.mat))
 Base.kron(A::PDMat, B::PDMat) = PDMat(kron(A.mat, B.mat), Cholesky(kron(A.chol.U, B.chol.U), 'U', A.chol.info))
 LinearAlgebra.sqrt(A::PDMat) = PDMat(sqrt(Hermitian(A.mat)))
 
