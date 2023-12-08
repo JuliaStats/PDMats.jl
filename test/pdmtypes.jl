@@ -201,7 +201,7 @@ using Test
         @test M isa PDSparseMat
         @test Matrix(M) ≈ A
         Mat32 = @inferred Matrix{Float32}(M)
-        @test eltype(Mat32) == Float32
+        @test Mat32 isa Matrix{Float32}
         @test Mat32 ≈ Float32.(A)
 
         if VERSION < v"1.6"
