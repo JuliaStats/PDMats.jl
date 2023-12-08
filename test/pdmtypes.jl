@@ -273,7 +273,7 @@ using Test
         # This falls back to the generic method in Julia based on broadcasting
         dim = 4
         x = rand(dim, dim)
-        A = PDMat(Array(Hermitian(x' * x + I)))
+        A = PDMat(Array(Symmetric(x' * x + I)))
         @test Base.broadcastable(A) == A.mat
 
         B = PDiagMat(rand(dim))
