@@ -51,7 +51,11 @@ LinearAlgebra.cholesky(a::PDSparseMat) = a.chol
 
 ### Inheriting from AbstractMatrix
 
-Base.getindex(a::PDSparseMat, I::Vararg{Int, 2}) = getindex(a.mat, I...)
+Base.IndexStyle(::Type{PDSparseMat{T,S}}) where {T,S} = IndexStyle(S)
+# Linear Indexing
+Base.@propagate_inbounds Base.getindex(a::PDSparseMat, i::Int) = getindex(a.mat, i)
+# Cartesian Indexing
+Base.@propagate_inbounds Base.getindex(a::PDSparseMat, I::Vararg{Int, 2}) = getindex(a.mat, I...)
 
 ### Arithmetics
 

@@ -51,6 +51,10 @@ Base.broadcastable(a::PDMat) = Base.broadcastable(a.mat)
 
 ### Inheriting from AbstractMatrix
 
+Base.IndexStyle(::Type{PDMat{T,S}}) where {T,S} = Base.IndexStyle(S)
+# Linear Indexing
+Base.@propagate_inbounds Base.getindex(a::PDMat, i::Int) = getindex(a.mat, i)
+# Cartesian Indexing
 Base.@propagate_inbounds Base.getindex(a::PDMat, I::Vararg{Int, 2}) = getindex(a.mat, I...)
 
 ### Arithmetics
