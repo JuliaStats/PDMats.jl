@@ -200,7 +200,7 @@ using Test
         M = @inferred AbstractPDMat(sparse(A))
         @test M isa PDSparseMat
         @test Matrix(M) ≈ A
-        Mat32 = Matrix{Float32}(M)
+        Mat32 = @inferred Matrix{Float32}(M)
         @test eltype(Mat32) == Float32
         @test Mat32 ≈ Float32.(A)
 
