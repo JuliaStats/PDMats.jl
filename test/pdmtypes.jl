@@ -178,7 +178,7 @@ using Test
         M = @inferred AbstractPDMat(cholesky(A))
         @test M isa PDMat
         @test Matrix(M) ≈ A
-        Mat32 = Matrix{Float32}(M)
+        Mat32 = @inferred Matrix{Float32}(M)
         @test eltype(Mat32) == Float32
         @test Mat32 ≈ Float32.(A)
 
