@@ -46,13 +46,13 @@ Base.convert(::Type{AbstractPDMat{T}}, a::PDSparseMat) where {T<:Real} = convert
 
 Base.size(a::PDSparseMat) = (a.dim, a.dim)
 Base.Matrix(a::PDSparseMat) = Matrix(a.mat)
+Base.Matrix{T}(a::PDSparseMat) where {T} = Matrix{T}(a.mat)
 LinearAlgebra.diag(a::PDSparseMat) = diag(a.mat)
 LinearAlgebra.cholesky(a::PDSparseMat) = a.chol
 
 ### Inheriting from AbstractMatrix
 
-Base.getindex(a::PDSparseMat,i::Integer) = getindex(a.mat, i)
-Base.getindex(a::PDSparseMat,I::Vararg{Int, N}) where {N} = getindex(a.mat, I...)
+Base.getindex(a::PDSparseMat, I::Vararg{Int, 2}) = getindex(a.mat, I...)
 
 ### Arithmetics
 

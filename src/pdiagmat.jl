@@ -29,6 +29,7 @@ Base.convert(::Type{AbstractPDMat{T}}, a::PDiagMat) where {T<:Real} = convert(PD
 
 Base.size(a::PDiagMat) = (a.dim, a.dim)
 Base.Matrix(a::PDiagMat) = Matrix(Diagonal(a.diag))
+Base.Matrix{T}(a::PDiagMat) where {T} = Matrix{T}(Diagonal(a.diag))
 LinearAlgebra.diag(a::PDiagMat) = copy(a.diag)
 LinearAlgebra.cholesky(a::PDiagMat) = Cholesky(Diagonal(map(sqrt, a.diag)), 'U', 0)
 
@@ -37,11 +38,7 @@ Base.broadcastable(a::PDiagMat) = Base.broadcastable(Diagonal(a.diag))
 
 ### Inheriting from AbstractMatrix
 
-function Base.getindex(a::PDiagMat, i::Integer)
-    ncol, nrow = fldmod1(i, a.dim)
-    ncol == nrow ? a.diag[nrow] : zero(eltype(a))
-end
-Base.getindex(a::PDiagMat{T},i::Integer,j::Integer) where {T} = i == j ? a.diag[i] : zero(T)
+Base.@propagate_inbounds Base.getindex(a::PDiagMat{T}, i::Int, j::Int) where {T} = i == j ? a.diag[i] : zero(T)
 
 ### Arithmetics
 
