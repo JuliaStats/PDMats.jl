@@ -217,7 +217,7 @@ using Test
     @testset "properties and fields" begin
         for dim in (1, 5, 10)
             x = rand(dim, dim)
-            M = PDMat(Array(Hermitian(x' * x + I)))
+            M = PDMat(Array(Symmetric(x' * x + I)))
             @test fieldnames(typeof(M)) == (:mat, :chol)
             @test propertynames(M) == (fieldnames(typeof(M))..., :dim)
             @test getproperty(M, :dim) === dim
