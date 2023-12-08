@@ -45,7 +45,6 @@ Base.convert(::Type{AbstractPDMat{T}}, a::PDSparseMat) where {T<:Real} = convert
 ### Basics
 
 Base.size(a::PDSparseMat) = (a.dim, a.dim)
-Base.Matrix(a::PDSparseMat) = Matrix(a.mat)
 Base.Matrix{T}(a::PDSparseMat) where {T} = Matrix{T}(a.mat)
 LinearAlgebra.diag(a::PDSparseMat) = diag(a.mat)
 LinearAlgebra.cholesky(a::PDSparseMat) = a.chol

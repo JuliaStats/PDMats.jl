@@ -28,7 +28,6 @@ Base.convert(::Type{AbstractPDMat{T}}, a::PDiagMat) where {T<:Real} = convert(PD
 ### Basics
 
 Base.size(a::PDiagMat) = (a.dim, a.dim)
-Base.Matrix(a::PDiagMat) = Matrix(Diagonal(a.diag))
 Base.Matrix{T}(a::PDiagMat) where {T} = Matrix{T}(Diagonal(a.diag))
 LinearAlgebra.diag(a::PDiagMat) = copy(a.diag)
 LinearAlgebra.cholesky(a::PDiagMat) = Cholesky(Diagonal(map(sqrt, a.diag)), 'U', 0)
