@@ -255,7 +255,7 @@ using Test
 
     @testset "Incorrect dimensions" begin
         x = rand(10, 10)
-        A = Array(Hermitian(x * x' + I))
+        A = Array(Symmetric(x * x' + I))
         C = cholesky(A)
         @test_throws DimensionMismatch PDMat(A[:, 1:(end - 1)], C)
         @test_throws DimensionMismatch PDMat(A[1:(end - 1), 1:(end - 1)], C)
