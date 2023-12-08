@@ -242,7 +242,7 @@ using Test
 
             if HAVE_CHOLMOD
                 x = sprand(dim, dim, 0.2)
-                M = PDSparseMat(sparse(Hermitian(x' * x + I)))
+                M = PDSparseMat(sparse(Symmetric(x' * x + I)))
                 @test fieldnames(typeof(M)) == (:mat, :chol)
                 @test propertynames(M) == (fieldnames(typeof(M))..., :dim)
                 @test getproperty(M, :dim) === dim
