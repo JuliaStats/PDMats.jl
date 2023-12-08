@@ -4,7 +4,9 @@
 #       the implementation of a subtype of AbstractPDMat
 #
 
-using PDMats, SuiteSparse, Test
+using PDMats, SuiteSparse, Test, Random
+
+Random.seed!(10)
 
 const HAVE_CHOLMOD = isdefined(SuiteSparse, :CHOLMOD)
 const PDMatType = HAVE_CHOLMOD ? Union{PDMat, PDSparseMat, PDiagMat} : Union{PDMat, PDiagMat}
