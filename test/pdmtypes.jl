@@ -262,7 +262,7 @@ using Test
 
         if HAVE_CHOLMOD
             x = sprand(10, 10, 0.2)
-            A = sparse(Hermitian(x * x' + I))
+            A = sparse(Symmetric(x * x' + I))
             C = cholesky(A)
             @test_throws DimensionMismatch PDSparseMat(A[:, 1:(end - 1)], C)
             @test_throws DimensionMismatch PDSparseMat(A[1:(end - 1), 1:(end - 1)], C)
