@@ -170,21 +170,30 @@ using Test
 
     @testset "AbstractPDMat constructors (#136)" begin
         x = rand(10, 10)
-        A = x' * x + I
+        A = Array(Symmetric(x' * x + I))
 
         M = @inferred AbstractPDMat(A)
         @test M isa PDMat
         @test cholesky(M) isa Cholesky
         @test Matrix(M) ≈ A
+        Mat32 = @inferred Matrix{Float32}(M)
+        @test eltype(Mat32) == Float32
+        @test Mat32 ≈ Float32.(A)
 
         M = @inferred AbstractPDMat(cholesky(A))
         @test M isa PDMat
         @test cholesky(M) isa Cholesky
         @test Matrix(M) ≈ A
+        Mat32 = @inferred Matrix{Float32}(M)
+        @test Mat32 isa Matrix{Float32}
+        @test Mat32 ≈ Float32.(A)
 
         M = @inferred AbstractPDMat(Diagonal(A))
         @test M isa PDiagMat
         @test Matrix(M) ≈ Diagonal(A)
+        Mat32 = @inferred Matrix{Float32}(M)
+        @test Mat32 isa Matrix{Float32}
+        @test Mat32 ≈ Float32.(Diagonal(A))
 
         M = @inferred AbstractPDMat(Symmetric(Diagonal(A)))
         @test M isa PDiagMat
@@ -198,6 +207,9 @@ using Test
         @test M isa PDMat
         @test cholesky(M) isa CHOLMOD.Factor
         @test Matrix(M) ≈ A
+        Mat32 = @inferred Matrix{Float32}(M)
+        @test Mat32 isa Matrix{Float32}
+        @test Mat32 ≈ Float32.(A)
 
         if VERSION < v"1.6"
             # inference fails e.g. on Julia 1.0
@@ -213,7 +225,7 @@ using Test
     @testset "properties and fields" begin
         for dim in (1, 5, 10)
             x = rand(dim, dim)
-            M = PDMat(x' * x + I)
+            M = PDMat(Array(Symmetric(x' * x + I)))
             @test fieldnames(typeof(M)) == (:mat, :fact)
             @test propertynames(M) == (fieldnames(typeof(M))..., :dim)
             @test getproperty(M, :dim) === dim
@@ -238,7 +250,7 @@ using Test
 
             if HAVE_CHOLMOD
                 x = sprand(dim, dim, 0.2)
-                M = PDMat(x' * x + I)
+                M = PDMat(sparse(Symmetric(x' * x + I)))
                 @test fieldnames(typeof(M)) == (:mat, :fact)
                 @test propertynames(M) == (fieldnames(typeof(M))..., :dim)
                 @test getproperty(M, :dim) === dim
@@ -251,14 +263,14 @@ using Test
 
     @testset "Incorrect dimensions" begin
         x = rand(10, 10)
-        A = x * x' + I
+        A = Array(Symmetric(x * x' + I))
         C = cholesky(A)
         @test_throws DimensionMismatch PDMat(A[:, 1:(end - 1)], C)
         @test_throws DimensionMismatch PDMat(A[1:(end - 1), 1:(end - 1)], C)
 
         if HAVE_CHOLMOD
             x = sprand(10, 10, 0.2)
-            A = x * x' + I
+            A = sparse(Symmetric(x * x' + I))
             C = cholesky(A)
             @test_throws DimensionMismatch PDMat(A[:, 1:(end - 1)], C)
             @test_throws DimensionMismatch PDMat(A[1:(end - 1), 1:(end - 1)], C)
@@ -269,7 +281,7 @@ using Test
         # This falls back to the generic method in Julia based on broadcasting
         dim = 4
         x = rand(dim, dim)
-        A = PDMat(x' * x + I)
+        A = PDMat(Array(Symmetric(x' * x + I)))
         @test Base.broadcastable(A) == A.mat
 
         B = PDiagMat(rand(dim))

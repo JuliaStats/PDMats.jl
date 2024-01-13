@@ -46,7 +46,7 @@ Base.convert(::Type{AbstractPDMat{T}}, a::PDMat) where {T<:Real} = convert(PDMat
 ### Basics
 
 Base.size(a::PDMat) = (a.dim, a.dim)
-Base.Matrix(a::PDMat) = Matrix(a.mat)
+Base.Matrix{T}(a::PDMat) where {T} = Matrix{T}(a.mat)
 LinearAlgebra.diag(a::PDMat) = diag(a.mat)
 LinearAlgebra.cholesky(a::PDMatCholesky) = a.fact
 
@@ -55,8 +55,11 @@ Base.broadcastable(a::PDMat) = Base.broadcastable(a.mat)
 
 ### Inheriting from AbstractMatrix
 
-Base.getindex(a::PDMat, i::Int) = getindex(a.mat, i)
-Base.getindex(a::PDMat, I::Vararg{Int, N}) where {N} = getindex(a.mat, I...)
+Base.IndexStyle(::Type{PDMat{T,S}}) where {T,S} = Base.IndexStyle(S)
+# Linear Indexing
+Base.@propagate_inbounds Base.getindex(a::PDMat, i::Int) = getindex(a.mat, i)
+# Cartesian Indexing
+Base.@propagate_inbounds Base.getindex(a::PDMat, I::Vararg{Int, 2}) = getindex(a.mat, I...)
 
 ### Arithmetics
 
@@ -84,8 +87,8 @@ end
 Base.inv(a::PDMat) = PDMat(inv(a.fact))
 LinearAlgebra.det(a::PDMat) = det(a.fact)
 LinearAlgebra.logdet(a::PDMat) = logdet(a.fact)
-LinearAlgebra.eigmax(a::PDMat) = eigmax(a.mat)
-LinearAlgebra.eigmin(a::PDMat) = eigmin(a.mat)
+LinearAlgebra.eigmax(a::PDMat) = eigmax(Symmetric(a.mat))
+LinearAlgebra.eigmin(a::PDMat) = eigmin(Symmetric(a.mat))
 Base.sqrt(A::PDMat) = PDMat(sqrt(Hermitian(A.mat)))
 
 function Base.kron(A::PDMatCholesky, B::PDMatCholesky)

@@ -4,7 +4,9 @@
 #       the implementation of a subtype of AbstractPDMat
 #
 
-using PDMats, LinearAlgebra, SparseArrays, Test
+using PDMats, LinearAlgebra, SparseArrays, Test, Random
+
+Random.seed!(10)
 
 if isdefined(Base, :get_extension)
     const HAVE_CHOLMOD = isdefined(SparseArrays, :CHOLMOD)

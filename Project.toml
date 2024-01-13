@@ -8,6 +8,10 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 SuiteSparse = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
 
 [compat]
+BandedMatrices = "0.15, 1"
+Random = "<0.0.1, 1"
+StaticArrays = "1"
+Test = "<0.0.1, 1"
 julia = "1"
 
 [extensions]
@@ -15,12 +19,13 @@ PDMatsSparseArraysExt = "SparseArrays"
 
 [extras]
 BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["BandedMatrices", "SparseArrays", "StaticArrays", "Test"]
+test = ["BandedMatrices", "Random", "SparseArrays", "StaticArrays", "Test"]
 
 [weakdeps]
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"

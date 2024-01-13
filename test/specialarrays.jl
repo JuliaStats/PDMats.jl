@@ -4,7 +4,7 @@ using StaticArrays
 @testset "Special matrix types" begin
     @testset "StaticArrays" begin
         # Full matrix
-        S = (x -> x * x' + I)(@SMatrix(randn(4, 7)))
+        S = (x -> SMatrix{4,4}(Symmetric(x * x' + I)))(@SMatrix(randn(4, 7)))
         PDS = PDMat(S)
         @test PDS isa PDMat{Float64, <:SMatrix{4, 4, Float64}}
         @test isbits(PDS)
