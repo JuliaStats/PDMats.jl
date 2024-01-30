@@ -5,7 +5,7 @@ AbstractPDMat(A::AbstractPDMat) = A
 AbstractPDMat(A::AbstractMatrix) = PDMat(A)
 
 ## convert
-Base.convert(::Type{AbstractMatrix{T}}, a::AbstractPDMat) where {T<:Real} = convert(AbstractPDMat{T}, a) 
+Base.convert(::Type{AbstractMatrix{T}}, a::AbstractPDMat) where {T<:Real} = convert(AbstractPDMat{T}, a)
 Base.convert(::Type{AbstractArray{T}}, a::AbstractPDMat) where {T<:Real} = convert(AbstractMatrix{T}, a)
 
 ## arithmetics
@@ -35,11 +35,10 @@ LinearAlgebra.checksquare(a::AbstractPDMat) = size(a, 1)
 
 """
     whiten(a::AbstractMatrix, x::AbstractVecOrMat)
-    unwhiten(a::AbstractMatrix, x::AbstractVecOrMat)
-    unwhiten!(a::AbstractMatrix, x::AbstractVecOrMat)
-    unwhiten!(r::AbstractVecOrMat, a::AbstractPDMat, x::AbstractVecOrMat)
+    whiten!(a::AbstractMatrix, x::AbstractVecOrMat)
+    whiten!(r::AbstractVecOrMat, a::AbstractPDMat, x::AbstractVecOrMat)
 
-Allocating and in-place versions of the `whiten`ing transform (or its inverse) defined by `a` applied to `x`
+Allocating and in-place versions of the `whiten`ing transform defined by `a` applied to `x`
 
 If the covariance of `x` is `a` then the covariance of the result will be `I`.
 The name `whiten` indicates that this function transforms a correlated multivariate random
@@ -66,8 +65,24 @@ julia> W * W'
  1.0  0.0
  0.0  1.0
 ```
+
+See also [`unwhiten`](@ref).
 """
 whiten(a::AbstractMatrix{<:Real}, x::AbstractVecOrMat) = whiten(AbstractPDMat(a), x)
+
+"""
+    unwhiten(a::AbstractMatrix, x::AbstractVecOrMat)
+    unwhiten!(a::AbstractMatrix, x::AbstractVecOrMat)
+    unwhiten!(r::AbstractVecOrMat, a::AbstractPDMat, x::AbstractVecOrMat)
+
+Allocating and in-place versions of the `unwhiten`ing transform defined by `a` applied to `x`
+
+If the covariance of `x` is `I` then the covariance of the result will be `a`.
+The name `unwhiten` indicates that this function transforms an uncorrelated "white noise" signal
+into a signal with the given covariance.
+
+`unwhiten` is the inverse transformation of [`whiten`](@ref).
+"""
 unwhiten(a::AbstractMatrix{<:Real}, x::AbstractVecOrMat) = unwhiten(AbstractPDMat(a), x)
 
 whiten!(a::AbstractMatrix{<:Real}, x::AbstractVecOrMat) = whiten!(x, a, x)
