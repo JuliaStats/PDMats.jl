@@ -68,6 +68,12 @@ end
 *(a::PDSparseMat, c::Real) = PDSparseMat(a.mat * c)
 *(a::PDSparseMat, x::AbstractMatrix) = a.mat * x  # defining these seperately to avoid
 *(a::PDSparseMat, x::AbstractVector) = a.mat * x  # ambiguity errors
+if VERSION < v"1.11.0-DEV.1216"
+    # Fix method ambiguity with `*(::AbstractMatrix, ::Diagonal)` in LinearAlgebra
+    # Removed in https://github.com/JuliaLang/julia/pull/52464
+    *(a::PDSparseMat, x::Diagonal) = a.mat * x
+end
+
 \(a::PDSparseMat{T}, x::AbstractVecOrMat{T}) where {T<:Real} = convert(Array{T},a.chol \ convert(Array{Float64},x)) #to avoid limitations in sparse factorization library CHOLMOD, see e.g., julia issue #14076
 /(x::AbstractVecOrMat{T}, a::PDSparseMat{T}) where {T<:Real} = convert(Array{T},convert(Array{Float64},x) / a.chol )
 
