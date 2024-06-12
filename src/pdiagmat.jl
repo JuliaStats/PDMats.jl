@@ -52,14 +52,14 @@ function pdadd!(r::Matrix, a::Matrix, b::PDiagMat, c)
 end
 
 *(a::PDiagMat, c::Real) = PDiagMat(a.diag * c)
-function *(a::PDiagMat, x::AbstractVector)
-    @check_argdims a.dim == length(x)
-    return a.diag .* x
+*(a::PDiagMat, x::AbstractVector) = Diagonal(a.diag) * x
+*(a::PDiagMat, x::AbstractMatrix) = Diagonal(a.diag) * x
+if VERSION < v"1.11.0-DEV.1216"
+    # Fix method ambiguity with `*(::AbstractMatrix, ::Diagonal)` in LinearAlgebra
+    # Removed in https://github.com/JuliaLang/julia/pull/52464
+    *(a::PDiagMat, x::Diagonal) = Diagonal(a.diag) * x
 end
-function *(a::PDiagMat, x::AbstractMatrix)
-    @check_argdims a.dim == size(x, 1)
-    return a.diag .* x
-end
+
 function \(a::PDiagMat, x::AbstractVecOrMat)
     @check_argdims a.dim == size(x, 1)
     return x ./ a.diag

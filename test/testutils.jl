@@ -221,6 +221,9 @@ function pdtest_mul(C, Cmat::Matrix, X::Matrix, verbose::Int)
     @assert size(Cmat) == size(C)
     @test C * X ≈ Cmat * X
 
+    # Special matrix types (see #176)
+    @test C * Diagonal(X) ≈ Cmat * Diagonal(X)
+
     y = similar(C * X, d)
     ymat = similar(Cmat * X, d)
     for i = 1:n
@@ -233,8 +236,8 @@ function pdtest_mul(C, Cmat::Matrix, X::Matrix, verbose::Int)
     end
 
     # Dimension mismatches
-    @test_throws DimensionMismatch C * rand(d + 1)
-    @test_throws DimensionMismatch C * rand(d + 1, n)
+    @test_throws DimensionMismatch C * rand(d + 2)
+    @test_throws DimensionMismatch C * rand(d + 2, n)
 end
 
 
