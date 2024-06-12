@@ -65,7 +65,7 @@ function pdadd!(r::Matrix, a::Matrix, b::PDSparseMat, c)
     _addscal!(r, a, b.mat, c)
 end
 
-*(a::PDSparseMat, c::Real) = PDSparseMat(a.mat * c)
+*(a::PDSparseMat, c::Real) = a.mat * c
 *(a::PDSparseMat, x::AbstractMatrix) = a.mat * x  # defining these seperately to avoid
 *(a::PDSparseMat, x::AbstractVector) = a.mat * x  # ambiguity errors
 \(a::PDSparseMat{T}, x::AbstractVecOrMat{T}) where {T<:Real} = convert(Array{T},a.chol \ convert(Array{Float64},x)) #to avoid limitations in sparse factorization library CHOLMOD, see e.g., julia issue #14076
