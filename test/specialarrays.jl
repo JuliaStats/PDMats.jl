@@ -106,7 +106,7 @@ using StaticArrays
         # Full matrix
         A = Symmetric(BandedMatrix(Eye(5), (1, 1)))
         P = PDMat(A)
-        @test P isa PDMat{Float64, <:BandedMatrix{Float64}}
+        @test P isa PDMat{Float64, <:Symmetric{Float64, <:BandedMatrix{Float64}}}
 
         x = rand(5)
         X = rand(2, 5)
