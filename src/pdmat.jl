@@ -1,11 +1,11 @@
 """
 Full positive definite matrix together with a Cholesky factorization object.
 """
-struct PDMat{T<:Real,S<:AbstractMatrix} <: AbstractPDMat{T}
-    mat::S
+struct PDMat{T<:Real,S<:AbstractMatrix{T},M<:AbstractMatrix{T}} <: AbstractPDMat{T}
+    mat::M
     chol::Cholesky{T,S}
 
-    PDMat{T,S}(m::AbstractMatrix{T},c::Cholesky{T,S}) where {T,S} = new{T,S}(m,c)
+    PDMat{T,S}(m::M, c::Cholesky{T,S}) where {T,S<:AbstractMatrix{T},M<:AbstractMatrix{T}} = new{T,S,M}(m,c)
 end
 
 function PDMat(mat::AbstractMatrix,chol::Cholesky{T,S}) where {T,S}
@@ -13,7 +13,7 @@ function PDMat(mat::AbstractMatrix,chol::Cholesky{T,S}) where {T,S}
     if size(chol, 1) != d
         throw(DimensionMismatch("Dimensions of mat and chol are inconsistent."))
     end
-    PDMat{T,S}(convert(S, mat), chol)
+    PDMat{T,S}(convert(AbstractMatrix{T}, mat), chol)
 end
 
 PDMat(mat::AbstractMatrix) = PDMat(mat, cholesky(mat))

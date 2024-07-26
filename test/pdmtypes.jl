@@ -164,6 +164,11 @@ using Test
         end
     end
 
+    @testset "PDMat fro SymTridiagonal" begin
+        S = SymTridiagonal(fill(4,4), fill(1,3))
+        @test PDMat(S) == S
+    end
+
     @testset "AbstractPDMat constructors (#136)" begin
         x = rand(10, 10)
         A = Array(Symmetric(x' * x + I))
