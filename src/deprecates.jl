@@ -17,7 +17,7 @@ using Base: @deprecate
 
 @deprecate dim(a::AbstractMatrix) LinearAlgebra.checksquare(a)
 
-@deprecate PDMat{T,S}(d::Int, m::AbstractMatrix{T}, c::Cholesky{T,S}) where {T,S} PDMat{T,S}(m, c)
+@deprecate PDMat{T,S}(d::Int, m::AbstractMatrix{T}, c::Cholesky{T,S}) where {T,S} PDMat{T,S,Cholesky{T,S}}(m, c)
 
 @deprecate PDiagMat(dim::Int, diag::AbstractVector{<:Real}) PDiagMat(diag)
 @deprecate PDiagMat{T,V}(dim, diag) where {T<:Real, V<:AbstractVector{T}} PDiagMat{T,V}(diag)

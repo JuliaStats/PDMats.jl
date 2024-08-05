@@ -1,6 +1,6 @@
 module PDMats
 
-    using LinearAlgebra, SparseArrays, SuiteSparse
+    using LinearAlgebra
 
     import Base: +, *, \, /, ==, convert, inv, Matrix, kron
 
@@ -8,7 +8,6 @@ module PDMats
         # Types
         AbstractPDMat,
         PDMat,
-        PDSparseMat,
         PDiagMat,
         ScalMat,
 
@@ -35,19 +34,12 @@ module PDMats
     """
     abstract type AbstractPDMat{T<:Real} <: AbstractMatrix{T} end
 
-    const HAVE_CHOLMOD = isdefined(SuiteSparse, :CHOLMOD)
-
     # source files
 
     include("utils.jl")
     include("chol.jl")
 
     include("pdmat.jl")
-
-    if HAVE_CHOLMOD
-        include("pdsparsemat.jl")
-    end
-
     include("pdiagmat.jl")
     include("scalmat.jl")
 
@@ -56,4 +48,8 @@ module PDMats
 
     include("deprecates.jl")
 
+    # Support for sparse arrays
+    if !isdefined(Base, :get_extension)
+        include("../ext/PDMatsSparseArraysExt/PDMatsSparseArraysExt.jl")
+    end
 end # module

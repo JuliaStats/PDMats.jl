@@ -68,7 +68,7 @@ function /(x::AbstractVecOrMat, a::PDiagMat)
     @check_argdims a.dim == size(x, 2)
     if VERSION < v"1.9-"
         # return matrix for 1-element vectors `x`, consistent with LinearAlgebra < 1.9
-        return reshape(x, Val(2)) ./ permutedims(a.diag) # = (a' \ x')'
+        return reshape(x, Val(2)) ./ permutedims(a.diag) # = (a' \ x')
     else
         return x ./ (x isa AbstractVector ? a.diag : a.diag')
     end

@@ -1,4 +1,4 @@
-using LinearAlgebra, PDMats, SparseArrays, SuiteSparse
+using LinearAlgebra, PDMats, SparseArrays
 using Test
 
 @testset "pd matrix types" begin
@@ -10,8 +10,10 @@ using Test
             @test @test_deprecated(PDiagMat(d, d)) == PDiagMat(d)
             x = one(T)
             @test @test_deprecated(ScalMat(2, x, x)) == ScalMat(2, x)
-            s = SparseMatrixCSC{T}(I, 2, 2)
-            @test PDSparseMat(s, cholesky(s)).mat == PDSparseMat(s).mat == PDSparseMat(cholesky(s)).mat
+            if HAVE_CHOLMOD
+                s = SparseMatrixCSC{T}(I, 2, 2)
+                @test PDMat(s, cholesky(s)).mat == PDMat(s).mat == PDMat(cholesky(s)).mat
+            end
         end
 
         @testset "test the functionality" begin
@@ -32,8 +34,10 @@ using Test
             @testset "ScalMat" begin
                 test_pdmat(ScalMat(3,X), X*Matrix{T}(I, 3, 3), cmat_eq=true, verbose=1)
             end
-            @testset "PDSparseMat" begin
-                test_pdmat(PDSparseMat(sparse(M)), M,          cmat_eq=true, verbose=1, t_eig=false)
+            if HAVE_CHOLMOD
+                @testset "PDMat from sparse matrix" begin
+                    test_pdmat(PDMat(sparse(M)), M, cmat_eq=true, verbose=1, t_eig=false)
+                end
             end
         end
 
@@ -45,7 +49,7 @@ using Test
             @test @test_deprecated(PDiagMat(2, d)) == @test_deprecated(PDiagMat{T,Vector{T}}(2, d)) == PDiagMat(d)
             if HAVE_CHOLMOD
                 s = SparseMatrixCSC{T}(I, 2, 2)
-                @test @test_deprecated(PDSparseMat{T, typeof(s)}(2, s, cholesky(s))) == PDSparseMat(s)
+                @test @test_deprecated(PDMat{T, typeof(s)}(2, s, cholesky(s))) == PDMat(s)
             end
         end
     end
@@ -65,7 +69,7 @@ using Test
                 @test B == A
                 @test (B === A) === (S === T)
                 @test (B.mat === A.mat) === (S === T)
-                @test (B.chol === A.chol) === (S === T)
+                @test (B.fact === A.fact) === (S === T)
             end
 
             A = PDiagMat(ones(T, 2))
@@ -87,16 +91,16 @@ using Test
             end
 
             if HAVE_CHOLMOD
-                A = PDSparseMat(SparseMatrixCSC{T}(I, 2, 2))
-                for R in (AbstractArray{S}, AbstractMatrix{S}, AbstractPDMat{S}, PDSparseMat{S})
+                A = PDMat(SparseMatrixCSC{T}(I, 2, 2))
+                for R in (AbstractArray{S}, AbstractMatrix{S}, AbstractPDMat{S}, PDMat{S})
                     B = @inferred(convert(R, A))
-                    @test B isa PDSparseMat{S}
+                    @test B isa PDMat{S}
                     @test B == A
                     @test (B === A) === (S === T)
                     @test (B.mat === A.mat) === (S === T)
                     # CholMOD only supports Float64 and ComplexF64 type parameters!
                     # Hence the Cholesky factorization is reused
-                    @test B.chol === A.chol
+                    @test B.fact === A.fact
                 end
             end
         end
@@ -143,9 +147,9 @@ using Test
         end
 
         # right division not defined for CHOLMOD:
-        # `rdiv!(::Matrix{Float64}, ::SuiteSparse.CHOLMOD.Factor{Float64})` not defined
+        # `rdiv!(::Matrix{Float64}, ::SparseArrays.CHOLMOD.Factor{Float64})` not defined
         if !HAVE_CHOLMOD
-            z = x / PDSparseMat(sparse(first(A), 1, 1)) 
+            z = x / PDMat(sparse(first(A), 1, 1)) 
             @test typeof(z) === typeof(y)
             @test size(z) == size(y)
             @test z ≈ y
@@ -170,6 +174,7 @@ using Test
 
         M = @inferred AbstractPDMat(A)
         @test M isa PDMat
+        @test cholesky(M) isa Cholesky
         @test Matrix(M) ≈ A
         Mat32 = @inferred Matrix{Float32}(M)
         @test eltype(Mat32) == Float32
@@ -177,6 +182,7 @@ using Test
 
         M = @inferred AbstractPDMat(cholesky(A))
         @test M isa PDMat
+        @test cholesky(M) isa Cholesky
         @test Matrix(M) ≈ A
         Mat32 = @inferred Matrix{Float32}(M)
         @test Mat32 isa Matrix{Float32}
@@ -198,7 +204,8 @@ using Test
         @test Matrix(M) ≈ Diagonal(A)
 
         M = @inferred AbstractPDMat(sparse(A))
-        @test M isa PDSparseMat
+        @test M isa PDMat
+        @test cholesky(M) isa CHOLMOD.Factor
         @test Matrix(M) ≈ A
         Mat32 = @inferred Matrix{Float32}(M)
         @test Mat32 isa Matrix{Float32}
@@ -210,7 +217,8 @@ using Test
         else
             M = @inferred AbstractPDMat(cholesky(sparse(A)))
         end
-        @test M isa PDSparseMat
+        @test M isa PDMat
+        @test cholesky(M) isa CHOLMOD.Factor
         @test Matrix(M) ≈ A
     end
 
@@ -218,7 +226,7 @@ using Test
         for dim in (1, 5, 10)
             x = rand(dim, dim)
             M = PDMat(Array(Symmetric(x' * x + I)))
-            @test fieldnames(typeof(M)) == (:mat, :chol)
+            @test fieldnames(typeof(M)) == (:mat, :fact)
             @test propertynames(M) == (fieldnames(typeof(M))..., :dim)
             @test getproperty(M, :dim) === dim
             for p in fieldnames(typeof(M))
@@ -242,8 +250,8 @@ using Test
 
             if HAVE_CHOLMOD
                 x = sprand(dim, dim, 0.2)
-                M = PDSparseMat(sparse(Symmetric(x' * x + I)))
-                @test fieldnames(typeof(M)) == (:mat, :chol)
+                M = PDMat(sparse(Symmetric(x' * x + I)))
+                @test fieldnames(typeof(M)) == (:mat, :fact)
                 @test propertynames(M) == (fieldnames(typeof(M))..., :dim)
                 @test getproperty(M, :dim) === dim
                 for p in fieldnames(typeof(M))
@@ -264,8 +272,8 @@ using Test
             x = sprand(10, 10, 0.2)
             A = sparse(Symmetric(x * x' + I))
             C = cholesky(A)
-            @test_throws DimensionMismatch PDSparseMat(A[:, 1:(end - 1)], C)
-            @test_throws DimensionMismatch PDSparseMat(A[1:(end - 1), 1:(end - 1)], C)
+            @test_throws DimensionMismatch PDMat(A[:, 1:(end - 1)], C)
+            @test_throws DimensionMismatch PDMat(A[1:(end - 1), 1:(end - 1)], C)
         end
     end
 
@@ -295,5 +303,16 @@ using Test
         @test B - C ≈ Matrix(B) - Matrix(C)
         @test_broken C - B isa Diagonal{Float64, Vector{Float64}}
         @test C - B ≈ Matrix(C) - Matrix(B)
+    end
+
+    # Ref https://github.com/JuliaStats/PDMats.jl/pull/207
+    # Note: `cholesky(::SymTridiagonal)` requires https://github.com/JuliaLang/julia/pull/44076
+    if VERSION >= v"1.8.0-DEV.1526"
+        @testset "PDMat from SymTridiagonal" begin
+            S = SymTridiagonal(fill(4, 4), fill(1, 3))
+            M = @inferred(PDMat(S))
+            @test M isa PDMat{Int,<:SymTridiagonal,<:Cholesky}
+            @test M == S
+        end
     end
 end
