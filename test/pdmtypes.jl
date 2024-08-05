@@ -304,4 +304,12 @@ using Test
         @test_broken C - B isa Diagonal{Float64, Vector{Float64}}
         @test C - B ≈ Matrix(C) - Matrix(B)
     end
+
+    # https://github.com/JuliaStats/PDMats.jl/pull/207
+    @testset "PDMat from SymTridiagonal" begin
+        S = SymTridiagonal(fill(4, 4), fill(1, 3))
+        M = @inferred(PDMat(S))
+        @test M isa PDMat{Int,<:SymTridiagonal,<:Cholesky}
+        @test M == S
+    end
 end
