@@ -187,3 +187,9 @@ function Xt_invA_X(a::ScalMat, x::Matrix{<:Real})
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 1)
     return Symmetric(_rdiv!(transpose(x) * x, a.value))
 end
+
+### dot product
+
+function LinearAlgebra.dot(x::AbstractVector, a::ScalMat, y::AbstractVector)
+    dot(x, UniformScaling(a.value), y)
+end

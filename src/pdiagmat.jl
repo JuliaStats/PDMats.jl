@@ -203,3 +203,9 @@ function invquad(a::PDiagMat{<:Real,<:Vector}, x::Matrix)
     return invquad!(Vector{T}(undef, size(x, 2)), a, x)
 end
 
+### dot product
+
+function LinearAlgebra.dot(x::AbstractVector, a::PDiagMat, y::AbstractVector)
+    dot(x, Diagonal(a.diag), y)
+end
+
