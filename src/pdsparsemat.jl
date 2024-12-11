@@ -115,26 +115,14 @@ end
 
 function quad(a::PDSparseMat, x::AbstractVecOrMat)
     @check_argdims a.dim == size(x, 1)
-    # https://github.com/JuliaLang/julia/commit/2425ae760fb5151c5c7dd0554e87c5fc9e24de73
-    if VERSION < v"1.4.0-DEV.92"
-        z = a.mat * x
-        return x isa AbstractVector ? dot(x, z) : map(dot, eachcol(x), eachcol(z))
-    else
-        return x isa AbstractVector ? dot(x, a.mat, x) : map(Base.Fix1(quad, a), eachcol(x))
-    end
+    return x isa AbstractVector ? dot(x, a.mat, x) : map(Base.Fix1(quad, a), eachcol(x))
 end
 
 function quad!(r::AbstractArray, a::PDSparseMat, x::AbstractMatrix)
     @check_argdims eachindex(r) == axes(x, 2)
     @inbounds for i in axes(x, 2)
         xi = view(x, :, i)
-        # https://github.com/JuliaLang/julia/commit/2425ae760fb5151c5c7dd0554e87c5fc9e24de73
-        if VERSION < v"1.4.0-DEV.92"
-            # Can't use `lmul!` with buffer due to missing support in SparseArrays
-            r[i] = dot(xi, a.mat * xi)
-        else
-            r[i] = dot(xi, a.mat, xi)
-        end
+        r[i] = dot(xi, a.mat, xi)
     end
     return r
 end

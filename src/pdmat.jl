@@ -70,15 +70,10 @@ end
 \(a::PDMat, x::AbstractVecOrMat) = a.chol \ x
 function /(x::AbstractVecOrMat, a::PDMat)
     # /(::AbstractVector, ::Cholesky) is not defined
-    if VERSION < v"1.9-"
-        # return matrix for 1-element vectors `x`, consistent with LinearAlgebra
-        return reshape(x, Val(2)) / a.chol
+    if x isa AbstractVector
+        return vec(reshape(x, Val(2)) / a.chol)
     else
-        if x isa AbstractVector
-            return vec(reshape(x, Val(2)) / a.chol)
-        else
-            return x / a.chol
-        end
+        return x / a.chol
     end
 end
 

@@ -54,12 +54,7 @@ function \(a::ScalMat, x::AbstractVecOrMat)
 end
 function /(x::AbstractVecOrMat, a::ScalMat)
     @check_argdims a.dim == size(x, 2)
-    if VERSION < v"1.9-"
-        # return matrix for 1-element vectors `x`, consistent with LinearAlgebra < 1.9
-        return reshape(x, Val(2)) / a.value
-    else
-        return x / a.value
-    end
+    return x / a.value
 end
 Base.kron(A::ScalMat, B::ScalMat) = ScalMat(A.dim * B.dim, A.value * B.value )
 
@@ -78,7 +73,7 @@ LinearAlgebra.sqrt(a::ScalMat) = ScalMat(a.dim, sqrt(a.value))
 function whiten!(r::AbstractVecOrMat, a::ScalMat, x::AbstractVecOrMat)
     @check_argdims axes(r) == axes(x)
     @check_argdims a.dim == size(x, 1)
-    _ldiv!(r, sqrt(a.value), x)
+    ldiv!(r, sqrt(a.value), x)
 end
 
 function unwhiten!(r::AbstractVecOrMat, a::ScalMat, x::AbstractVecOrMat)
@@ -180,10 +175,10 @@ end
 
 function X_invA_Xt(a::ScalMat, x::Matrix{<:Real})
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 2)
-    return Symmetric(_rdiv!(x * transpose(x), a.value))
+    return Symmetric(rdiv!(x * transpose(x), a.value))
 end
 
 function Xt_invA_X(a::ScalMat, x::Matrix{<:Real})
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 1)
-    return Symmetric(_rdiv!(transpose(x) * x, a.value))
+    return Symmetric(rdiv!(transpose(x) * x, a.value))
 end
