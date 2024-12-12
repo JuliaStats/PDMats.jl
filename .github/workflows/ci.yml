@@ -17,8 +17,8 @@ jobs:
           - '1'
           - 'pre'
         os:
-          - ubuntu-latest # Apple Silicon
-          - macOS-latest
+          - ubuntu-latest
+          - macOS-latest # Apple Silicon
           - windows-latest
         arch:
           - ''
