@@ -15,6 +15,14 @@ using StaticArrays
         @test PDMat(S, C) === PDS
         @test @allocated(PDMat(S)) == @allocated(PDMat(C)) == @allocated(PDMat(S, C))
 
+        if Base.VERSION >= v"1.12.0-DEV.1654"    # julia #56562
+            A = PDMat(Matrix{Float64}(I, 2, 2))
+            B = PDMat(SMatrix{2,2,Float64}(I))
+            @test !isa(A.mat, typeof(B.mat))
+            S = convert(typeof(B), A)
+            @test  isa(S.mat, typeof(B.mat))
+        end
+
         # Diagonal matrix
         D = PDiagMat(@SVector(rand(4)))
         @test D isa PDiagMat{Float64, <:SVector{4, Float64}}

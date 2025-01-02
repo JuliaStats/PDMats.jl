@@ -18,13 +18,36 @@ using Test
             M = convert(Array{T,2}, [4. -2. -1.; -2. 5. -1.; -1. -1. 6.])
             V = convert(Array{T,1}, [1.5, 2.5, 2.0])
             X = convert(T,2.0)
+            f64M = Float64.(M)
 
             @testset "PDMat from Matrix" begin
+                pdf64M = PDMat(f64M)
                 test_pdmat(PDMat(M), M,                        cmat_eq=true, verbose=1)
+                test_pdmat(PDMat{Float64}(M), f64M,            cmat_eq=true, verbose=1)
+                test_pdmat(PDMat{Float64,Matrix{Float64}}(M), f64M, cmat_eq=true, verbose=1)
+                @test_throws TypeError PDMat{Float32,Matrix{Float64}}(M)
+            end
+            @testset "PDMat from PDMat" begin
+                pdM = PDMat(M)
+                pdf64M = PDMat(f64M)
+                @test pdM === PDMat(pdM)
+                @test pdf64M === PDMat{Float64}(pdf64M) === PDMat{Float64,Matrix{Float64}}(pdf64M)
+                test_pdmat(PDMat(pdM), M,                      cmat_eq=true, verbose=1)
+                test_pdmat(PDMat{Float64}(pdf64M), f64M,       cmat_eq=true, verbose=1)
+                test_pdmat(PDMat{Float64,Matrix{Float64}}(pdf64M), f64M, cmat_eq=true, verbose=1)
+                if Base.VERSION >= v"1.12.0-DEV.1654"   # julia #56562
+                    @test isa(convert(typeof(pdf64M), pdM), typeof(pdf64M))
+                end
+                @test_throws TypeError PDMat{Float32,Matrix{Float64}}(pdM)
             end
             @testset "PDMat from Cholesky" begin
                 cholL = Cholesky(Matrix(transpose(cholesky(M).factors)), 'L', 0)
+                cholLf64 = Cholesky(Matrix(transpose(cholesky(f64M).factors)), 'L', 0)
                 test_pdmat(PDMat(cholL), M,                    cmat_eq=true, verbose=1)
+                test_pdmat(PDMat{Float64}(cholLf64), f64M,     cmat_eq=true, verbose=1)
+                if Base.VERSION >= v"1.12.0-DEV.1654"   # julia #56562
+                    test_pdmat(PDMat{Float64,Matrix{Float64}}(cholLf64), f64M, cmat_eq=true, verbose=1)
+                end
             end
             @testset "PDiagMat" begin
                 test_pdmat(PDiagMat(V), Matrix(Diagonal(V)),   cmat_eq=true, verbose=1)
@@ -142,7 +165,7 @@ using Test
         # right division not defined for CHOLMOD:
         # `rdiv!(::Matrix{Float64}, ::SuiteSparse.CHOLMOD.Factor{Float64})` not defined
         if !HAVE_CHOLMOD
-            z = x / PDSparseMat(sparse(first(A), 1, 1)) 
+            z = x / PDSparseMat(sparse(first(A), 1, 1))
             @test typeof(z) === typeof(y)
             @test size(z) == size(y)
             @test z ≈ y

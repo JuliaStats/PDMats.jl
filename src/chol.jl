@@ -73,7 +73,7 @@ function invquad(A::Cholesky, x::AbstractVector)
     @check_argdims size(A, 1) == size(x, 1)
     return sum(abs2, chol_lower(A) \ x)
 end
-function invquad(A::Cholesky, X::AbstractMatrix) 
+function invquad(A::Cholesky, X::AbstractMatrix)
     @check_argdims size(A, 1) == size(X, 1)
     Z = chol_lower(A) \ X
     return vec(sum(abs2, Z; dims=1))
