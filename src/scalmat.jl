@@ -48,6 +48,15 @@ function *(a::ScalMat, x::AbstractMatrix)
     @check_argdims a.dim == size(x, 1)
     return a.value * x
 end
+if VERSION < v"1.11.0-DEV.1216"
+    # Fix method ambiguity with `*(::AbstractMatrix, ::Diagonal)` in LinearAlgebra
+    # Removed in https://github.com/JuliaLang/julia/pull/52464
+    function *(a::ScalMat, x::Diagonal)
+        @check_argdims a.dim == size(x, 1)
+        return a.value * x
+    end
+end
+
 function \(a::ScalMat, x::AbstractVecOrMat)
     @check_argdims a.dim == size(x, 1)
     return x / a.value

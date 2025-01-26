@@ -96,6 +96,12 @@ end
 *(a::PDMat, c::Real) = PDMat(a.mat * c)
 *(a::PDMat, x::AbstractVector) = a.mat * x
 *(a::PDMat, x::AbstractMatrix) = a.mat * x
+if VERSION < v"1.11.0-DEV.1216"
+    # Fix method ambiguity with `*(::AbstractMatrix, ::Diagonal)` in LinearAlgebra
+    # Removed in https://github.com/JuliaLang/julia/pull/52464
+    *(a::PDMat, x::Diagonal) = a.mat * x
+end
+
 \(a::PDMat, x::AbstractVecOrMat) = a.chol \ x
 function /(x::AbstractVecOrMat, a::PDMat)
     # /(::AbstractVector, ::Cholesky) is not defined
