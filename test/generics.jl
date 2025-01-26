@@ -28,3 +28,13 @@ end
 @test isposdef(PDMat([1.0 0.0; 0.0 1.0]))
 @test isposdef(PDiagMat([1.0, 1.0]))
 @test isposdef(ScalMat(2, 3.0))
+
+@testset "dot products" begin
+    pm1 = PDiagMat([1., 2., 3.])
+    pm2 = ScalMat(3, 2.)
+    x = [13., 42., .7]
+    y = [0.5, .125, 20.24]
+
+    @test dot(x, pm1, y) ≈ dot(x, Matrix(pm1), y)
+    @test dot(x, pm2, y) ≈ dot(x, Matrix(pm2), y)
+end
