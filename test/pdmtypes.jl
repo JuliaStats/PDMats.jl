@@ -80,7 +80,7 @@ using Test
     end
 
     @testset "float type conversions" begin
-        for T in (Float32, Float64), S in (Float32, Float64)
+        for T in (Float32, Float64), S in (Float32, Float64, Real)
             A = PDMat(Matrix{T}(I, 2, 2))
             for R in (AbstractArray{S}, AbstractMatrix{S}, AbstractPDMat{S}, PDMat{S})
                 B = @inferred(convert(R, A))
@@ -106,7 +106,8 @@ using Test
                 @test B isa ScalMat{S}
                 @test B == A
                 @test (B === A) === (S === T)
-                @test (B.value === A.value) === (S === T)
+                # Conversion to `Real` does not change the scalar `value`
+                @test (B.value === A.value) === (S === T || S === Real)
             end
 
             if HAVE_CHOLMOD
