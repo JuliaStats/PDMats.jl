@@ -51,7 +51,7 @@ function pdadd!(r::Matrix, a::Matrix, b::PDiagMat, c)
     return r
 end
 
-*(a::PDiagMat, c::Real) = PDiagMat(a.diag * c)
+*(a::PDiagMat, c::Real) = Diagonal(a.diag) * c
 function *(a::PDiagMat, x::AbstractVector)
     @check_argdims a.dim == length(x)
     return a.diag .* x
