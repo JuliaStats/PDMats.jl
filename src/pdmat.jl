@@ -113,7 +113,11 @@ LinearAlgebra.det(a::PDMat) = det(a.chol)
 LinearAlgebra.logdet(a::PDMat) = logdet(a.chol)
 LinearAlgebra.eigmax(a::PDMat) = eigmax(Symmetric(a.mat))
 LinearAlgebra.eigmin(a::PDMat) = eigmin(Symmetric(a.mat))
-Base.kron(A::PDMat, B::PDMat) = PDMat(kron(A.mat, B.mat), Cholesky(kron(A.chol.U, B.chol.U), 'U', A.chol.info))
+function Base.kron(A::PDMat, B::PDMat)
+    M = kron(A.mat, B.mat)
+    C = Cholesky(UpperTriangular(kron(chol_upper(A.chol), chol_upper(B.chol))))
+    return PDMat(M, C)
+end
 LinearAlgebra.sqrt(A::PDMat) = PDMat(sqrt(Hermitian(A.mat)))
 
 ### (un)whitening
