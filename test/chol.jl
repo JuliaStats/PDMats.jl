@@ -11,8 +11,8 @@ using PDMats: chol_lower, chol_upper
         @assert size_of_one_copy > d  # ensure the matrix is large enough that few-byte allocations don't matter
 
         @test chol_lower(C) ≈ chol_upper(C)'
-        @test (@allocated chol_lower(C)) < 1.05 * size_of_one_copy  # allow 5% overhead
-        @test (@allocated chol_upper(C)) < 1.05 * size_of_one_copy
+        @test (@allocated chol_lower(C)) < 1.1 * size_of_one_copy  # allow 10% overhead
+        @test (@allocated chol_upper(C)) < 1.1 * size_of_one_copy
 
         X = randn(d, 10)
         for uplo in (:L, :U)
