@@ -125,14 +125,20 @@ LinearAlgebra.sqrt(A::PDMat) = PDMat(sqrt(Hermitian(A.mat)))
 function whiten!(r::AbstractVecOrMat, a::PDMat, x::AbstractVecOrMat)
     @check_argdims axes(r) == axes(x)
     @check_argdims a.dim == size(x, 1)
-    v = _rcopy!(r, x)
-    return ldiv!(chol_lower(cholesky(a)), v)
+    if r === x
+        return ldiv!(chol_lower(cholesky(a)), r)
+    else
+        return ldiv!(r, chol_lower(cholesky(a)), x)
+    end
 end
 function unwhiten!(r::AbstractVecOrMat, a::PDMat, x::AbstractVecOrMat)
     @check_argdims axes(r) == axes(x)
     @check_argdims a.dim == size(x, 1)
-    v = _rcopy!(r, x)
-    return lmul!(chol_lower(cholesky(a)), v)
+    if r === x
+        return lmul!(chol_lower(cholesky(a)), r)
+    else
+        return mul!(r, chol_lower(cholesky(a)), x)
+    end
 end
 
 function whiten(a::PDMat, x::AbstractVecOrMat)
@@ -162,8 +168,7 @@ function quad!(r::AbstractArray, a::PDMat, x::AbstractMatrix)
     aU = chol_upper(cholesky(a))
     z = similar(r, a.dim) # buffer to save allocations
     @inbounds for i in axes(x, 2)
-        copyto!(z, view(x, :, i))
-        lmul!(aU, z)
+        mul!(z, aU, view(x, :, i))
         r[i] = sum(abs2, z)
     end
     return r

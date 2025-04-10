@@ -7,9 +7,6 @@ macro check_argdims(cond)
     end
 end
 
-_rcopy!(r, x) = (r === x || copyto!(r, x); r)
-
-
 function _addscal!(r::Matrix, a::Matrix, b::Union{Matrix, SparseMatrixCSC}, c::Real)
     if c == one(c)
         for i in eachindex(a)

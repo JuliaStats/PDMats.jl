@@ -1,5 +1,5 @@
 include("testutils.jl")
-tests = ["pdmtypes", "abstracttypes", "addition", "generics", "kron", "chol", "specialarrays", "sqrt"]
+tests = ["pdmtypes", "abstracttypes", "addition", "generics", "kron", "chol", "specialarrays", "sqrt", "ad"]
 println("Running tests ...")
 
 for t in tests

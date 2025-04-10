@@ -61,8 +61,7 @@ function quad!(r::AbstractArray, A::Cholesky, X::AbstractMatrix)
     aU = chol_upper(A)
     z = similar(r, size(A, 1)) # buffer to save allocations
     @inbounds for i in axes(X, 2)
-        copyto!(z, view(X, :, i))
-        lmul!(aU, z)
+        mul!(z, aU, view(X, :, i))
         r[i] = sum(abs2, z)
     end
     return r
