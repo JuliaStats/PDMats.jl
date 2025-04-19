@@ -23,7 +23,9 @@ function Base.convert(::Type{PDiagMat{T}}, a::PDiagMat) where {T<:Real}
     diag = convert(AbstractVector{T}, a.diag)
     return PDiagMat{T,typeof(diag)}(diag)
 end
-Base.convert(::Type{AbstractPDMat{T}}, a::PDiagMat) where {T<:Real} = convert(PDiagMat{T}, a)
+function Base.convert(::Type{AbstractPDMat{T}}, a::PDiagMat) where {T<:Real}
+    return convert(PDiagMat{T}, a)
+end
 
 ### Basics
 
@@ -37,7 +39,9 @@ Base.broadcastable(a::PDiagMat) = Base.broadcastable(Diagonal(a.diag))
 
 ### Inheriting from AbstractMatrix
 
-Base.@propagate_inbounds Base.getindex(a::PDiagMat{T}, i::Int, j::Int) where {T} = i == j ? a.diag[i] : zero(T)
+Base.@propagate_inbounds Base.getindex(a::PDiagMat{T}, i::Int, j::Int) where {T} = i == j ?
+                                                                                   a.diag[i] :
+                                                                                   zero(T)
 
 ### Arithmetics
 
@@ -82,7 +86,6 @@ LinearAlgebra.eigmax(a::PDiagMat) = maximum(a.diag)
 LinearAlgebra.eigmin(a::PDiagMat) = minimum(a.diag)
 LinearAlgebra.sqrt(a::PDiagMat) = PDiagMat(map(sqrt, a.diag))
 
-
 ### whiten and unwhiten
 
 function whiten!(r::AbstractVecOrMat, a::PDiagMat, x::AbstractVecOrMat)
@@ -114,7 +117,7 @@ function quad(a::PDiagMat, x::AbstractVecOrMat)
     else
         # map(Base.Fix1(invquad, a), eachcol(x)) or similar alternatives
         # do NOT return a `SVector` for inputs `x::SMatrix`.
-        return vec(sum(abs2.(x) .* a.diag; dims = 1))
+        return vec(sum(abs2.(x) .* a.diag; dims=1))
     end
 end
 
@@ -125,11 +128,11 @@ function quad!(r::AbstractArray, a::PDiagMat, x::AbstractMatrix)
     @inbounds for j in axes(x, 2)
         s = zero(promote_type(eltype(ad), eltype(x)))
         for i in axes(x, 1)
-            s += ad[i] * abs2(x[i,j])
+            s += ad[i] * abs2(x[i, j])
         end
         r[j] = s
     end
-    r
+    return r
 end
 
 function invquad(a::PDiagMat, x::AbstractVecOrMat)
@@ -139,7 +142,7 @@ function invquad(a::PDiagMat, x::AbstractVecOrMat)
     else
         # map(Base.Fix1(invquad, a), eachcol(x)) or similar alternatives
         # do NOT return a `SVector` for inputs `x::SMatrix`.
-        return vec(sum(abs2.(x) ./ a.diag; dims = 1))
+        return vec(sum(abs2.(x) ./ a.diag; dims=1))
     end
 end
 
@@ -150,13 +153,12 @@ function invquad!(r::AbstractArray, a::PDiagMat, x::AbstractMatrix)
     @inbounds for j in axes(x, 2)
         s = zero(zero(eltype(x)) / zero(eltype(ad)))
         for i in axes(x, 1)
-            s += abs2(x[i,j]) / ad[i]
+            s += abs2(x[i, j]) / ad[i]
         end
         r[j] = s
     end
-    r
+    return r
 end
-
 
 ### tri products
 
@@ -197,4 +199,3 @@ function invquad(a::PDiagMat{<:Real,<:Vector}, x::Matrix)
     T = typeof(abs2(zero(eltype(x))) / zero(eltype(a)))
     return invquad!(Vector{T}(undef, size(x, 2)), a, x)
 end
-
