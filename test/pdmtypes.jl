@@ -5,25 +5,27 @@ using Test
     for T in [Float64, Float32]
         @testset "test that all external constructors are accessible" begin
             m = Matrix{T}(I, 2, 2)
-            @test PDMat(m, cholesky(m)).mat == PDMat(Symmetric(m)).mat == PDMat(m).mat == PDMat(cholesky(m)).mat
-            d = ones(T,2)
+            @test PDMat(m, cholesky(m)).mat == PDMat(Symmetric(m)).mat == PDMat(m).mat ==
+                  PDMat(cholesky(m)).mat
+            d = ones(T, 2)
             @test @test_deprecated(PDiagMat(d, d)) == PDiagMat(d)
             x = one(T)
             @test @test_deprecated(ScalMat(2, x, x)) == ScalMat(2, x)
             s = SparseMatrixCSC{T}(I, 2, 2)
-            @test PDSparseMat(s, cholesky(s)).mat == PDSparseMat(s).mat == PDSparseMat(cholesky(s)).mat
+            @test PDSparseMat(s, cholesky(s)).mat == PDSparseMat(s).mat ==
+                  PDSparseMat(cholesky(s)).mat
         end
 
         @testset "test the functionality" begin
-            M = convert(Array{T,2}, [4. -2. -1.; -2. 5. -1.; -1. -1. 6.])
+            M = convert(Array{T,2}, [4.0 -2.0 -1.0; -2.0 5.0 -1.0; -1.0 -1.0 6.0])
             V = convert(Array{T,1}, [1.5, 2.5, 2.0])
-            X = convert(T,2.0)
+            X = convert(T, 2.0)
             f64M = Float64.(M)
 
             @testset "PDMat from Matrix" begin
                 pdf64M = PDMat(f64M)
-                test_pdmat(PDMat(M), M,                        cmat_eq=true, verbose=1)
-                test_pdmat(PDMat{Float64}(M), f64M,            cmat_eq=true, verbose=1)
+                test_pdmat(PDMat(M), M, cmat_eq=true, verbose=1)
+                test_pdmat(PDMat{Float64}(M), f64M, cmat_eq=true, verbose=1)
                 test_pdmat(PDMat{Float64,Matrix{Float64}}(M), f64M, cmat_eq=true, verbose=1)
                 @test_throws TypeError PDMat{Float32,Matrix{Float64}}(M)
             end
@@ -31,10 +33,12 @@ using Test
                 pdM = PDMat(M)
                 pdf64M = PDMat(f64M)
                 @test pdM === PDMat(pdM)
-                @test pdf64M === PDMat{Float64}(pdf64M) === PDMat{Float64,Matrix{Float64}}(pdf64M)
-                test_pdmat(PDMat(pdM), M,                      cmat_eq=true, verbose=1)
-                test_pdmat(PDMat{Float64}(pdf64M), f64M,       cmat_eq=true, verbose=1)
-                test_pdmat(PDMat{Float64,Matrix{Float64}}(pdf64M), f64M, cmat_eq=true, verbose=1)
+                @test pdf64M === PDMat{Float64}(pdf64M) ===
+                      PDMat{Float64,Matrix{Float64}}(pdf64M)
+                test_pdmat(PDMat(pdM), M, cmat_eq=true, verbose=1)
+                test_pdmat(PDMat{Float64}(pdf64M), f64M, cmat_eq=true, verbose=1)
+                test_pdmat(PDMat{Float64,Matrix{Float64}}(pdf64M), f64M, cmat_eq=true,
+                           verbose=1)
                 if Base.VERSION >= v"1.12.0-DEV.1654"   # julia #56562
                     @test isa(convert(typeof(pdf64M), pdM), typeof(pdf64M))
                 end
@@ -43,20 +47,21 @@ using Test
             @testset "PDMat from Cholesky" begin
                 cholL = Cholesky(Matrix(transpose(cholesky(M).factors)), 'L', 0)
                 cholLf64 = Cholesky(Matrix(transpose(cholesky(f64M).factors)), 'L', 0)
-                test_pdmat(PDMat(cholL), M,                    cmat_eq=true, verbose=1)
-                test_pdmat(PDMat{Float64}(cholLf64), f64M,     cmat_eq=true, verbose=1)
+                test_pdmat(PDMat(cholL), M, cmat_eq=true, verbose=1)
+                test_pdmat(PDMat{Float64}(cholLf64), f64M, cmat_eq=true, verbose=1)
                 if Base.VERSION >= v"1.12.0-DEV.1654"   # julia #56562
-                    test_pdmat(PDMat{Float64,Matrix{Float64}}(cholLf64), f64M, cmat_eq=true, verbose=1)
+                    test_pdmat(PDMat{Float64,Matrix{Float64}}(cholLf64), f64M, cmat_eq=true,
+                               verbose=1)
                 end
             end
             @testset "PDiagMat" begin
-                test_pdmat(PDiagMat(V), Matrix(Diagonal(V)),   cmat_eq=true, verbose=1)
+                test_pdmat(PDiagMat(V), Matrix(Diagonal(V)), cmat_eq=true, verbose=1)
             end
             @testset "ScalMat" begin
-                test_pdmat(ScalMat(3,X), X*Matrix{T}(I, 3, 3), cmat_eq=true, verbose=1)
+                test_pdmat(ScalMat(3, X), X*Matrix{T}(I, 3, 3), cmat_eq=true, verbose=1)
             end
             @testset "PDSparseMat" begin
-                test_pdmat(PDSparseMat(sparse(M)), M,          cmat_eq=true, verbose=1, t_eig=false)
+                test_pdmat(PDSparseMat(sparse(M)), M, cmat_eq=true, verbose=1, t_eig=false)
             end
         end
 
@@ -64,11 +69,13 @@ using Test
             m = Matrix{T}(I, 2, 2)
             C = cholesky(m)
             @test @test_deprecated(PDMat{T,typeof(m)}(2, m, C)) == PDMat(m)
-            d = ones(T,2)
-            @test @test_deprecated(PDiagMat(2, d)) == @test_deprecated(PDiagMat{T,Vector{T}}(2, d)) == PDiagMat(d)
+            d = ones(T, 2)
+            @test @test_deprecated(PDiagMat(2, d)) ==
+                  @test_deprecated(PDiagMat{T,Vector{T}}(2, d)) == PDiagMat(d)
             if HAVE_CHOLMOD
                 s = SparseMatrixCSC{T}(I, 2, 2)
-                @test @test_deprecated(PDSparseMat{T, typeof(s)}(2, s, cholesky(s))) == PDSparseMat(s)
+                @test @test_deprecated(PDSparseMat{T,typeof(s)}(2, s, cholesky(s))) ==
+                      PDSparseMat(s)
             end
         end
     end
@@ -112,7 +119,8 @@ using Test
 
             if HAVE_CHOLMOD
                 A = PDSparseMat(SparseMatrixCSC{T}(I, 2, 2))
-                for R in (AbstractArray{S}, AbstractMatrix{S}, AbstractPDMat{S}, PDSparseMat{S})
+                for R in
+                    (AbstractArray{S}, AbstractMatrix{S}, AbstractPDMat{S}, PDSparseMat{S})
                     B = @inferred(convert(R, A))
                     @test B isa PDSparseMat{S}
                     @test B == A
@@ -178,7 +186,7 @@ using Test
         x = rand(10, 10)
         A = Diagonal(x' * x)
         M = PDMat(cholesky(A))
-        @test M isa PDMat{Float64, typeof(A)}
+        @test M isa PDMat{Float64,typeof(A)}
         @test Matrix(M) ≈ A
     end
 
@@ -293,7 +301,8 @@ using Test
         @test Base.broadcastable(B) == Diagonal(B.diag)
 
         for X in (A, B), Y in (A, B)
-            @test X - Y isa (X === Y === B ? Diagonal{Float64, Vector{Float64}} : Matrix{Float64})
+            @test X - Y isa
+                  (X === Y === B ? Diagonal{Float64,Vector{Float64}} : Matrix{Float64})
             @test X - Y ≈ Matrix(X) - Matrix(Y)
         end
 
@@ -304,9 +313,9 @@ using Test
         @test C - A ≈ Matrix(C) - Matrix(A)
 
         # ScalMat does not behave nicely with PDiagMat
-        @test_broken B - C isa Diagonal{Float64, Vector{Float64}}
+        @test_broken B - C isa Diagonal{Float64,Vector{Float64}}
         @test B - C ≈ Matrix(B) - Matrix(C)
-        @test_broken C - B isa Diagonal{Float64, Vector{Float64}}
+        @test_broken C - B isa Diagonal{Float64,Vector{Float64}}
         @test C - B ≈ Matrix(C) - Matrix(B)
     end
 end

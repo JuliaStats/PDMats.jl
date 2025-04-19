@@ -36,14 +36,15 @@ if HAVE_CHOLMOD
     +(a::PDSparseMat, b::PDSparseMat) = PDSparseMat(a.mat + b.mat)
 end
 
-
 # between pdmat and uniformscaling (multiple of identity)
 
 +(a::AbstractPDMat, b::UniformScaling) = a + ScalMat(a.dim, b.λ)
 +(a::UniformScaling, b::AbstractPDMat) = ScalMat(b.dim, a.λ) + b
 
 pdadd(a::PDMat, b::AbstractPDMat, c::Real) = PDMat(a.mat + Matrix(b * c))
-pdadd(a::PDiagMat, b::AbstractPDMat, c::Real) = PDMat(_adddiag!(Matrix(b * c), a.diag, one(c)))
+function pdadd(a::PDiagMat, b::AbstractPDMat, c::Real)
+    return PDMat(_adddiag!(Matrix(b * c), a.diag, one(c)))
+end
 pdadd(a::ScalMat, b::AbstractPDMat, c::Real) = PDMat(_adddiag!(Matrix(b * c), a.value))
 if HAVE_CHOLMOD
     pdadd(a::PDSparseMat, b::AbstractPDMat, c::Real) = PDMat(a.mat + Matrix(b * c))
@@ -60,7 +61,9 @@ pdadd(a::PDiagMat, b::PDMat, c::Real) = PDMat(_adddiag!(b.mat * c, a.diag, one(c
 pdadd(a::PDiagMat, b::PDiagMat, c::Real) = PDiagMat(a.diag + b.diag * c)
 pdadd(a::PDiagMat, b::ScalMat, c::Real) = PDiagMat(a.diag .+ b.value * c)
 if HAVE_CHOLMOD
-    pdadd(a::PDiagMat, b::PDSparseMat, c::Real) = PDSparseMat(_adddiag!(b.mat * c, a.diag, one(c)))
+    function pdadd(a::PDiagMat, b::PDSparseMat, c::Real)
+        return PDSparseMat(_adddiag!(b.mat * c, a.diag, one(c)))
+    end
 end
 
 pdadd(a::ScalMat, b::PDMat, c::Real) = PDMat(_adddiag!(b.mat * c, a.value))

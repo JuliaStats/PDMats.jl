@@ -1,13 +1,12 @@
 # Useful utilities to support internal implementation
 
-
 macro check_argdims(cond)
-    quote
+    return quote
         ($(esc(cond))) || throw(DimensionMismatch("Inconsistent argument dimensions."))
     end
 end
 
-function _addscal!(r::Matrix, a::Matrix, b::Union{Matrix, SparseMatrixCSC}, c::Real)
+function _addscal!(r::Matrix, a::Matrix, b::Union{Matrix,SparseMatrixCSC}, c::Real)
     if c == one(c)
         for i in eachindex(a)
             @inbounds r[i] = a[i] + b[i]
@@ -20,31 +19,34 @@ function _addscal!(r::Matrix, a::Matrix, b::Union{Matrix, SparseMatrixCSC}, c::R
     return r
 end
 
-function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::Real)
+function _adddiag!(a::Union{Matrix,SparseMatrixCSC}, v::Real)
     for i in diagind(a)
         @inbounds a[i] += v
     end
     return a
 end
 
-function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector, c::Real)
+function _adddiag!(a::Union{Matrix,SparseMatrixCSC}, v::AbstractVector, c::Real)
     @check_argdims eachindex(v) == axes(a, 1) == axes(a, 2)
     if c == one(c)
         for i in eachindex(v)
-            @inbounds a[i,i] += v[i]
+            @inbounds a[i, i] += v[i]
         end
     else
         for i in eachindex(v)
-            @inbounds a[i,i] += v[i] * c
+            @inbounds a[i, i] += v[i] * c
         end
     end
     return a
 end
 
-_adddiag(a::Union{Matrix, SparseMatrixCSC}, v::Real) = _adddiag!(copy(a), v)
-_adddiag(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector, c::Real) = _adddiag!(copy(a), v, c)
-_adddiag(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector{T}) where {T<:Real} = _adddiag!(copy(a), v, one(T))
-
+_adddiag(a::Union{Matrix,SparseMatrixCSC}, v::Real) = _adddiag!(copy(a), v)
+function _adddiag(a::Union{Matrix,SparseMatrixCSC}, v::AbstractVector, c::Real)
+    return _adddiag!(copy(a), v, c)
+end
+function _adddiag(a::Union{Matrix,SparseMatrixCSC}, v::AbstractVector{T}) where {T<:Real}
+    return _adddiag!(copy(a), v, one(T))
+end
 
 function wsumsq(w::AbstractVector, a::AbstractVector)
     @check_argdims(eachindex(a) == eachindex(w))

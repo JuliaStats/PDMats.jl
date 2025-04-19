@@ -5,16 +5,18 @@ struct PDSparseMat{T<:Real,S<:AbstractSparseMatrix} <: AbstractPDMat{T}
     mat::S
     chol::CholTypeSparse
 
-    PDSparseMat{T,S}(m::AbstractSparseMatrix{T},c::CholTypeSparse) where {T,S} =
-        new{T,S}(m,c) #add {T} to CholTypeSparse argument once #14076 is implemented
+    function PDSparseMat{T,S}(m::AbstractSparseMatrix{T}, c::CholTypeSparse) where {T,S}
+        return new{T,S}(m, c)
+    end #add {T} to CholTypeSparse argument once #14076 is implemented
 end
-@deprecate PDSparseMat{T,S}(d::Int, m::AbstractSparseMatrix{T}, c::CholTypeSparse) where {T,S} PDSparseMat{T,S}(m, c)
+@deprecate PDSparseMat{T,S}(d::Int, m::AbstractSparseMatrix{T},
+                            c::CholTypeSparse) where {T,S} PDSparseMat{T,S}(m, c)
 
-function PDSparseMat(mat::AbstractSparseMatrix,chol::CholTypeSparse)
+function PDSparseMat(mat::AbstractSparseMatrix, chol::CholTypeSparse)
     d = LinearAlgebra.checksquare(mat)
     size(chol, 1) == d ||
         throw(DimensionMismatch("Dimensions of mat and chol are inconsistent."))
-    PDSparseMat{eltype(mat),typeof(mat)}(mat, chol)
+    return PDSparseMat{eltype(mat),typeof(mat)}(mat, chol)
 end
 
 PDSparseMat(mat::SparseMatrixCSC) = PDSparseMat(mat, cholesky(mat))
@@ -40,7 +42,9 @@ function Base.convert(::Type{PDSparseMat{T}}, a::PDSparseMat) where {T<:Real}
     mat = convert(AbstractMatrix{T}, a.mat)
     return PDSparseMat{T,typeof(mat)}(mat, a.chol)
 end
-Base.convert(::Type{AbstractPDMat{T}}, a::PDSparseMat) where {T<:Real} = convert(PDSparseMat{T}, a)
+function Base.convert(::Type{AbstractPDMat{T}}, a::PDSparseMat) where {T<:Real}
+    return convert(PDSparseMat{T}, a)
+end
 
 ### Basics
 
@@ -55,21 +59,26 @@ Base.IndexStyle(::Type{PDSparseMat{T,S}}) where {T,S} = IndexStyle(S)
 # Linear Indexing
 Base.@propagate_inbounds Base.getindex(a::PDSparseMat, i::Int) = getindex(a.mat, i)
 # Cartesian Indexing
-Base.@propagate_inbounds Base.getindex(a::PDSparseMat, I::Vararg{Int, 2}) = getindex(a.mat, I...)
+Base.@propagate_inbounds Base.getindex(a::PDSparseMat, I::Vararg{Int,2}) = getindex(a.mat,
+                                                                                    I...)
 
 ### Arithmetics
 
 # add `a * c` to a dense matrix `m` of the same size inplace.
 function pdadd!(r::Matrix, a::Matrix, b::PDSparseMat, c)
     @check_argdims size(r) == size(a) == size(b)
-    _addscal!(r, a, b.mat, c)
+    return _addscal!(r, a, b.mat, c)
 end
 
 *(a::PDSparseMat, c::Real) = PDSparseMat(a.mat * c)
 *(a::PDSparseMat, x::AbstractMatrix) = a.mat * x  # defining these seperately to avoid
 *(a::PDSparseMat, x::AbstractVector) = a.mat * x  # ambiguity errors
-\(a::PDSparseMat{T}, x::AbstractVecOrMat{T}) where {T<:Real} = convert(Array{T},a.chol \ convert(Array{Float64},x)) #to avoid limitations in sparse factorization library CHOLMOD, see e.g., julia issue #14076
-/(x::AbstractVecOrMat{T}, a::PDSparseMat{T}) where {T<:Real} = convert(Array{T},convert(Array{Float64},x) / a.chol )
+function \(a::PDSparseMat{T}, x::AbstractVecOrMat{T}) where {T<:Real}
+    return convert(Array{T}, a.chol \ convert(Array{Float64}, x))
+end #to avoid limitations in sparse factorization library CHOLMOD, see e.g., julia issue #14076
+function /(x::AbstractVecOrMat{T}, a::PDSparseMat{T}) where {T<:Real}
+    return convert(Array{T}, convert(Array{Float64}, x) / a.chol)
+end
 
 ### Algebra
 
@@ -144,7 +153,6 @@ function invquad!(r::AbstractArray, a::PDSparseMat, x::AbstractMatrix)
     return r
 end
 
-
 ### tri products
 
 function X_A_Xt(a::PDSparseMat, x::AbstractMatrix{<:Real})
@@ -153,13 +161,11 @@ function X_A_Xt(a::PDSparseMat, x::AbstractMatrix{<:Real})
     return Symmetric(x * z)
 end
 
-
 function Xt_A_X(a::PDSparseMat, x::AbstractMatrix{<:Real})
     @check_argdims a.dim == size(x, 1)
     z = a.mat * x
     return Symmetric(transpose(x) * z)
 end
-
 
 function X_invA_Xt(a::PDSparseMat, x::AbstractMatrix{<:Real})
     @check_argdims a.dim == size(x, 2)

@@ -12,20 +12,23 @@ struct PDMat{T<:Real,S<:AbstractMatrix{T}} <: AbstractPDMat{T}
         end
         # in principle we might want to check that `c` is a Cholesky factorization of `m`,
         # but that's slow
-        return new{T,S}(m,c)
+        return new{T,S}(m, c)
     end
 end
-function PDMat{T}(m::AbstractMatrix, c::Cholesky) where T<:Real
+function PDMat{T}(m::AbstractMatrix, c::Cholesky) where {T<:Real}
     c = convert(Cholesky{T}, c)
     return PDMat{T,typeof(c.factors)}(m, c)
 end
-PDMat(mat::AbstractMatrix,chol::Cholesky{T,S}) where {T<:Real,S<:AbstractMatrix{T}} = PDMat{T,S}(mat, chol)
+function PDMat(mat::AbstractMatrix,
+               chol::Cholesky{T,S}) where {T<:Real,S<:AbstractMatrix{T}}
+    return PDMat{T,S}(mat, chol)
+end
 
 # Construction from another PDMat
 PDMat{T,S}(pdm::PDMat{T,S}) where {T<:Real,S<:AbstractMatrix{T}} = pdm  # since PDMat doesn't support `setindex!` it's not mutable (xref https://docs.julialang.org/en/v1/manual/conversion-and-promotion/#Mutable-collections)
 PDMat{T,S}(pdm::PDMat) where {T<:Real,S<:AbstractMatrix{T}} = PDMat{T,S}(pdm.mat, pdm.chol)
-PDMat{T}(pdm::PDMat{T}) where T<:Real = pdm
-PDMat{T}(pdm::PDMat) where T<:Real = PDMat{T}(pdm.mat, pdm.chol)
+PDMat{T}(pdm::PDMat{T}) where {T<:Real} = pdm
+PDMat{T}(pdm::PDMat) where {T<:Real} = PDMat{T}(pdm.mat, pdm.chol)
 PDMat(pdm::PDMat) = pdm
 
 # Construction from an AbstractMatrix
@@ -33,7 +36,7 @@ function PDMat{T,S}(mat::AbstractMatrix) where {T<:Real,S<:AbstractMatrix{T}}
     mat = convert(S, mat)
     return PDMat{T,S}(mat, cholesky(mat))
 end
-function PDMat{T}(mat::AbstractMatrix) where T<:Real
+function PDMat{T}(mat::AbstractMatrix) where {T<:Real}
     mat = convert(AbstractMatrix{T}, mat)
     return PDMat{T}(mat, cholesky(mat))
 end
@@ -44,7 +47,7 @@ function PDMat{T,S}(c::Cholesky) where {T<:Real,S<:AbstractMatrix{T}}
     c = convert(Cholesky{T,S}, c)
     return PDMat{T,S}(AbstractMatrix(c), c)
 end
-function PDMat{T}(c::Cholesky) where T<:Real
+function PDMat{T}(c::Cholesky) where {T<:Real}
     c = convert(Cholesky{T}, c)
     return PDMat{T}(AbstractMatrix(c), c)
 end
@@ -64,7 +67,9 @@ AbstractPDMat(A::Cholesky) = PDMat(A)
 # This next method isn't needed because PDMat{T}(a) returns `a` directly
 # Base.convert(::Type{PDMat{T}}, a::PDMat{T}) where {T<:Real} = a
 Base.convert(::Type{PDMat{T}}, a::PDMat) where {T<:Real} = PDMat{T}(a)
-Base.convert(::Type{PDMat{T,S}}, a::PDMat) where {T<:Real,S<:AbstractMatrix{T}} = PDMat{T,S}(a)
+function Base.convert(::Type{PDMat{T,S}}, a::PDMat) where {T<:Real,S<:AbstractMatrix{T}}
+    return PDMat{T,S}(a)
+end
 
 Base.convert(::Type{AbstractPDMat{T}}, a::PDMat) where {T<:Real} = convert(PDMat{T}, a)
 
@@ -90,7 +95,7 @@ Base.@propagate_inbounds Base.getindex(a::PDMat, i::Int, j::Int) = getindex(a.ma
 
 function pdadd!(r::Matrix, a::Matrix, b::PDMat, c)
     @check_argdims size(r) == size(a) == size(b)
-    _addscal!(r, a, b.mat, c)
+    return _addscal!(r, a, b.mat, c)
 end
 
 *(a::PDMat, c::Real) = PDMat(a.mat * c)
@@ -158,7 +163,7 @@ function quad(a::PDMat, x::AbstractVecOrMat)
     if x isa AbstractVector
         return sum(abs2, aU_x)
     else
-        return vec(sum(abs2, aU_x; dims = 1))
+        return vec(sum(abs2, aU_x; dims=1))
     end
 end
 
@@ -180,7 +185,7 @@ function invquad(a::PDMat, x::AbstractVecOrMat)
     if x isa AbstractVector
         return sum(abs2, inv_aL_x)
     else
-        return vec(sum(abs2, inv_aL_x; dims = 1))
+        return vec(sum(abs2, inv_aL_x; dims=1))
     end
 end
 
@@ -236,4 +241,3 @@ function invquad(a::PDMat{<:Real,<:Vector}, x::Matrix)
     T = typeof(abs2(zero(eltype(x))) / zero(eltype(a)))
     return invquad!(Vector{T}(undef, size(x, 2)), a, x)
 end
-

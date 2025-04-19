@@ -2,7 +2,6 @@
 
 using PDMats
 
-
 # New AbstractPDMat type for the tests below
 # Supports only functions needed in the tests below
 struct ScalMat3D{T<:Real} <: AbstractPDMat{T}
