@@ -22,7 +22,7 @@ using PDMats: chol_lower, chol_upper
             @test chol_lower(ch) ≈ chol_upper(ch)'
             @test (@allocated chol_lower(ch)) < 33  # allow small overhead for wrapper types
             @test (@allocated chol_upper(ch)) < 33  # allow small overhead for wrapper types
- 
+
             # Only test dim, `quad`/`invquad`, `whiten`/`unwhiten`, and tri products
             @test dim(ch) == size(C, 1)
             pdtest_quad(ch, C, invC, X, 0)

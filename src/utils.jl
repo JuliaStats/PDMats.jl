@@ -2,7 +2,7 @@
 
 
 macro check_argdims(cond)
-    quote
+    return quote
         ($(esc(cond))) || throw(DimensionMismatch("Inconsistent argument dimensions."))
     end
 end
@@ -31,11 +31,11 @@ function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector, c::Real
     @check_argdims eachindex(v) == axes(a, 1) == axes(a, 2)
     if c == one(c)
         for i in eachindex(v)
-            @inbounds a[i,i] += v[i]
+            @inbounds a[i, i] += v[i]
         end
     else
         for i in eachindex(v)
-            @inbounds a[i,i] += v[i] * c
+            @inbounds a[i, i] += v[i] * c
         end
     end
     return a
@@ -43,7 +43,7 @@ end
 
 _adddiag(a::Union{Matrix, SparseMatrixCSC}, v::Real) = _adddiag!(copy(a), v)
 _adddiag(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector, c::Real) = _adddiag!(copy(a), v, c)
-_adddiag(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector{T}) where {T<:Real} = _adddiag!(copy(a), v, one(T))
+_adddiag(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector{T}) where {T <: Real} = _adddiag!(copy(a), v, one(T))
 
 
 function wsumsq(w::AbstractVector, a::AbstractVector)
@@ -70,7 +70,7 @@ function colwise_dot!(r::AbstractArray, a::AbstractMatrix, b::AbstractMatrix)
     for j in axes(a, 2)
         v = zero(promote_type(eltype(a), eltype(b)))
         @simd for i in axes(a, 1)
-            @inbounds v += a[i, j]*b[i, j]
+            @inbounds v += a[i, j] * b[i, j]
         end
         r[j] = v
     end
@@ -84,7 +84,7 @@ function colwise_sumsq!(r::AbstractArray, a::AbstractMatrix, c::Real)
         @simd for i in axes(a, 1)
             @inbounds v += abs2(a[i, j])
         end
-        r[j] = v*c
+        r[j] = v * c
     end
     return r
 end

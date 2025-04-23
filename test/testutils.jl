@@ -12,25 +12,26 @@ const HAVE_CHOLMOD = isdefined(SuiteSparse, :CHOLMOD)
 const PDMatType = HAVE_CHOLMOD ? Union{PDMat, PDSparseMat, PDiagMat} : Union{PDMat, PDiagMat}
 
 ## driver function
-function test_pdmat(C, Cmat::Matrix;
-                    verbose::Int=2,             # the level to display intermediate steps
-                    cmat_eq::Bool=false,        # require Cmat and Matrix(C) to be exactly equal
-                    t_diag::Bool=true,          # whether to test diag method
-                    t_cholesky::Bool=true,      # whether to test cholesky method
-                    t_scale::Bool=true,         # whether to test scaling
-                    t_add::Bool=true,           # whether to test pdadd
-                    t_det::Bool=true,           # whether to test det method
-                    t_logdet::Bool=true,        # whether to test logdet method
-                    t_eig::Bool=true,           # whether to test eigmax and eigmin
-                    t_mul::Bool=true,           # whether to test multiplication
-                    t_div::Bool=true,           # whether to test division
-                    t_quad::Bool=true,          # whether to test quad & invquad
-                    t_triprod::Bool=true,       # whether to test X_A_Xt, Xt_A_X, X_invA_Xt, and Xt_invA_X
-                    t_whiten::Bool=true         # whether to test whiten and unwhiten
-                    )
+function test_pdmat(
+        C, Cmat::Matrix;
+        verbose::Int = 2,             # the level to display intermediate steps
+        cmat_eq::Bool = false,        # require Cmat and Matrix(C) to be exactly equal
+        t_diag::Bool = true,          # whether to test diag method
+        t_cholesky::Bool = true,      # whether to test cholesky method
+        t_scale::Bool = true,         # whether to test scaling
+        t_add::Bool = true,           # whether to test pdadd
+        t_det::Bool = true,           # whether to test det method
+        t_logdet::Bool = true,        # whether to test logdet method
+        t_eig::Bool = true,           # whether to test eigmax and eigmin
+        t_mul::Bool = true,           # whether to test multiplication
+        t_div::Bool = true,           # whether to test division
+        t_quad::Bool = true,          # whether to test quad & invquad
+        t_triprod::Bool = true,       # whether to test X_A_Xt, Xt_A_X, X_invA_Xt, and Xt_invA_X
+        t_whiten::Bool = true         # whether to test whiten and unwhiten
+    )
 
     d = size(Cmat, 1)
-    verbose >= 1 && printstyled("Testing $(typeof(C)) of size ($d, $d)\n", color=:blue)
+    verbose >= 1 && printstyled("Testing $(typeof(C)) of size ($d, $d)\n", color = :blue)
 
     pdtest_basics(C, Cmat, d, verbose)
     pdtest_cmat(C, Cmat, cmat_eq, verbose)
@@ -46,7 +47,7 @@ function test_pdmat(C, Cmat::Matrix;
     Imat = inv(Cmat)
 
     n = 5
-    X = rand(eltype(C),d,n) .- convert(eltype(C),0.5)
+    X = rand(eltype(C), d, n) .- convert(eltype(C), 0.5)
 
     t_mul && pdtest_mul(C, Cmat, X, verbose)
     t_div && pdtest_div(C, Imat, X, verbose)
@@ -55,13 +56,13 @@ function test_pdmat(C, Cmat::Matrix;
 
     t_whiten && pdtest_whiten(C, Cmat, verbose)
 
-    verbose >= 2 && println()
+    return verbose >= 2 && println()
 end
 
 
 ## core testing functions
 
-_pdt(vb::Int, s) = (vb >= 2 && printstyled("    .. testing $s\n", color=:green))
+_pdt(vb::Int, s) = (vb >= 2 && printstyled("    .. testing $s\n", color = :green))
 
 
 function pdtest_basics(C, Cmat::Matrix, d::Int, verbose::Int)
@@ -82,7 +83,7 @@ function pdtest_basics(C, Cmat::Matrix, d::Int, verbose::Int)
 
     _pdt(verbose, "eltype")
     @test eltype(C) == eltype(Cmat)
-#    @test eltype(typeof(C)) == eltype(typeof(Cmat))
+    #    @test eltype(typeof(C)) == eltype(typeof(Cmat))
 
     _pdt(verbose, "index")
     @test all(C[i] == Cmat[i] for i in 1:(d^2))
@@ -104,13 +105,13 @@ function pdtest_basics(C, Cmat::Matrix, d::Int, verbose::Int)
     _pdt(verbose, "Matrix")
     M = Matrix(C)
     @test M isa Matrix
-    @test M == Cmat
+    return @test M == Cmat
 end
 
 
 function pdtest_cmat(C, Cmat::Matrix, cmat_eq::Bool, verbose::Int)
     _pdt(verbose, "full")
-    if cmat_eq
+    return if cmat_eq
         @test Matrix(C) == Cmat
     else
         @test Matrix(C) ≈ Cmat
@@ -120,7 +121,7 @@ end
 
 function pdtest_diag(C, Cmat::Matrix, cmat_eq::Bool, verbose::Int)
     _pdt(verbose, "diag")
-    if cmat_eq
+    return if cmat_eq
         @test diag(C) == diag(Cmat)
     else
         @test diag(C) ≈ diag(Cmat)
@@ -135,7 +136,7 @@ function pdtest_cholesky(C::Union{PDMat, PDiagMat, ScalMat}, Cmat::Matrix, cmat_
         @test cholesky(C).U ≈ cholesky(Cmat).U
     end
     # regression test: https://github.com/JuliaStats/PDMats.jl/pull/182
-    if C isa Union{PDiagMat, ScalMat}
+    return if C isa Union{PDiagMat, ScalMat}
         size_of_sqrt_diag = C.dim * sizeof(float(eltype(C)))
         # allow some overhead for wrapper types
         max_allocations = max(1.05 * size_of_sqrt_diag, 128 + size_of_sqrt_diag)
@@ -148,7 +149,7 @@ if HAVE_CHOLMOD
         _pdt(verbose, "cholesky")
         # We special case PDSparseMat because we can't perform equality checks on
         # `SuiteSparse.CHOLMOD.Factor`s and `SuiteSparse.CHOLMOD.FactorComponent`s
-        @test diag(cholesky(C)) ≈ diag(cholesky(Cmat).U)
+        return @test diag(cholesky(C)) ≈ diag(cholesky(Cmat).U)
         # NOTE: `==` also doesn't work because `diag(cholesky(C))` will return `Vector{Float64}`
         # even if the inputs are `Float32`s.
     end
@@ -156,25 +157,25 @@ end
 
 function pdtest_scale(C, Cmat::Matrix, verbose::Int)
     _pdt(verbose, "scale")
-    @test Matrix(C * convert(eltype(C),2)) ≈ Cmat * convert(eltype(C),2)
-    @test Matrix(convert(eltype(C),2) * C) ≈ convert(eltype(C),2) * Cmat
+    @test Matrix(C * convert(eltype(C), 2)) ≈ Cmat * convert(eltype(C), 2)
+    return @test Matrix(convert(eltype(C), 2) * C) ≈ convert(eltype(C), 2) * Cmat
 end
 
 
 function pdtest_add(C, Cmat::Matrix, verbose::Int)
-    M = rand(eltype(C),size(Cmat))
+    M = rand(eltype(C), size(Cmat))
     _pdt(verbose, "add")
     @test C + M ≈ Cmat + M
     @test M + C ≈ M + Cmat
 
     _pdt(verbose, "add_scal")
-    @test pdadd(M, C, convert(eltype(C),2)) ≈ M + Cmat * convert(eltype(C),2)
+    @test pdadd(M, C, convert(eltype(C), 2)) ≈ M + Cmat * convert(eltype(C), 2)
 
     _pdt(verbose, "add_scal!")
-    R = M + Cmat * convert(eltype(C),2)
-    Mr = pdadd!(M, C, convert(eltype(C),2))
+    R = M + Cmat * convert(eltype(C), 2)
+    Mr = pdadd!(M, C, convert(eltype(C), 2))
     @test Mr === M
-    @test Mr ≈ R
+    return @test Mr ≈ R
 end
 
 function pdtest_det(C, Cmat::Matrix, verbose::Int)
@@ -182,8 +183,8 @@ function pdtest_det(C, Cmat::Matrix, verbose::Int)
     @test det(C) ≈ det(Cmat)
 
     # generic fallback in LinearAlgebra performs LU decomposition
-    if C isa Union{PDMat,PDiagMat,ScalMat}
-	@test iszero(@allocated det(C))
+    return if C isa Union{PDMat, PDiagMat, ScalMat}
+        @test iszero(@allocated det(C))
     end
 end
 
@@ -192,8 +193,8 @@ function pdtest_logdet(C, Cmat::Matrix, verbose::Int)
     @test logdet(C) ≈ logdet(Cmat)
 
     # generic fallback in LinearAlgebra performs LU decomposition
-    if C isa Union{PDMat,PDiagMat,ScalMat}
-	@test iszero(@allocated logdet(C))
+    return if C isa Union{PDMat, PDiagMat, ScalMat}
+        @test iszero(@allocated logdet(C))
     end
 end
 
@@ -203,14 +204,14 @@ function pdtest_eig(C, Cmat::Matrix, verbose::Int)
     @test eigmax(C) ≈ eigmax(Cmat)
 
     _pdt(verbose, "eigmin")
-    @test eigmin(C) ≈ eigmin(Cmat)
+    return @test eigmin(C) ≈ eigmin(Cmat)
 end
 
 
 function pdtest_mul(C, Cmat::Matrix, verbose::Int)
     n = 5
     X = rand(eltype(C), size(C, 1), n)
-    pdtest_mul(C, Cmat, X, verbose)
+    return pdtest_mul(C, Cmat, X, verbose)
 end
 
 
@@ -223,8 +224,8 @@ function pdtest_mul(C, Cmat::Matrix, X::Matrix, verbose::Int)
 
     y = similar(C * X, d)
     ymat = similar(Cmat * X, d)
-    for i = 1:n
-        xi = vec(copy(X[:,i]))
+    for i in 1:n
+        xi = vec(copy(X[:, i]))
         @test C * xi ≈ Cmat * xi
 
         mul!(y, C, xi)
@@ -234,7 +235,7 @@ function pdtest_mul(C, Cmat::Matrix, X::Matrix, verbose::Int)
 
     # Dimension mismatches
     @test_throws DimensionMismatch C * rand(d + 1)
-    @test_throws DimensionMismatch C * rand(d + 1, n)
+    return @test_throws DimensionMismatch C * rand(d + 1, n)
 end
 
 
@@ -249,8 +250,8 @@ function pdtest_div(C, Imat::Matrix, X::Matrix, verbose::Int)
     check_rdiv = !(C isa PDSparseMat && HAVE_CHOLMOD)
     check_rdiv && @test Matrix(X') / C ≈ (C \ X)'
 
-    for i = 1:n
-        xi = vec(copy(X[:,i]))
+    for i in 1:n
+        xi = vec(copy(X[:, i]))
         @test C \ xi ≈ Imat * xi
         check_rdiv && @test Matrix(xi') / C ≈ (C \ xi)'
     end
@@ -259,7 +260,7 @@ function pdtest_div(C, Imat::Matrix, X::Matrix, verbose::Int)
     # Dimension mismatches
     @test_throws DimensionMismatch C \ rand(d + 1)
     @test_throws DimensionMismatch C \ rand(d + 1, n)
-    if check_rdiv
+    return if check_rdiv
         @test_throws DimensionMismatch rand(1, d + 1) / C
         @test_throws DimensionMismatch rand(n, d + 1) / C
     end
@@ -270,12 +271,12 @@ function pdtest_quad(C, Cmat::Matrix, Imat::Matrix, X::Matrix, verbose::Int)
     n = size(X, 2)
 
     _pdt(verbose, "quad")
-    r_quad = zeros(eltype(C),n)
-    for i = 1:n
-        xi = vec(X[:,i])
+    r_quad = zeros(eltype(C), n)
+    for i in 1:n
+        xi = vec(X[:, i])
         r_quad[i] = dot(xi, Cmat * xi)
         @test quad(C, xi) ≈ r_quad[i]
-        @test quad(C, view(X,:,i)) ≈ r_quad[i]
+        @test quad(C, view(X, :, i)) ≈ r_quad[i]
     end
     @test quad(C, X) ≈ r_quad
     r = similar(r_quad)
@@ -283,17 +284,17 @@ function pdtest_quad(C, Cmat::Matrix, Imat::Matrix, X::Matrix, verbose::Int)
     @test r ≈ r_quad
 
     _pdt(verbose, "invquad")
-    r_invquad = zeros(eltype(C),n)
-    for i = 1:n
-        xi = vec(X[:,i])
+    r_invquad = zeros(eltype(C), n)
+    for i in 1:n
+        xi = vec(X[:, i])
         r_invquad[i] = dot(xi, Imat * xi)
         @test invquad(C, xi) ≈ r_invquad[i]
-        @test invquad(C, view(X,:,i)) ≈ r_invquad[i]
+        @test invquad(C, view(X, :, i)) ≈ r_invquad[i]
     end
     @test invquad(C, X) ≈ r_invquad
     r = similar(r_invquad)
     @test invquad!(r, C, X) === r
-    @test r ≈ r_invquad
+    return @test r ≈ r_invquad
 end
 
 
@@ -324,13 +325,13 @@ function pdtest_triprod(C, Cmat::Matrix, Imat::Matrix, X::Matrix, verbose::Int)
     M = Xt_invA_X(C, X)
     @test M ≈ Xt * Imat * X
     @test issymmetric(M)
-    @test_throws DimensionMismatch Xt_invA_X(C, rand(d + 1, n))
+    return @test_throws DimensionMismatch Xt_invA_X(C, rand(d + 1, n))
 end
 
 
 function pdtest_whiten(C, Cmat::Matrix, verbose::Int)
     Y = PDMats.chol_lower(Cmat)
-    Q = qr(convert(Array{eltype(C),2},randn(size(Cmat)))).Q
+    Q = qr(convert(Array{eltype(C), 2}, randn(size(Cmat)))).Q
     Y = Y * Q'                    # generate a matrix Y such that Y * Y' = C
     @test Y * Y' ≈ Cmat
     d = size(C, 1)
@@ -338,8 +339,8 @@ function pdtest_whiten(C, Cmat::Matrix, verbose::Int)
     _pdt(verbose, "whiten")
     Z = whiten(C, Y)
     @test Z * Z' ≈ Matrix{eltype(C)}(I, d, d)
-    for i = 1:d
-        @test whiten(C, Y[:,i]) ≈ Z[:,i]
+    for i in 1:d
+        @test whiten(C, Y[:, i]) ≈ Z[:, i]
     end
 
     _pdt(verbose, "whiten!")
@@ -350,8 +351,8 @@ function pdtest_whiten(C, Cmat::Matrix, verbose::Int)
     _pdt(verbose, "unwhiten")
     X = unwhiten(C, Z)
     @test X * X' ≈ Cmat
-    for i = 1:d
-        @test unwhiten(C, Z[:,i]) ≈ X[:,i]
+    for i in 1:d
+        @test unwhiten(C, Z[:, i]) ≈ X[:, i]
     end
 
     _pdt(verbose, "unwhiten!")
@@ -361,7 +362,7 @@ function pdtest_whiten(C, Cmat::Matrix, verbose::Int)
 
     _pdt(verbose, "whiten-unwhiten")
     @test unwhiten(C, whiten(C, Matrix{eltype(C)}(I, d, d))) ≈ Matrix{eltype(C)}(I, d, d)
-    @test whiten(C, unwhiten(C, Matrix{eltype(C)}(I, d, d))) ≈ Matrix{eltype(C)}(I, d, d)
+    return @test whiten(C, unwhiten(C, Matrix{eltype(C)}(I, d, d))) ≈ Matrix{eltype(C)}(I, d, d)
 end
 
 
@@ -376,5 +377,5 @@ function _pd_compare(A::AbstractPDMat, B::AbstractPDMat)
     @test size(A) == size(B)
     @test Matrix(A) ≈ Matrix(B)
     @test cholesky(A).L ≈ cholesky(B).L
-    @test cholesky(A).U ≈ cholesky(B).U
+    return @test cholesky(A).U ≈ cholesky(B).U
 end

@@ -1,7 +1,7 @@
 """
 Positive definite diagonal matrix.
 """
-struct PDiagMat{T<:Real,V<:AbstractVector{T}} <: AbstractPDMat{T}
+struct PDiagMat{T <: Real, V <: AbstractVector{T}} <: AbstractPDMat{T}
     diag::V
 end
 
@@ -14,16 +14,16 @@ end
 Base.propertynames(::PDiagMat) = (:diag, :dim)
 
 AbstractPDMat(A::Diagonal{<:Real}) = PDiagMat(A.diag)
-AbstractPDMat(A::Symmetric{<:Real,<:Diagonal{<:Real}}) = PDiagMat(A.data.diag)
-AbstractPDMat(A::Hermitian{<:Real,<:Diagonal{<:Real}}) = PDiagMat(A.data.diag)
+AbstractPDMat(A::Symmetric{<:Real, <:Diagonal{<:Real}}) = PDiagMat(A.data.diag)
+AbstractPDMat(A::Hermitian{<:Real, <:Diagonal{<:Real}}) = PDiagMat(A.data.diag)
 
 ### Conversion
-Base.convert(::Type{PDiagMat{T}}, a::PDiagMat{T}) where {T<:Real} = a
-function Base.convert(::Type{PDiagMat{T}}, a::PDiagMat) where {T<:Real}
+Base.convert(::Type{PDiagMat{T}}, a::PDiagMat{T}) where {T <: Real} = a
+function Base.convert(::Type{PDiagMat{T}}, a::PDiagMat) where {T <: Real}
     diag = convert(AbstractVector{T}, a.diag)
-    return PDiagMat{T,typeof(diag)}(diag)
+    return PDiagMat{T, typeof(diag)}(diag)
 end
-Base.convert(::Type{AbstractPDMat{T}}, a::PDiagMat) where {T<:Real} = convert(PDiagMat{T}, a)
+Base.convert(::Type{AbstractPDMat{T}}, a::PDiagMat) where {T <: Real} = convert(PDiagMat{T}, a)
 
 ### Basics
 
@@ -125,11 +125,11 @@ function quad!(r::AbstractArray, a::PDiagMat, x::AbstractMatrix)
     @inbounds for j in axes(x, 2)
         s = zero(promote_type(eltype(ad), eltype(x)))
         for i in axes(x, 1)
-            s += ad[i] * abs2(x[i,j])
+            s += ad[i] * abs2(x[i, j])
         end
         r[j] = s
     end
-    r
+    return r
 end
 
 function invquad(a::PDiagMat, x::AbstractVecOrMat)
@@ -150,11 +150,11 @@ function invquad!(r::AbstractArray, a::PDiagMat, x::AbstractMatrix)
     @inbounds for j in axes(x, 2)
         s = zero(zero(eltype(x)) / zero(eltype(ad)))
         for i in axes(x, 1)
-            s += abs2(x[i,j]) / ad[i]
+            s += abs2(x[i, j]) / ad[i]
         end
         r[j] = s
     end
-    r
+    return r
 end
 
 
@@ -186,15 +186,14 @@ end
 
 ### Specializations for `Array` arguments with reduced allocations
 
-function quad(a::PDiagMat{<:Real,<:Vector}, x::Matrix)
+function quad(a::PDiagMat{<:Real, <:Vector}, x::Matrix)
     @check_argdims a.dim == size(x, 1)
     T = typeof(zero(eltype(a)) * abs2(zero(eltype(x))))
     return quad!(Vector{T}(undef, size(x, 2)), a, x)
 end
 
-function invquad(a::PDiagMat{<:Real,<:Vector}, x::Matrix)
+function invquad(a::PDiagMat{<:Real, <:Vector}, x::Matrix)
     @check_argdims a.dim == size(x, 1)
     T = typeof(abs2(zero(eltype(x))) / zero(eltype(a)))
     return invquad!(Vector{T}(undef, size(x, 2)), a, x)
 end
-
