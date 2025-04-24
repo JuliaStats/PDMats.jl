@@ -12,7 +12,7 @@ using PDMats: chol_lower, chol_upper
 
         # allow 5% overhead
         @test chol_lower(C) ≈ chol_upper(C)'
-        broken = VERSION >= v"1.12.0-" && Sys.isapple()
+        broken = VERSION >= v"1.11.5" && Sys.isapple()
         @test (@allocated chol_lower(C)) < 1.05 * size_of_one_copy  broken = broken
         @test (@allocated chol_upper(C)) < 1.05 * size_of_one_copy  broken = broken
 
