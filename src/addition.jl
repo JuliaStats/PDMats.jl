@@ -1,4 +1,3 @@
-
 # between pdmat and pdmat
 
 +(a::PDMat, b::AbstractPDMat) = PDMat(a.mat + Matrix(b))

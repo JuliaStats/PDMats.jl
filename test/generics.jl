@@ -1,10 +1,9 @@
-
 # test operators with pd matrix types
 using LinearAlgebra, PDMats
 using Test
 
 @testset "scalar multiplication" begin
-    printstyled("Testing scalar multiplication\n"; color=:blue)
+    printstyled("Testing scalar multiplication\n"; color = :blue)
     pm1 = PDMat(Matrix(1.0I, 3, 3))
     pm2 = PDiagMat(ones(3))
     pm3 = ScalMat(3, 1)

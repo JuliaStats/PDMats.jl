@@ -1,15 +1,15 @@
 """
 Scaling matrix.
 """
-struct ScalMat{T<:Real} <: AbstractPDMat{T}
+struct ScalMat{T <: Real} <: AbstractPDMat{T}
     dim::Int
     value::T
 end
 
 ### Conversion
-Base.convert(::Type{ScalMat{T}}, a::ScalMat{T}) where {T<:Real} = a
-Base.convert(::Type{ScalMat{T}}, a::ScalMat) where {T<:Real} = ScalMat{T}(a.dim, T(a.value))
-Base.convert(::Type{AbstractPDMat{T}}, a::ScalMat) where {T<:Real} = convert(ScalMat{T}, a)
+Base.convert(::Type{ScalMat{T}}, a::ScalMat{T}) where {T <: Real} = a
+Base.convert(::Type{ScalMat{T}}, a::ScalMat) where {T <: Real} = ScalMat{T}(a.dim, T(a.value))
+Base.convert(::Type{AbstractPDMat{T}}, a::ScalMat) where {T <: Real} = convert(ScalMat{T}, a)
 
 ### Basics
 
@@ -22,7 +22,7 @@ LinearAlgebra.cholesky(a::ScalMat) = Cholesky(Diagonal(fill(sqrt(a.value), a.dim
 
 function Base.getindex(a::ScalMat, i::Integer)
     ncol, nrow = fldmod1(i, a.dim)
-    ncol == nrow ? a.value : zero(eltype(a))
+    return ncol == nrow ? a.value : zero(eltype(a))
 end
 Base.getindex(a::ScalMat{T}, i::Integer, j::Integer) where {T} = i == j ? a.value : zero(T)
 
@@ -56,7 +56,7 @@ function /(x::AbstractVecOrMat, a::ScalMat)
     @check_argdims a.dim == size(x, 2)
     return x / a.value
 end
-Base.kron(A::ScalMat, B::ScalMat) = ScalMat(A.dim * B.dim, A.value * B.value )
+Base.kron(A::ScalMat, B::ScalMat) = ScalMat(A.dim * B.dim, A.value * B.value)
 
 ### Algebra
 
@@ -73,13 +73,13 @@ LinearAlgebra.sqrt(a::ScalMat) = ScalMat(a.dim, sqrt(a.value))
 function whiten!(r::AbstractVecOrMat, a::ScalMat, x::AbstractVecOrMat)
     @check_argdims axes(r) == axes(x)
     @check_argdims a.dim == size(x, 1)
-    ldiv!(r, sqrt(a.value), x)
+    return ldiv!(r, sqrt(a.value), x)
 end
 
 function unwhiten!(r::AbstractVecOrMat, a::ScalMat, x::AbstractVecOrMat)
     @check_argdims axes(r) == axes(x)
     @check_argdims a.dim == size(x, 1)
-    mul!(r, x, sqrt(a.value))
+    return mul!(r, x, sqrt(a.value))
 end
 
 function whiten(a::ScalMat, x::AbstractVecOrMat)
@@ -102,8 +102,8 @@ function quad(a::ScalMat, x::AbstractVecOrMat)
         # do NOT return a `SVector` for inputs `x::SMatrix`.
         wsq = let w = a.value
             x -> w * abs2(x)
-        end 
-        return vec(sum(wsq, x; dims=1))
+        end
+        return vec(sum(wsq, x; dims = 1))
     end
 end
 
@@ -125,8 +125,8 @@ function invquad(a::ScalMat, x::AbstractVecOrMat)
         # do NOT return a `SVector` for inputs `x::SMatrix`.
         wsq = let w = a.value
             x -> abs2(x) / w
-        end 
-        return vec(sum(wsq, x; dims=1))
+        end
+        return vec(sum(wsq, x; dims = 1))
     end
 end
 

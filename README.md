@@ -4,6 +4,7 @@ Uniform interface for positive definite matrices of various structures.
 
 [![CI](https://github.com/JuliaStats/PDMats.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/JuliaStats/PDMats.jl/actions/workflows/ci.yml)
 [![Coverage Status](https://img.shields.io/coveralls/JuliaStats/PDMats.jl.svg)](https://coveralls.io/r/JuliaStats/PDMats.jl?branch=master)
+[![code style: runic](https://img.shields.io/badge/code_style-%E1%9A%B1%E1%9A%A2%E1%9A%BE%E1%9B%81%E1%9A%B2-black)](https://github.com/fredrikekre/Runic.jl)
 
 --------------
 

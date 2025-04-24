@@ -53,7 +53,7 @@ end
 function quad(A::Cholesky, X::AbstractMatrix)
     @check_argdims size(A, 1) == size(X, 1)
     Z = chol_upper(A) * X
-    return vec(sum(abs2, Z; dims=1))
+    return vec(sum(abs2, Z; dims = 1))
 end
 function quad!(r::AbstractArray, A::Cholesky, X::AbstractMatrix)
     @check_argdims eachindex(r) == axes(X, 2)
@@ -75,7 +75,7 @@ end
 function invquad(A::Cholesky, X::AbstractMatrix)
     @check_argdims size(A, 1) == size(X, 1)
     Z = chol_lower(A) \ X
-    return vec(sum(abs2, Z; dims=1))
+    return vec(sum(abs2, Z; dims = 1))
 end
 function invquad!(r::AbstractArray, A::Cholesky, X::AbstractMatrix)
     @check_argdims eachindex(r) == axes(X, 2)

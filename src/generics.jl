@@ -5,25 +5,25 @@ AbstractPDMat(A::AbstractPDMat) = A
 AbstractPDMat(A::AbstractMatrix) = PDMat(A)
 
 ## convert
-Base.convert(::Type{AbstractMatrix{T}}, a::AbstractPDMat) where {T<:Real} = convert(AbstractPDMat{T}, a)
-Base.convert(::Type{AbstractArray{T}}, a::AbstractPDMat) where {T<:Real} = convert(AbstractMatrix{T}, a)
+Base.convert(::Type{AbstractMatrix{T}}, a::AbstractPDMat) where {T <: Real} = convert(AbstractPDMat{T}, a)
+Base.convert(::Type{AbstractArray{T}}, a::AbstractPDMat) where {T <: Real} = convert(AbstractMatrix{T}, a)
 
 ## arithmetics
 
-pdadd!(r::Matrix, a::Matrix, b::AbstractPDMat{T}) where {T<:Real} = pdadd!(r, a, b, one(T))
+pdadd!(r::Matrix, a::Matrix, b::AbstractPDMat{T}) where {T <: Real} = pdadd!(r, a, b, one(T))
 
 pdadd!(a::Matrix, b::AbstractPDMat, c) = pdadd!(a, a, b, c)
-pdadd!(a::Matrix, b::AbstractPDMat{T}) where {T<:Real} = pdadd!(a, a, b, one(T))
+pdadd!(a::Matrix, b::AbstractPDMat{T}) where {T <: Real} = pdadd!(a, a, b, one(T))
 
-pdadd(a::Matrix{T}, b::AbstractPDMat{S}, c::R) where {T<:Real, S<:Real, R<:Real} = pdadd!(similar(a, promote_type(T, S, R)), a, b, c)
-pdadd(a::Matrix{T}, b::AbstractPDMat{S}) where {T<:Real, S<:Real} = pdadd!(similar(a, promote_type(T, S)), a, b, one(T))
+pdadd(a::Matrix{T}, b::AbstractPDMat{S}, c::R) where {T <: Real, S <: Real, R <: Real} = pdadd!(similar(a, promote_type(T, S, R)), a, b, c)
+pdadd(a::Matrix{T}, b::AbstractPDMat{S}) where {T <: Real, S <: Real} = pdadd!(similar(a, promote_type(T, S)), a, b, one(T))
 
 +(a::Matrix, b::AbstractPDMat) = pdadd(a, b)
 +(a::AbstractPDMat, b::Matrix) = pdadd(b, a)
 
-*(a::AbstractPDMat, c::T) where {T<:Real} = a * c
-*(c::T, a::AbstractPDMat) where {T<:Real} = a * c
-/(a::AbstractPDMat, c::T) where {T<:Real} = a * inv(c)
+*(a::AbstractPDMat, c::T) where {T <: Real} = a * c
+*(c::T, a::AbstractPDMat) where {T <: Real} = a * c
+/(a::AbstractPDMat, c::T) where {T <: Real} = a * inv(c)
 Base.kron(A::AbstractPDMat, B::AbstractPDMat) = PDMat(kron(Matrix(A), Matrix(B)))
 
 # LinearAlgebra
@@ -140,4 +140,3 @@ Overwrite `r` with the value of the quadratic form defined by `inv(a)` applied c
 function invquad!(r::AbstractArray, a::AbstractMatrix{<:Real}, x::AbstractMatrix)
     return invquad!(r, AbstractPDMat(a), x)
 end
-
