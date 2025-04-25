@@ -93,7 +93,7 @@ function pdadd!(r::Matrix, a::Matrix, b::PDMat, c)
     return _addscal!(r, a, b.mat, c)
 end
 
-*(a::PDMat, c::Real) = PDMat(a.mat * c)
+*(a::PDMat, c::Real) = a.mat * c
 *(a::PDMat, x::AbstractVector) = a.mat * x
 *(a::PDMat, x::AbstractMatrix) = a.mat * x
 \(a::PDMat, x::AbstractVecOrMat) = a.chol \ x
