@@ -180,7 +180,7 @@ X_invA_Xt(a, x)     # compute `x * inv(a) * x'` for a matrix `x`.
 
 Xt_invA_X(a, x)     # compute `x' * inv(a) * x` for a matrix `x`.
 
-whiten(a, x)        # whitening transform. `x` can be a vector or a matrix.
+whiten(a, x)        # whitening transform defined by `a`. `x` can be a vector or a matrix.
                     #
                     # Note: If the covariance of `x` is `a`, then the
                     # covariance of the transformed result is an identity
@@ -190,8 +190,17 @@ whiten!(a, x)       # whitening transform inplace, directly updating `x`.
 
 whiten!(r, a, x)    # write the transformed result to `r`.
 
-unwhiten(a, x)      # inverse of whitening transform. `x` can be a vector or
-                    # a matrix.
+invwhiten(a, x)     # whitening transform defined by `inv(a)`. `x` can be a vector or a matrix.
+                    #
+                    # Note: If the precision of `x` is `a`, then the
+                    # covariance of the transformed result is an identity matrix.
+
+invwhiten!(a, x)    # whitening transform inplace, directly updating `x`.
+
+invwhiten!(r, a, x) # write the transformed result to `r`.
+
+unwhiten(a, x)      # inverse of whitening transform with `a`.
+                    # `x` can be a vector or a matrix.
                     #
                     # Note: If the covariance of `x` is an identity matrix,
                     # then the covariance of the transformed result is `a`.
@@ -201,6 +210,18 @@ unwhiten(a, x)      # inverse of whitening transform. `x` can be a vector or
 unwhiten!(a, x)     # un-whitening transform inplace, updating `x`.
 
 unwhiten!(r, a, x)  # write the transformed result to `r`.
+
+invunwhiten(a, x)     # inverse of whitening transform defined by `inv(a)`.
+                      # `x` can be a vector or a matrix.
+                      #
+                      # Note: If the covariance of `x` is an identity matrix,
+                      # then the precision of the transformed result is `a`.
+                      # Note: the un-whitening transform is useful for
+                      # generating Gaussian samples.
+
+invunwhiten!(a, x)    # un-whitening transform inplace, updating `x`.
+
+invunwhiten!(r, a, x) # write the transformed result to `r`.
 ```
 
 ### Fallbacks for `AbstractArray`s

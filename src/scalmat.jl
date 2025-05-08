@@ -75,21 +75,25 @@ function whiten!(r::AbstractVecOrMat, a::ScalMat, x::AbstractVecOrMat)
     @check_argdims a.dim == size(x, 1)
     return ldiv!(r, sqrt(a.value), x)
 end
+invwhiten!(r::AbstractVecOrMat, a::ScalMat, x::AbstractVecOrMat) = unwhiten!(r, a, x)
 
 function unwhiten!(r::AbstractVecOrMat, a::ScalMat, x::AbstractVecOrMat)
     @check_argdims axes(r) == axes(x)
     @check_argdims a.dim == size(x, 1)
     return mul!(r, x, sqrt(a.value))
 end
+invunwhiten!(r::AbstractVecOrMat, a::ScalMat, x::AbstractVecOrMat) = whiten!(r, a, x)
 
 function whiten(a::ScalMat, x::AbstractVecOrMat)
     @check_argdims a.dim == size(x, 1)
     return x / sqrt(a.value)
 end
+invwhiten(a::ScalMat, x::AbstractVecOrMat) = unwhiten(a, x)
 function unwhiten(a::ScalMat, x::AbstractVecOrMat)
     @check_argdims a.dim == size(x, 1)
     return sqrt(a.value) * x
 end
+invunwhiten(a::ScalMat, x::AbstractVecOrMat) = whiten(a, x)
 
 ### quadratic forms
 
