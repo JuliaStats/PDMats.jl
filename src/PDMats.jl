@@ -53,6 +53,7 @@ include("scalmat.jl")
 
 include("generics.jl")
 include("addition.jl")
+include("congruent.jl")
 
 include("deprecates.jl")
 
