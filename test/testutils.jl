@@ -330,10 +330,18 @@ end
 
 
 function pdtest_whiten(C, Cmat::Matrix, verbose::Int)
-    Y = PDMats.chol_lower(Cmat)
-    Q = qr(convert(Array{eltype(C), 2}, randn(size(Cmat)))).Q
-    Y = Y * Q'                    # generate a matrix Y such that Y * Y' = C
+    # generate a matrix Y such that Y * Y' = C
+    Y = similar(Cmat, float(eltype(C)))
+    Q = qr(randn!(similar(Cmat, float(eltype(C))))).Q
+    mul!(Y, PDMats.chol_lower(Cmat), Q')
     @test Y * Y' ≈ Cmat
+
+    # generate a matrix A such that A * A' ≈ inv(C)
+    A = similar(Cmat, float(eltype(C)))
+    Q = qr(randn!(similar(Cmat, float(eltype(C))))).Q
+    ldiv!(A, PDMats.chol_upper(Cmat), Matrix(Q)')
+    @test (A * A') * Cmat ≈ I
+
     d = size(C, 1)
 
     _pdt(verbose, "whiten")
@@ -346,7 +354,25 @@ function pdtest_whiten(C, Cmat::Matrix, verbose::Int)
     _pdt(verbose, "whiten!")
     Z2 = copy(Y)
     whiten!(C, Z2)
-    @test Z ≈ Z2
+    @test Z2 ≈ Z
+    Z2 = copy(Y)
+    whiten!(Z2, C, Y)
+    @test Z2 ≈ Z
+
+    _pdt(verbose, "invwhiten")
+    B = invwhiten(C, A)
+    @test B * B' ≈ Matrix{eltype(C)}(I, d, d)
+    for i in 1:d
+        @test invwhiten(C, A[:, i]) ≈ B[:, i]
+    end
+
+    _pdt(verbose, "invwhiten!")
+    B2 = copy(A)
+    invwhiten!(C, B2)
+    @test B2 ≈ B
+    B2 = copy(A)
+    invwhiten!(B2, C, A)
+    @test B2 ≈ B
 
     _pdt(verbose, "unwhiten")
     X = unwhiten(C, Z)
@@ -358,11 +384,35 @@ function pdtest_whiten(C, Cmat::Matrix, verbose::Int)
     _pdt(verbose, "unwhiten!")
     X2 = copy(Z)
     unwhiten!(C, X2)
-    @test X ≈ X2
+    @test X2 ≈ X
+    X2 = copy(Z)
+    unwhiten!(X2, C, Z)
+    @test X2 ≈ X
+
+    _pdt(verbose, "invunwhiten")
+    D = invunwhiten(C, B)
+    @test (D * D') * Cmat ≈ Matrix{eltype(C)}(I, d, d)
+    for i in 1:d
+        @test invunwhiten(C, B[:, i]) ≈ D[:, i]
+    end
+
+    _pdt(verbose, "invunwhiten!")
+    D2 = copy(B)
+    invunwhiten!(C, D2)
+    @test D2 ≈ D
+    D2 = copy(B)
+    invunwhiten!(D2, C, B)
+    @test D2 ≈ D
 
     _pdt(verbose, "whiten-unwhiten")
     @test unwhiten(C, whiten(C, Matrix{eltype(C)}(I, d, d))) ≈ Matrix{eltype(C)}(I, d, d)
-    return @test whiten(C, unwhiten(C, Matrix{eltype(C)}(I, d, d))) ≈ Matrix{eltype(C)}(I, d, d)
+    @test whiten(C, unwhiten(C, Matrix{eltype(C)}(I, d, d))) ≈ Matrix{eltype(C)}(I, d, d)
+
+    _pdt(verbose, "invwhiten-invunwhiten")
+    @test invunwhiten(C, invwhiten(C, Matrix{eltype(C)}(I, d, d))) ≈ Matrix{eltype(C)}(I, d, d)
+    @test invwhiten(C, invunwhiten(C, Matrix{eltype(C)}(I, d, d))) ≈ Matrix{eltype(C)}(I, d, d)
+
+    return nothing
 end
 
 

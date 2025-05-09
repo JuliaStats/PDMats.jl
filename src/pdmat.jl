@@ -131,6 +131,15 @@ function whiten!(r::AbstractVecOrMat, a::PDMat, x::AbstractVecOrMat)
         return ldiv!(r, chol_lower(cholesky(a)), x)
     end
 end
+function invwhiten!(r::AbstractVecOrMat, a::PDMat, x::AbstractVecOrMat)
+    @check_argdims axes(r) == axes(x)
+    @check_argdims a.dim == size(x, 1)
+    if r === x
+        return lmul!(chol_upper(cholesky(a)), r)
+    else
+        return mul!(r, chol_upper(cholesky(a)), x)
+    end
+end
 function unwhiten!(r::AbstractVecOrMat, a::PDMat, x::AbstractVecOrMat)
     @check_argdims axes(r) == axes(x)
     @check_argdims a.dim == size(x, 1)
@@ -140,14 +149,31 @@ function unwhiten!(r::AbstractVecOrMat, a::PDMat, x::AbstractVecOrMat)
         return mul!(r, chol_lower(cholesky(a)), x)
     end
 end
+function invunwhiten!(r::AbstractVecOrMat, a::PDMat, x::AbstractVecOrMat)
+    @check_argdims axes(r) == axes(x)
+    @check_argdims a.dim == size(x, 1)
+    if r === x
+        return ldiv!(chol_upper(cholesky(a)), r)
+    else
+        return ldiv!(r, chol_upper(cholesky(a)), x)
+    end
+end
 
 function whiten(a::PDMat, x::AbstractVecOrMat)
     @check_argdims a.dim == size(x, 1)
     return chol_lower(cholesky(a)) \ x
 end
+function invwhiten(a::PDMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    return chol_upper(cholesky(a)) * x
+end
 function unwhiten(a::PDMat, x::AbstractVecOrMat)
     @check_argdims a.dim == size(x, 1)
     return chol_lower(cholesky(a)) * x
+end
+function invunwhiten(a::PDMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    return chol_upper(cholesky(a)) \ x
 end
 
 ## quad/invquad

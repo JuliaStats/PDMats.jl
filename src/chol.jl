@@ -32,16 +32,22 @@ dim(A::Cholesky) = LinearAlgebra.checksquare(A)
 # whiten
 whiten(A::Cholesky, x::AbstractVecOrMat) = chol_lower(A) \ x
 whiten!(A::Cholesky, x::AbstractVecOrMat) = ldiv!(chol_lower(A), x)
+invwhiten(A::Cholesky, x::AbstractVecOrMat) = chol_upper(A) * x
+invwhiten!(A::Cholesky, x::AbstractVecOrMat) = lmul!(chol_upper(A), x)
 
 # unwhiten
 unwhiten(A::Cholesky, x::AbstractVecOrMat) = chol_lower(A) * x
 unwhiten!(A::Cholesky, x::AbstractVecOrMat) = lmul!(chol_lower(A), x)
+invunwhiten(A::Cholesky, x::AbstractVecOrMat) = chol_upper(A) \ x
+invunwhiten!(A::Cholesky, x::AbstractVecOrMat) = ldiv!(chol_upper(A), x)
 
 # 3-argument whiten/unwhiten
 for T in (:AbstractVector, :AbstractMatrix)
     @eval begin
         whiten!(r::$T, A::Cholesky, x::$T) = whiten!(A, copyto!(r, x))
+        invwhiten!(r::$T, A::Cholesky, x::$T) = invwhiten!(A, copyto!(r, x))
         unwhiten!(r::$T, A::Cholesky, x::$T) = unwhiten!(A, copyto!(r, x))
+        invunwhiten!(r::$T, A::Cholesky, x::$T) = invunwhiten!(A, copyto!(r, x))
     end
 end
 
