@@ -14,8 +14,8 @@ using LinearAlgebra, PDMats, Test
         [((X_A_Xt, Xt_A_X), typemaps), ((X_invA_Xt, Xt_invA_X), inv_typemaps)]
         @testset "$f(::$TA, ::$TB) -> $Tret" for ((TA, TB), Tret) in tmaps, f in fs
             @testset for T in [Float32, Float64],
-                n in [3, 5],
-                uplo in (TA <: PDMat ? ('L', 'U') : (nothing,))
+                    n in [3, 5],
+                    uplo in (TA <: PDMat ? ('L', 'U') : (nothing,))
 
                 A = _rand(TA, T, n, uplo)
                 B = _rand(TB, T, n, uplo)
