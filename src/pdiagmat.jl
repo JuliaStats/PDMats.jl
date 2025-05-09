@@ -90,20 +90,24 @@ function whiten!(r::AbstractVecOrMat, a::PDiagMat, x::AbstractVecOrMat)
     @check_argdims a.dim == size(x, 1)
     return r .= x ./ sqrt.(a.diag)
 end
+invwhiten!(r::AbstractVecOrMat, a::PDiagMat, x::AbstractVecOrMat) = unwhiten!(r, a, x)
 function unwhiten!(r::AbstractVecOrMat, a::PDiagMat, x::AbstractVecOrMat)
     @check_argdims axes(r) == axes(x)
     @check_argdims a.dim == size(x, 1)
     return r .= x .* sqrt.(a.diag)
 end
+invunwhiten!(r::AbstractVecOrMat, a::PDiagMat, x::AbstractVecOrMat) = whiten!(r, a, x)
 
 function whiten(a::PDiagMat, x::AbstractVecOrMat)
     @check_argdims a.dim == size(x, 1)
     return x ./ sqrt.(a.diag)
 end
+invwhiten(a::PDiagMat, x::AbstractVecOrMat) = unwhiten(a, x)
 function unwhiten(a::PDiagMat, x::AbstractVecOrMat)
     @check_argdims a.dim == size(x, 1)
     return x .* sqrt.(a.diag)
 end
+invunwhiten(a::PDiagMat, x::AbstractVecOrMat) = whiten(a, x)
 
 ### quadratic forms
 

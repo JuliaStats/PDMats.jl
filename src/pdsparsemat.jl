@@ -86,29 +86,60 @@ function whiten!(r::AbstractVecOrMat, a::PDSparseMat, x::AbstractVecOrMat)
     # Can't use `ldiv!` due to missing support in SparseArrays
     return copyto!(r, chol_lower(a.chol) \ x)
 end
+function invwhiten!(r::AbstractVecOrMat, a::PDSparseMat, x::AbstractVecOrMat)
+    @check_argdims axes(r) == axes(x)
+    @check_argdims a.dim == size(x, 1)
+    # `*` and `mul!` are not defined for `UP` factor components,
+    # so we can't use `chol_upper(C) * x`
+    # `sparse` is neither defined for `PtL` nor for `UP` nor for `U` factor components
+    C = cholesky(a)
+    PtL = sparse(C.L)[C.p, :]
+    return copyto!(r, PtL' * x)
+end
 
 function unwhiten!(r::AbstractVecOrMat, a::PDSparseMat, x::AbstractVecOrMat)
     @check_argdims axes(r) == axes(x)
     @check_argdims a.dim == size(x, 1)
     # `*` is not defined for `PtL` factor components,
-    # so we can't use `chol_lower(a.chol) * x`
-    C = a.chol
+    # so we can't use `chol_lower(C) * x`
+    # `sparse` is neither defined for `PtL` nor for `UP` nor for `U` factor components
+    C = cholesky(a)
     PtL = sparse(C.L)[C.p, :]
     return copyto!(r, PtL * x)
+end
+function invunwhiten!(r::AbstractVecOrMat, a::PDSparseMat, x::AbstractVecOrMat)
+    @check_argdims axes(r) == axes(x)
+    @check_argdims a.dim == size(x, 1)
+    # Can't use `ldiv!` due to missing support in SparseArrays
+    return copyto!(r, chol_upper(cholesky(a)) \ x)
 end
 
 function whiten(a::PDSparseMat, x::AbstractVecOrMat)
     @check_argdims a.dim == size(x, 1)
     return chol_lower(cholesky(a)) \ x
 end
+function invwhiten(a::PDSparseMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    # `*` is not defined for `UP` factor components,
+    # so we can't use `chol_upper(C) * x`
+    # `sparse` is neither defined for `PtL` nor for `UP` nor for `U` factor components
+    C = cholesky(a)
+    PtL = sparse(C.L)[C.p, :]
+    return PtL' * x
+end
 
 function unwhiten(a::PDSparseMat, x::AbstractVecOrMat)
     @check_argdims a.dim == size(x, 1)
     # `*` is not defined for `PtL` factor components,
-    # so we can't use `chol_lower(a.chol) * x`
-    C = a.chol
+    # so we can't use `chol_lower(C) * x`
+    # `sparse` is neither defined for `PtL` nor for `UP` nor for `U` factor components
+    C = cholesky(a)
     PtL = sparse(C.L)[C.p, :]
     return PtL * x
+end
+function invunwhiten(a::PDSparseMat, x::AbstractVecOrMat)
+    @check_argdims a.dim == size(x, 1)
+    return chol_upper(cholesky(a)) \ x
 end
 
 ### quadratic forms
