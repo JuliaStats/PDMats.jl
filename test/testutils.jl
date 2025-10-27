@@ -423,6 +423,16 @@ _randPDiagMat(T, n) = PDiagMat(rand(T, n))
 _randScalMat(T, n) = ScalMat(n, rand(T))
 _randPDSparseMat(T, n) = (X = T.(sprand(n, 1, 0.5)); PDSparseMat(X * X' + LinearAlgebra.I))
 
+function _rand(::Type{PDMat}, T, n, uplo::Char)
+    X = _randPDMat(T, n)
+    cholX = cholesky(X)
+    cholX.uplo === uplo && return X
+    (; factors, info) = cholX
+    return PDMat(Cholesky(Matrix(factors'), uplo, info))
+end
+_rand(::Type{PDiagMat}, T, n, _) = _randPDiagMat(T, n)
+_rand(::Type{ScalMat}, T, n, _) = _randScalMat(T, n)
+
 function _pd_compare(A::AbstractPDMat, B::AbstractPDMat)
     @test size(A) == size(B)
     @test Matrix(A) ≈ Matrix(B)
