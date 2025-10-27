@@ -18,7 +18,7 @@ jobs:
           - 'pre'
         os:
           - ubuntu-latest
-          - macOS-latest # Apple Silicon
+          - macOS-latest
           - windows-latest
         arch:
           - ''
@@ -28,9 +28,6 @@ jobs:
             version: 1
           - os: windows-latest
             arch: x86
-            version: 1
-          - os: macOS-13 # Intel
-            arch: ''
             version: 1
     steps:
       - uses: actions/checkout@v5
