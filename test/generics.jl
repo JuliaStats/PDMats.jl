@@ -35,5 +35,9 @@ end
         x = copy(b)
         ldiv!(A, x)
         @test isapprox(A * x, b)
+        B = [1.0 2.0; 3.0 4.0]
+        X = copy(B)
+        ldiv!(A, X)
+        @test isapprox(A * X, B)
     end
 end
