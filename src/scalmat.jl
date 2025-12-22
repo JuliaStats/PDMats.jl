@@ -69,7 +69,7 @@ LinearAlgebra.sqrt(a::ScalMat) = ScalMat(a.dim, sqrt(a.value))
 
 function LinearAlgebra.ldiv!(A::ScalMat, B::AbstractVecOrMat)
     @check_argdims A.dim == size(B, 1)
-    return rdiv!(B, A.value)
+    return ldiv!(A.value, B)
 end
 
 
