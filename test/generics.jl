@@ -1,5 +1,5 @@
 # test operators with pd matrix types
-using LinearAlgebra, PDMats
+using LinearAlgebra, SparseArrays, PDMats
 using Test
 
 @testset "scalar multiplication" begin
@@ -27,3 +27,13 @@ end
 @test isposdef(PDMat([1.0 0.0; 0.0 1.0]))
 @test isposdef(PDiagMat([1.0, 1.0]))
 @test isposdef(ScalMat(2, 3.0))
+
+@testset "ldiv!(A, b)" begin
+    printstyled("Testing ldiv!(A, b)\n"; color = :blue)
+    for A in (PDMat([4.0 2.0; 2.0 3.0]), PDiagMat([4.0, 3.0]), ScalMat(2, 4.0), #=PDSparseMat(sparse([4.0 2.0; 2.0 3.0]))=#) # CHOLMOD.Factor is not supported by ldiv!
+        b = [1.0, 2.0]
+        x = copy(b)
+        ldiv!(A, x)
+        @test isapprox(A * x, b)
+    end
+end

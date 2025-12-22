@@ -30,6 +30,7 @@ Base.kron(A::AbstractPDMat, B::AbstractPDMat) = PDMat(kron(Matrix(A), Matrix(B))
 LinearAlgebra.isposdef(::AbstractPDMat) = true
 LinearAlgebra.ishermitian(::AbstractPDMat) = true
 LinearAlgebra.checksquare(a::AbstractPDMat) = size(a, 1)
+LinearAlgebra.ldiv!(A::AbstractPDMat, B::AbstractVecOrMat) = ldiv!(cholesky(A), B)
 
 ## whiten and unwhiten
 
