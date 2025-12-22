@@ -67,6 +67,11 @@ LinearAlgebra.eigmax(a::ScalMat) = a.value
 LinearAlgebra.eigmin(a::ScalMat) = a.value
 LinearAlgebra.sqrt(a::ScalMat) = ScalMat(a.dim, sqrt(a.value))
 
+function LinearAlgebra.ldiv!(A::ScalMat, B::AbstractVecOrMat)
+    @check_argdims A.dim == size(B, 1)
+    return ldiv!(A.value, B)
+end
+
 
 ### whiten and unwhiten
 

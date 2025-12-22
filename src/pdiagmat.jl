@@ -82,6 +82,8 @@ LinearAlgebra.eigmax(a::PDiagMat) = maximum(a.diag)
 LinearAlgebra.eigmin(a::PDiagMat) = minimum(a.diag)
 LinearAlgebra.sqrt(a::PDiagMat) = PDiagMat(map(sqrt, a.diag))
 
+LinearAlgebra.ldiv!(A::PDiagMat, B::AbstractVecOrMat) = ldiv!(Diagonal(A.diag), B)
+
 
 ### whiten and unwhiten
 
