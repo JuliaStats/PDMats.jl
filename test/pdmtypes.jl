@@ -16,6 +16,8 @@ using Test
 
         @testset "test the functionality" begin
             M = convert(Array{T, 2}, [4.0 -2.0 -1.0; -2.0 5.0 -1.0; -1.0 -1.0 6.0])
+            MS = Symmetric(convert(Matrix{T}, [4.0 NaN NaN; -2.0 5.0 NaN; -1.0 -1.0 6.0]), :L)
+            MH = Hermitian(convert(Matrix{T}, [4.0 NaN NaN; -2.0 5.0 NaN; -1.0 -1.0 6.0]), :L)
             V = convert(Array{T, 1}, [1.5, 2.5, 2.0])
             X = convert(T, 2.0)
             f64M = Float64.(M)
@@ -25,6 +27,8 @@ using Test
                 test_pdmat(PDMat(M), M, cmat_eq = true, verbose = 1)
                 test_pdmat(PDMat{Float64}(M), f64M, cmat_eq = true, verbose = 1)
                 test_pdmat(PDMat{Float64, Matrix{Float64}}(M), f64M, cmat_eq = true, verbose = 1)
+                test_pdmat(PDMat(MS), M, cmat_eq = true, verbose = 1)
+                test_pdmat(PDMat(MH), M, cmat_eq = true, verbose = 1)
                 @test_throws TypeError PDMat{Float32, Matrix{Float64}}(M)
             end
             @testset "PDMat from PDMat" begin
@@ -57,6 +61,10 @@ using Test
             end
             @testset "PDSparseMat" begin
                 test_pdmat(PDSparseMat(sparse(M)), M, cmat_eq = true, verbose = 1, t_eig = false)
+                sparseMS = Symmetric(sparse(MS.data), :L)
+                test_pdmat(PDSparseMat(sparseMS), M, cmat_eq = true, verbose = 1, t_eig = false)
+                sparseMH = Hermitian(sparse(MH.data), :L)
+                test_pdmat(PDSparseMat(sparseMH), M, cmat_eq = true, verbose = 1, t_eig = false)
             end
         end
 
@@ -222,7 +230,9 @@ using Test
         @test Mat32 isa Matrix{Float32}
         @test Mat32 ≈ Float32.(A)
 
-        M = @inferred AbstractPDMat(cholesky(sparse(A)))
+        # sparse(::SparseArrays.CHOLMOD.Factor) is inferred to return a Union{Symmetric{T, <:SparseMatrixCSC{T}}, SparseMatrixCSC{T}}
+        # Now that we support Symmetric directly, the following is no longer inferrable
+        M = AbstractPDMat(cholesky(sparse(A)))
         @test M isa PDSparseMat
         @test Matrix(M) ≈ A
     end
