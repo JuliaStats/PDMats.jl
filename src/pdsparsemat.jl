@@ -2,8 +2,8 @@ const AbstractSparseLike{T<:Real, S<:AbstractSparseMatrix{T}} = Union{S, Symmetr
 # We can't define `convert(AbstractSparseLike{T}, mat)` here because of piracy
 convert_abstractsparselike(::Type{T}, mat::AbstractSparseMatrix) where T<:Real = convert(AbstractSparseMatrix{T}, mat)
 convert_abstractsparselike(::Type{T}, mat::SparseMatrixCSC) where T<:Real = convert(SparseMatrixCSC{T}, mat)  # the AbstractSparseMatrix method doesn't work
-convert_abstractsparselike(::Type{T}, mat::Symmetric{S,<:AbstractSparseMatrix{S}} where S) where T<:Real = Symmetric(convert_abstractsparselike(T, mat.data), mat.uplo)
-convert_abstractsparselike(::Type{T}, mat::Hermitian{S,<:AbstractSparseMatrix{S}} where S) where T<:Real = Hermitian(convert_abstractsparselike(T, mat.data), mat.uplo)
+convert_abstractsparselike(::Type{T}, mat::Symmetric{S,<:AbstractSparseMatrix{S}} where S) where T<:Real = Symmetric(convert_abstractsparselike(T, mat.data), Symbol(mat.uplo))
+convert_abstractsparselike(::Type{T}, mat::Hermitian{S,<:AbstractSparseMatrix{S}} where S) where T<:Real = Hermitian(convert_abstractsparselike(T, mat.data), Symbol(mat.uplo))
 
 """
 Sparse positive definite matrix together with a Cholesky factorization object.

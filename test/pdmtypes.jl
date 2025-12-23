@@ -61,10 +61,16 @@ using Test
             end
             @testset "PDSparseMat" begin
                 test_pdmat(PDSparseMat(sparse(M)), M, cmat_eq = true, verbose = 1, t_eig = false)
+                test_pdmat(PDSparseMat{Float64}(sparse(M)), Float64.(M), cmat_eq = true, verbose = 1, t_eig = false)
+                test_pdmat(PDSparseMat{Float64}(sparse(M), cholesky(sparse(M))), Float64.(M), cmat_eq = true, verbose = 1, t_eig = false)
                 sparseMS = Symmetric(sparse(MS.data), :L)
                 test_pdmat(PDSparseMat(sparseMS), M, cmat_eq = true, verbose = 1, t_eig = false)
+                test_pdmat(PDSparseMat{Float64}(sparseMS), Float64.(M), cmat_eq = true, verbose = 1, t_eig = false)
+                test_pdmat(PDSparseMat{Float64}(sparseMS, cholesky(sparseMS)), Float64.(M), cmat_eq = true, verbose = 1, t_eig = false)
                 sparseMH = Hermitian(sparse(MH.data), :L)
                 test_pdmat(PDSparseMat(sparseMH), M, cmat_eq = true, verbose = 1, t_eig = false)
+                test_pdmat(PDSparseMat{Float64}(sparseMH), Float64.(M), cmat_eq = true, verbose = 1, t_eig = false)
+                test_pdmat(PDSparseMat{Float64}(sparseMH, cholesky(sparseMH)), Float64.(M), cmat_eq = true, verbose = 1, t_eig = false)
             end
         end
 
