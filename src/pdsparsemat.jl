@@ -71,6 +71,15 @@ end
 \(a::PDSparseMat{T}, x::AbstractVecOrMat{T}) where {T <: Real} = convert(Array{T}, a.chol \ convert(Array{Float64}, x)) #to avoid limitations in sparse factorization library CHOLMOD, see e.g., julia issue #14076
 /(x::AbstractVecOrMat{T}, a::PDSparseMat{T}) where {T <: Real} = convert(Array{T}, convert(Array{Float64}, x) / a.chol)
 
+LinearAlgebra.mul!(y::AbstractVector, a::PDSparseMat, x::AbstractVector, α::Number, β::Number) = mul!(y, a.mat, x, α, β)
+@static if isdefined(LinearAlgebra, :AbstractTriangular)
+    LinearAlgebra.mul!(y::AbstractMatrix, a::PDSparseMat, x::LinearAlgebra.AbstractTriangular, α::Number, β::Number) = mul!(y, a.mat, x, α, β)   # ambiguity resolution
+end
+@static if isdefined(LinearAlgebra, :BandedMatrix)
+    LinearAlgebra.mul!(y::AbstractMatrix, a::PDSparseMat, x::LinearAlgebra.BandedMatrix, α::Number, β::Number) = mul!(y, a.mat, x, α, β)   # ambiguity resolution
+end
+LinearAlgebra.mul!(y::AbstractMatrix, a::PDSparseMat, x::AbstractMatrix, α::Number, β::Number) = mul!(y, a.mat, x, α, β)
+
 ### Algebra
 
 Base.inv(a::PDSparseMat{T}) where {T <: Real} = PDMat(inv(a.mat))

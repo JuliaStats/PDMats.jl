@@ -70,6 +70,15 @@ function /(x::AbstractVecOrMat, a::PDiagMat)
 end
 Base.kron(A::PDiagMat, B::PDiagMat) = PDiagMat(vec(permutedims(A.diag) .* B.diag))
 
+LinearAlgebra.mul!(y::AbstractVector, a::PDiagMat, x::AbstractVector, α::Number, β::Number) = mul!(y, Diagonal(a.diag), x, α, β)
+@static if isdefined(LinearAlgebra, :AbstractTriangular)
+    LinearAlgebra.mul!(y::AbstractMatrix, a::PDiagMat, x::LinearAlgebra.AbstractTriangular, α::Number, β::Number) = mul!(y, Diagonal(a.diag), x, α, β)   # ambiguity resolution
+end
+@static if isdefined(LinearAlgebra, :BandedMatrix)
+    LinearAlgebra.mul!(y::AbstractMatrix, a::PDiagMat, x::LinearAlgebra.BandedMatrix, α::Number, β::Number) = mul!(y, Diagonal(a.diag), x, α, β)   # ambiguity resolution
+end
+LinearAlgebra.mul!(y::AbstractMatrix, a::PDiagMat, x::AbstractMatrix, α::Number, β::Number) = mul!(y, Diagonal(a.diag), x, α, β)
+
 ### Algebra
 
 Base.inv(a::PDiagMat) = PDiagMat(map(inv, a.diag))

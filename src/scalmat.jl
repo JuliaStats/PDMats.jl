@@ -58,6 +58,15 @@ function /(x::AbstractVecOrMat, a::ScalMat)
 end
 Base.kron(A::ScalMat, B::ScalMat) = ScalMat(A.dim * B.dim, A.value * B.value)
 
+LinearAlgebra.mul!(y::AbstractVector, a::ScalMat, x::AbstractVector, α::Number, β::Number) = mul!(y, a.value, x, α, β)
+@static if isdefined(LinearAlgebra, :AbstractTriangular)
+    LinearAlgebra.mul!(y::AbstractMatrix, a::ScalMat, x::LinearAlgebra.AbstractTriangular, α::Number, β::Number) = mul!(y, a.value, x, α, β)   # ambiguity resolution
+end
+@static if isdefined(LinearAlgebra, :BandedMatrix)
+    LinearAlgebra.mul!(y::AbstractMatrix, a::ScalMat, x::LinearAlgebra.BandedMatrix, α::Number, β::Number) = mul!(y, a.value, x, α, β)   # ambiguity resolution
+end
+LinearAlgebra.mul!(y::AbstractMatrix, a::ScalMat, x::AbstractMatrix, α::Number, β::Number) = mul!(y, a.value, x, α, β)
+
 ### Algebra
 
 Base.inv(a::ScalMat) = ScalMat(a.dim, inv(a.value))
