@@ -106,6 +106,15 @@ function /(x::AbstractVecOrMat, a::PDMat)
     end
 end
 
+LinearAlgebra.mul!(y::AbstractVector, a::PDMat, x::AbstractVector, α::Number, β::Number) = mul!(y, a.mat, x, α, β)
+@static if isdefined(LinearAlgebra, :AbstractTriangular)
+    LinearAlgebra.mul!(y::AbstractMatrix, a::PDMat, x::LinearAlgebra.AbstractTriangular, α::Number, β::Number) = mul!(y, a.mat, x, α, β)   # ambiguity resolution
+end
+@static if isdefined(LinearAlgebra, :BandedMatrix)
+    LinearAlgebra.mul!(y::AbstractMatrix, a::PDMat, x::LinearAlgebra.BandedMatrix, α::Number, β::Number) = mul!(y, a.mat, x, α, β)   # ambiguity resolution
+end
+LinearAlgebra.mul!(y::AbstractMatrix, a::PDMat, x::AbstractMatrix, α::Number, β::Number) = mul!(y, a.mat, x, α, β)
+
 ### Algebra
 
 Base.inv(a::PDMat) = PDMat(inv(a.chol))
