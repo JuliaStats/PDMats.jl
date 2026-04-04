@@ -7,7 +7,7 @@ macro check_argdims(cond)
     end
 end
 
-function _addscal!(r::Matrix, a::Matrix, b::Union{Matrix, SparseMatrixCSC}, c::Real)
+function _addscal!(r::Matrix, a::Matrix, b::Union{M, Symmetric{T, <:M}, Hermitian{T, <:M}}, c::Real) where {T<:Real, M <: Union{Matrix, SparseMatrixCSC}}
     if c == one(c)
         for i in eachindex(a)
             @inbounds r[i] = a[i] + b[i]
