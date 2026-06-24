@@ -251,13 +251,13 @@ end
 
 ### Specializations for `Array` arguments with reduced allocations
 
-function quad(a::PDMat{<:Real, <:Vector}, x::Matrix)
+function quad(a::PDMat{<:Real, <:Matrix}, x::Matrix)
     @check_argdims a.dim == size(x, 1)
     T = typeof(zero(eltype(a)) * abs2(zero(eltype(x))))
     return quad!(Vector{T}(undef, size(x, 2)), a, x)
 end
 
-function invquad(a::PDMat{<:Real, <:Vector}, x::Matrix)
+function invquad(a::PDMat{<:Real, <:Matrix}, x::Matrix)
     @check_argdims a.dim == size(x, 1)
     T = typeof(abs2(zero(eltype(x))) / zero(eltype(a)))
     return invquad!(Vector{T}(undef, size(x, 2)), a, x)
