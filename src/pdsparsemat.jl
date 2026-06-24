@@ -1,23 +1,39 @@
+const AbstractSparseLike{T<:Real, S<:AbstractSparseMatrix{T}} = Union{S, Symmetric{T,S}, Hermitian{T,S}}
+# We can't define `convert(AbstractSparseLike{T}, mat)` here because of piracy
+convert_abstractsparselike(::Type{T}, mat::AbstractSparseMatrix) where T<:Real = convert(AbstractSparseMatrix{T}, mat)
+convert_abstractsparselike(::Type{T}, mat::SparseMatrixCSC) where T<:Real = convert(SparseMatrixCSC{T}, mat)  # the AbstractSparseMatrix method doesn't work
+convert_abstractsparselike(::Type{T}, mat::Symmetric{S,<:AbstractSparseMatrix{S}} where S) where T<:Real = Symmetric(convert_abstractsparselike(T, mat.data), Symbol(mat.uplo))
+convert_abstractsparselike(::Type{T}, mat::Hermitian{S,<:AbstractSparseMatrix{S}} where S) where T<:Real = Hermitian(convert_abstractsparselike(T, mat.data), Symbol(mat.uplo))
+
 """
 Sparse positive definite matrix together with a Cholesky factorization object.
 """
-struct PDSparseMat{T <: Real, S <: AbstractSparseMatrix} <: AbstractPDMat{T}
+struct PDSparseMat{T <: Real, S <: AbstractSparseLike{T}, C <: CholTypeSparse} <: AbstractPDMat{T}
     mat::S
-    chol::CholTypeSparse
+    chol::C
+    # Note: cholesky(::SparseMatrixCSC{Float32}) returns CholTypeSparse{Float64}, so we can't enforce C <: CholTypeSparse{T}
 
-    PDSparseMat{T, S}(m::AbstractSparseMatrix{T}, c::CholTypeSparse) where {T, S} =
-        new{T, S}(m, c) #add {T} to CholTypeSparse argument once #14076 is implemented
+    function PDSparseMat{T, S, C}(m::AbstractSparseLike{T}, c::CholTypeSparse) where {T, S, C}
+        d = LinearAlgebra.checksquare(m)
+        size(c, 1) == d ||
+            throw(DimensionMismatch("Dimensions of mat and chol are inconsistent."))
+        return new{T, S, C}(m, c)
+    end
 end
-@deprecate PDSparseMat{T, S}(d::Int, m::AbstractSparseMatrix{T}, c::CholTypeSparse) where {T, S} PDSparseMat{T, S}(m, c)
+@deprecate PDSparseMat{T, S}(d::Int, m::AbstractSparseMatrix{T}, c::CholTypeSparse) where {T, S} PDSparseMat{T, S, typeof(c)}(m, c)
 
-function PDSparseMat(mat::AbstractSparseMatrix, chol::CholTypeSparse)
-    d = LinearAlgebra.checksquare(mat)
-    size(chol, 1) == d ||
-        throw(DimensionMismatch("Dimensions of mat and chol are inconsistent."))
-    return PDSparseMat{eltype(mat), typeof(mat)}(mat, chol)
+PDSparseMat{T, S}(mat::AbstractSparseLike, chol::CholTypeSparse) where {T <: Real, S <: AbstractSparseLike{T}} = PDSparseMat{T, S, typeof(chol)}(mat, chol)
+PDSparseMat{T}(mat::AbstractSparseLike{T}, chol::CholTypeSparse) where {T <: Real} = PDSparseMat{T, typeof(mat)}(mat, chol)
+function PDSparseMat{T}(mat::AbstractSparseLike, chol::CholTypeSparse) where {T <: Real}
+    mat = convert_abstractsparselike(T, mat)::AbstractSparseLike{T}   # prevent StackOverflowError if the eltype conversion lies
+    return PDSparseMat{T}(mat, chol)
 end
+PDSparseMat(mat::AbstractSparseLike{T}, chol::CholTypeSparse) where {T <: Real} = PDSparseMat{T}(mat, chol)
 
-PDSparseMat(mat::SparseMatrixCSC) = PDSparseMat(mat, cholesky(mat))
+PDSparseMat{T}(mat::AbstractSparseLike{T,S}) where {T<:Real,S<:SparseMatrixCSC{T}} = PDSparseMat{T}(mat, cholesky(mat))
+PDSparseMat{T}(mat::AbstractSparseLike) where T<:Real = PDSparseMat{T}(convert_abstractsparselike(T, mat))
+
+PDSparseMat(mat::AbstractSparseLike{T,S}) where {T<:Real,S<:SparseMatrixCSC{T}} = PDSparseMat{T}(mat)
 PDSparseMat(fac::CholTypeSparse) = PDSparseMat(sparse(fac), fac)
 
 function Base.getproperty(a::PDSparseMat, s::Symbol)
