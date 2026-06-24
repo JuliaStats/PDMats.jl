@@ -1,8 +1,4 @@
-if isdefined(Base, :get_extension)
-    const CholTypeSparse{T} = SparseArrays.CHOLMOD.Factor{T}
-else
-    const CholTypeSparse{T} = SuiteSparse.CHOLMOD.Factor{T}
-end
+const CholTypeSparse{T} = SparseArrays.CHOLMOD.Factor{T}
 
 # Take into account pivoting!
 PDMats.chol_lower(cf::CholTypeSparse) = cf.PtL

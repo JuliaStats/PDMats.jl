@@ -2,13 +2,10 @@
 
 
 macro check_argdims(cond)
-    quote
+    return quote
         ($(esc(cond))) || throw(DimensionMismatch("Inconsistent argument dimensions."))
     end
 end
-
-_rcopy!(r, x) = (r === x || copyto!(r, x); r)
-
 
 function _addscal!(r::AbstractMatrix, a::AbstractMatrix, b::AbstractMatrix, c::Real)
     if isone(c)
@@ -34,11 +31,11 @@ function _adddiag!(a::AbstractMatrix, v::AbstractVector, c::Real)
     @check_argdims eachindex(v) == axes(a, 1) == axes(a, 2)
     if c == one(c)
         for i in eachindex(v)
-            @inbounds a[i,i] += v[i]
+            @inbounds a[i, i] += v[i]
         end
     else
         for i in eachindex(v)
-            @inbounds a[i,i] += v[i] * c
+            @inbounds a[i, i] += v[i] * c
         end
     end
     return a
@@ -46,7 +43,7 @@ end
 
 _adddiag(a::AbstractMatrix, v::Real) = _adddiag!(copy(a), v)
 _adddiag(a::AbstractMatrix, v::AbstractVector, c::Real) = _adddiag!(copy(a), v, c)
-_adddiag(a::AbstractMatrix, v::AbstractVector{T}) where {T<:Real} = _adddiag!(copy(a), v, one(T))
+_adddiag(a::AbstractMatrix, v::AbstractVector{T}) where {T <: Real} = _adddiag!(copy(a), v, one(T))
 
 
 function wsumsq(w::AbstractVector, a::AbstractVector)
@@ -73,7 +70,7 @@ function colwise_dot!(r::AbstractArray, a::AbstractMatrix, b::AbstractMatrix)
     for j in axes(a, 2)
         v = zero(promote_type(eltype(a), eltype(b)))
         @simd for i in axes(a, 1)
-            @inbounds v += a[i, j]*b[i, j]
+            @inbounds v += a[i, j] * b[i, j]
         end
         r[j] = v
     end
@@ -87,7 +84,7 @@ function colwise_sumsq!(r::AbstractArray, a::AbstractMatrix, c::Real)
         @simd for i in axes(a, 1)
             @inbounds v += abs2(a[i, j])
         end
-        r[j] = v*c
+        r[j] = v * c
     end
     return r
 end
@@ -103,25 +100,3 @@ function colwise_sumsqinv!(r::AbstractArray, a::AbstractMatrix, c::Real)
     end
     return r
 end
-
-# `rdiv!(::AbstractArray, ::Number)` was introduced in Julia 1.2
-# https://github.com/JuliaLang/julia/pull/31179
-@static if VERSION < v"1.2.0-DEV.385"
-    function _rdiv!(X::AbstractArray, s::Number)
-        @simd for I in eachindex(X)
-            @inbounds X[I] /= s
-        end
-        X
-    end
-else
-    _rdiv!(X::AbstractArray, s::Number) = rdiv!(X, s)
-end
-
-# `ldiv!(::AbstractArray, ::Number, ::AbstractArray)` was introduced in Julia 1.4
-# https://github.com/JuliaLang/julia/pull/33806
-@static if VERSION < v"1.4.0-DEV.635"
-    _ldiv!(Y::AbstractArray, s::Number, X::AbstractArray) = Y .= s .\ X
-else
-    _ldiv!(Y::AbstractArray, s::Number, X::AbstractArray) = ldiv!(Y, s, X)
-end
-

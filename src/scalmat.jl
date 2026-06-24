@@ -1,15 +1,15 @@
 """
 Scaling matrix.
 """
-struct ScalMat{T<:Real} <: AbstractPDMat{T}
+struct ScalMat{T <: Real} <: AbstractPDMat{T}
     dim::Int
     value::T
 end
 
 ### Conversion
-Base.convert(::Type{ScalMat{T}}, a::ScalMat{T}) where {T<:Real} = a
-Base.convert(::Type{ScalMat{T}}, a::ScalMat) where {T<:Real} = ScalMat(a.dim, T(a.value))
-Base.convert(::Type{AbstractPDMat{T}}, a::ScalMat) where {T<:Real} = convert(ScalMat{T}, a)
+Base.convert(::Type{ScalMat{T}}, a::ScalMat{T}) where {T <: Real} = a
+Base.convert(::Type{ScalMat{T}}, a::ScalMat) where {T <: Real} = ScalMat{T}(a.dim, T(a.value))
+Base.convert(::Type{AbstractPDMat{T}}, a::ScalMat) where {T <: Real} = convert(ScalMat{T}, a)
 
 ### Basics
 
@@ -22,7 +22,7 @@ LinearAlgebra.cholesky(a::ScalMat) = Cholesky(Diagonal(fill(sqrt(a.value), a.dim
 
 function Base.getindex(a::ScalMat, i::Integer)
     ncol, nrow = fldmod1(i, a.dim)
-    ncol == nrow ? a.value : zero(eltype(a))
+    return ncol == nrow ? a.value : zero(eltype(a))
 end
 Base.getindex(a::ScalMat{T}, i::Integer, j::Integer) where {T} = i == j ? a.value : zero(T)
 
@@ -54,14 +54,9 @@ function \(a::ScalMat, x::AbstractVecOrMat)
 end
 function /(x::AbstractVecOrMat, a::ScalMat)
     @check_argdims a.dim == size(x, 2)
-    if VERSION < v"1.9-"
-        # return matrix for 1-element vectors `x`, consistent with LinearAlgebra < 1.9
-        return reshape(x, Val(2)) / a.value
-    else
-        return x / a.value
-    end
+    return x / a.value
 end
-Base.kron(A::ScalMat, B::ScalMat) = ScalMat(A.dim * B.dim, A.value * B.value )
+Base.kron(A::ScalMat, B::ScalMat) = ScalMat(A.dim * B.dim, A.value * B.value)
 
 ### Algebra
 
@@ -72,29 +67,38 @@ LinearAlgebra.eigmax(a::ScalMat) = a.value
 LinearAlgebra.eigmin(a::ScalMat) = a.value
 LinearAlgebra.sqrt(a::ScalMat) = ScalMat(a.dim, sqrt(a.value))
 
+function LinearAlgebra.ldiv!(A::ScalMat, B::AbstractVecOrMat)
+    @check_argdims A.dim == size(B, 1)
+    return ldiv!(A.value, B)
+end
+
 
 ### whiten and unwhiten
 
 function whiten!(r::AbstractVecOrMat, a::ScalMat, x::AbstractVecOrMat)
     @check_argdims axes(r) == axes(x)
     @check_argdims a.dim == size(x, 1)
-    _ldiv!(r, sqrt(a.value), x)
+    return ldiv!(r, sqrt(a.value), x)
 end
+invwhiten!(r::AbstractVecOrMat, a::ScalMat, x::AbstractVecOrMat) = unwhiten!(r, a, x)
 
 function unwhiten!(r::AbstractVecOrMat, a::ScalMat, x::AbstractVecOrMat)
     @check_argdims axes(r) == axes(x)
     @check_argdims a.dim == size(x, 1)
-    mul!(r, x, sqrt(a.value))
+    return mul!(r, x, sqrt(a.value))
 end
+invunwhiten!(r::AbstractVecOrMat, a::ScalMat, x::AbstractVecOrMat) = whiten!(r, a, x)
 
 function whiten(a::ScalMat, x::AbstractVecOrMat)
     @check_argdims a.dim == size(x, 1)
     return x / sqrt(a.value)
 end
+invwhiten(a::ScalMat, x::AbstractVecOrMat) = unwhiten(a, x)
 function unwhiten(a::ScalMat, x::AbstractVecOrMat)
     @check_argdims a.dim == size(x, 1)
     return sqrt(a.value) * x
 end
+invunwhiten(a::ScalMat, x::AbstractVecOrMat) = whiten(a, x)
 
 ### quadratic forms
 
@@ -107,8 +111,8 @@ function quad(a::ScalMat, x::AbstractVecOrMat)
         # do NOT return a `SVector` for inputs `x::SMatrix`.
         wsq = let w = a.value
             x -> w * abs2(x)
-        end 
-        return vec(sum(wsq, x; dims=1))
+        end
+        return vec(sum(wsq, x; dims = 1))
     end
 end
 
@@ -130,8 +134,8 @@ function invquad(a::ScalMat, x::AbstractVecOrMat)
         # do NOT return a `SVector` for inputs `x::SMatrix`.
         wsq = let w = a.value
             x -> abs2(x) / w
-        end 
-        return vec(sum(wsq, x; dims=1))
+        end
+        return vec(sum(wsq, x; dims = 1))
     end
 end
 
@@ -180,10 +184,10 @@ end
 
 function X_invA_Xt(a::ScalMat, x::Matrix{<:Real})
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 2)
-    return Symmetric(_rdiv!(x * transpose(x), a.value))
+    return Symmetric(rdiv!(x * transpose(x), a.value))
 end
 
 function Xt_invA_X(a::ScalMat, x::Matrix{<:Real})
     @check_argdims LinearAlgebra.checksquare(a) == size(x, 1)
-    return Symmetric(_rdiv!(transpose(x) * x, a.value))
+    return Symmetric(rdiv!(transpose(x) * x, a.value))
 end

@@ -15,9 +15,9 @@ n = 10
 
 @testset "Matrix square root" begin
     for T in [Float32, Float64]
-        _pd_sqrt_compare( _randPDMat(T, n))
-        _pd_sqrt_compare( _randPDiagMat(T, n))
-        _pd_sqrt_compare( _randScalMat(T, n))
-        _pd_sqrt_compare( _randPDSparseMat(T, n))
+        _pd_sqrt_compare(_randPDMat(T, n))
+        _pd_sqrt_compare(_randPDiagMat(T, n))
+        _pd_sqrt_compare(_randScalMat(T, n))
+        _pd_sqrt_compare(_randPDSparseMat(T, n))
     end
 end

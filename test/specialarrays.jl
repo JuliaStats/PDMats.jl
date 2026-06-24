@@ -4,7 +4,7 @@ using StaticArrays
 @testset "Special matrix types" begin
     @testset "StaticArrays" begin
         # Full matrix
-        S = (x -> SMatrix{4,4}(Symmetric(x * x' + I)))(@SMatrix(randn(4, 7)))
+        S = (x -> SMatrix{4, 4}(Symmetric(x * x' + I)))(@SMatrix(randn(4, 7)))
         PDS = PDMat(S)
         @test PDS isa PDMat{Float64, <:SMatrix{4, 4, Float64}}
         @test isbits(PDS)
@@ -14,6 +14,14 @@ using StaticArrays
         @test Matrix(PDC) ≈ Matrix(PDS)
         @test PDMat(S, C) === PDS
         @test @allocated(PDMat(S)) == @allocated(PDMat(C)) == @allocated(PDMat(S, C))
+
+        if Base.VERSION >= v"1.12.0-DEV.1654"    # julia #56562
+            A = PDMat(Matrix{Float64}(I, 2, 2))
+            B = PDMat(SMatrix{2, 2, Float64}(I))
+            @test !isa(A.mat, typeof(B.mat))
+            S = convert(typeof(B), A)
+            @test  isa(S.mat, typeof(B.mat))
+        end
 
         # Diagonal matrix
         D = PDiagMat(@SVector(rand(4)))
@@ -72,16 +80,16 @@ using StaticArrays
             @test invquad(A, Y) isa SVector{10, Float64}
             @test invquad(A, Y) ≈ diag(Matrix(Y)' * (Matrix(A) \ Matrix(Y)))
 
-            @test X_A_Xt(A, X) isa Symmetric{Float64,<:SMatrix{10, 10, Float64}}
-            @test X_A_Xt(A, X) ≈ Matrix(X) * Matrix(A) *  Matrix(X)'
+            @test X_A_Xt(A, X) isa Symmetric{Float64, <:SMatrix{10, 10, Float64}}
+            @test X_A_Xt(A, X) ≈ Matrix(X) * Matrix(A) * Matrix(X)'
 
-            @test X_invA_Xt(A, X) isa Symmetric{Float64,<:SMatrix{10, 10, Float64}}
+            @test X_invA_Xt(A, X) isa Symmetric{Float64, <:SMatrix{10, 10, Float64}}
             @test X_invA_Xt(A, X) ≈ Matrix(X) * (Matrix(A) \ Matrix(X)')
 
-            @test Xt_A_X(A, Y) isa Symmetric{Float64,<:SMatrix{10, 10, Float64}}
+            @test Xt_A_X(A, Y) isa Symmetric{Float64, <:SMatrix{10, 10, Float64}}
             @test Xt_A_X(A, Y) ≈ Matrix(Y)' * Matrix(A) * Matrix(Y)
 
-            @test Xt_invA_X(A, Y) isa Symmetric{Float64,<:SMatrix{10, 10, Float64}}
+            @test Xt_invA_X(A, Y) isa Symmetric{Float64, <:SMatrix{10, 10, Float64}}
             @test Xt_invA_X(A, Y) ≈ Matrix(Y)' * (Matrix(A) \ Matrix(Y))
         end
 
@@ -113,10 +121,7 @@ using StaticArrays
         Y = rand(5, 2)
         @test P * x ≈ x
         @test P * Y ≈ Y
-        # Right division with Cholesky requires https://github.com/JuliaLang/julia/pull/32594
-        if VERSION >= v"1.3.0-DEV.562"
-            @test X / P ≈ X
-        end
+        @test X / P ≈ X
         @test P \ x ≈ x
         @test P \ Y ≈ Y
         @test X_A_Xt(P, X) ≈ X * X'

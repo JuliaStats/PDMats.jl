@@ -1,4 +1,3 @@
-
 # between pdmat and pdmat
 
 +(a::PDMat, b::AbstractPDMat) = PDMat(a.mat + Matrix(b))
@@ -37,4 +36,3 @@ pdadd(a::PDiagMat, b::ScalMat, c::Real) = PDiagMat(a.diag .+ b.value * c)
 pdadd(a::ScalMat, b::PDMat, c::Real) = PDMat(_adddiag!(b.mat * c, a.value))
 pdadd(a::ScalMat, b::PDiagMat, c::Real) = PDiagMat(a.value .+ b.diag * c)
 pdadd(a::ScalMat, b::ScalMat, c::Real) = ScalMat(a.dim, a.value + b.value * c)
-

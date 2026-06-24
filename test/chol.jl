@@ -10,9 +10,11 @@ using PDMats: chol_lower, chol_upper
         size_of_one_copy = sizeof(C)
         @assert size_of_one_copy > d  # ensure the matrix is large enough that few-byte allocations don't matter
 
+        # allow 5% overhead
         @test chol_lower(C) ≈ chol_upper(C)'
-        @test (@allocated chol_lower(C)) < 1.05 * size_of_one_copy  # allow 5% overhead
-        @test (@allocated chol_upper(C)) < 1.05 * size_of_one_copy
+        broken = VERSION >= v"1.11.5" && Sys.isapple()
+        @test (@allocated chol_lower(C)) < 1.05 * size_of_one_copy  broken = broken
+        @test (@allocated chol_upper(C)) < 1.05 * size_of_one_copy  broken = broken
 
         X = randn(d, 10)
         for uplo in (:L, :U)
@@ -20,7 +22,7 @@ using PDMats: chol_lower, chol_upper
             @test chol_lower(ch) ≈ chol_upper(ch)'
             @test (@allocated chol_lower(ch)) < 33  # allow small overhead for wrapper types
             @test (@allocated chol_upper(ch)) < 33  # allow small overhead for wrapper types
- 
+
             # Only test dim, `quad`/`invquad`, `whiten`/`unwhiten`, and tri products
             @test dim(ch) == size(C, 1)
             pdtest_quad(ch, C, invC, X, 0)

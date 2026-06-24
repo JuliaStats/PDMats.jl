@@ -24,16 +24,22 @@ dim(A::Cholesky) = LinearAlgebra.checksquare(A)
 # whiten
 whiten(A::Cholesky, x::AbstractVecOrMat) = chol_lower(A) \ x
 whiten!(A::Cholesky, x::AbstractVecOrMat) = ldiv!(chol_lower(A), x)
+invwhiten(A::Cholesky, x::AbstractVecOrMat) = chol_upper(A) * x
+invwhiten!(A::Cholesky, x::AbstractVecOrMat) = lmul!(chol_upper(A), x)
 
 # unwhiten
 unwhiten(A::Cholesky, x::AbstractVecOrMat) = chol_lower(A) * x
 unwhiten!(A::Cholesky, x::AbstractVecOrMat) = lmul!(chol_lower(A), x)
+invunwhiten(A::Cholesky, x::AbstractVecOrMat) = chol_upper(A) \ x
+invunwhiten!(A::Cholesky, x::AbstractVecOrMat) = ldiv!(chol_upper(A), x)
 
 # 3-argument whiten/unwhiten
 for T in (:AbstractVector, :AbstractMatrix)
     @eval begin
         whiten!(r::$T, A::Cholesky, x::$T) = whiten!(A, copyto!(r, x))
+        invwhiten!(r::$T, A::Cholesky, x::$T) = invwhiten!(A, copyto!(r, x))
         unwhiten!(r::$T, A::Cholesky, x::$T) = unwhiten!(A, copyto!(r, x))
+        invunwhiten!(r::$T, A::Cholesky, x::$T) = invunwhiten!(A, copyto!(r, x))
     end
 end
 
@@ -45,7 +51,7 @@ end
 function quad(A::Cholesky, X::AbstractMatrix)
     @check_argdims size(A, 1) == size(X, 1)
     Z = chol_upper(A) * X
-    return vec(sum(abs2, Z; dims=1))
+    return vec(sum(abs2, Z; dims = 1))
 end
 function quad!(r::AbstractArray, A::Cholesky, X::AbstractMatrix)
     @check_argdims eachindex(r) == axes(X, 2)
@@ -53,8 +59,7 @@ function quad!(r::AbstractArray, A::Cholesky, X::AbstractMatrix)
     aU = chol_upper(A)
     z = similar(r, size(A, 1)) # buffer to save allocations
     @inbounds for i in axes(X, 2)
-        copyto!(z, view(X, :, i))
-        lmul!(aU, z)
+        mul!(z, aU, view(X, :, i))
         r[i] = sum(abs2, z)
     end
     return r
@@ -65,10 +70,10 @@ function invquad(A::Cholesky, x::AbstractVector)
     @check_argdims size(A, 1) == size(x, 1)
     return sum(abs2, chol_lower(A) \ x)
 end
-function invquad(A::Cholesky, X::AbstractMatrix) 
+function invquad(A::Cholesky, X::AbstractMatrix)
     @check_argdims size(A, 1) == size(X, 1)
     Z = chol_lower(A) \ X
-    return vec(sum(abs2, Z; dims=1))
+    return vec(sum(abs2, Z; dims = 1))
 end
 function invquad!(r::AbstractArray, A::Cholesky, X::AbstractMatrix)
     @check_argdims eachindex(r) == axes(X, 2)

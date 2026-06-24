@@ -5,7 +5,7 @@ using PDMats
 
 # New AbstractPDMat type for the tests below
 # Supports only functions needed in the tests below
-struct ScalMat3D{T<:Real} <: AbstractPDMat{T}
+struct ScalMat3D{T <: Real} <: AbstractPDMat{T}
     value::T
 end
 Base.Matrix(a::ScalMat3D) = Matrix(Diagonal(fill(a.value, 3)))
@@ -16,9 +16,9 @@ Base.getindex(a::ScalMat3D, i::Int, j::Int) = i == j ? a.value : zero(a.value)
 
 @testset "addition" begin
     for T in (Float64, Float32)
-        printstyled("Testing addition with eltype = $T\n"; color=:blue)
-        M = convert(Array{T,2}, [4.0 -2.0 -1.0; -2.0 5.0 -1.0; -1.0 -1.0 6.0])
-        V = convert(Array{T,1}, [1.5, 2.5, 2.0])
+        printstyled("Testing addition with eltype = $T\n"; color = :blue)
+        M = convert(Array{T, 2}, [4.0 -2.0 -1.0; -2.0 5.0 -1.0; -1.0 -1.0 6.0])
+        V = convert(Array{T, 1}, [1.5, 2.5, 2.0])
         local X = convert(T, 2.0)
 
         pm1 = PDMat(M)
