@@ -12,9 +12,12 @@ using PDMats: chol_lower, chol_upper
 
         # allow 5% overhead
         @test chol_lower(C) ≈ chol_upper(C)'
-        broken = v"1.11.5" <= VERSION < v"1.12" && Sys.isapple()
-        @test (@allocated chol_lower(C)) < 1.05 * size_of_one_copy  broken = broken
-        @test (@allocated chol_upper(C)) < 1.05 * size_of_one_copy  broken = broken
+        # The allocation bound is unreliable on Apple (Julia >= 1.11.5): it is met on some
+        # machines but exceeded on others (incl. CI), so skip the check there rather than mark
+        # it `broken` (which errors on the machines where it happens to pass).
+        skip = VERSION >= v"1.11.5" && Sys.isapple()
+        @test (@allocated chol_lower(C)) < 1.05 * size_of_one_copy  skip = skip
+        @test (@allocated chol_upper(C)) < 1.05 * size_of_one_copy  skip = skip
 
         X = randn(d, 10)
         for uplo in (:L, :U)

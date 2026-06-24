@@ -163,10 +163,8 @@ using Test
         @test size(z) == size(y)
         @test z ≈ y
 
-        # right division not defined for CHOLMOD:
-        # `rdiv!(::Matrix{Float64}, ::SuiteSparse.CHOLMOD.Factor{Float64})` not defined
-        if !HAVE_CHOLMOD
-            z = x / PDSparseMat(sparse(first(A), 1, 1))
+        if HAVE_CHOLMOD
+            z = x / PDSparseMat(sparse(A))
             @test typeof(z) === typeof(y)
             @test size(z) == size(y)
             @test z ≈ y

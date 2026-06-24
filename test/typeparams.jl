@@ -57,10 +57,8 @@ Base.:*(a::MyPD, c::Real) = MyPD(a.value * c)
             M = Matrix(a)
             for x in operands
                 @test a \ x ≈ M \ Array(x)
-                if !(a isa PDSparseMat)  # CHOLMOD has no right division
-                    xt = permutedims(x)
-                    @test xt / a ≈ Array(xt) / M
-                end
+                xt = permutedims(x)
+                @test xt / a ≈ Array(xt) / M
             end
         end
     end

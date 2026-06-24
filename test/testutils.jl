@@ -245,25 +245,21 @@ function pdtest_div(C, Imat::Matrix, X::Matrix, verbose::Int)
     @assert d == size(C, 1) == size(C, 2)
     @assert size(Imat) == size(C)
     @test C \ X ≈ Imat * X
-    # CHOLMOD throws error since no method is found for
-    # `rdiv!(::Matrix{Float64}, ::SuiteSparse.CHOLMOD.Factor{Float64})`
-    check_rdiv = !(C isa PDSparseMat && HAVE_CHOLMOD)
-    check_rdiv && @test Matrix(X') / C ≈ (C \ X)'
+    @test Matrix(X') / C ≈ (C \ X)'
 
     for i in 1:n
         xi = vec(copy(X[:, i]))
         @test C \ xi ≈ Imat * xi
-        check_rdiv && @test Matrix(xi') / C ≈ (C \ xi)'
+        @test Matrix(xi') / C ≈ (C \ xi)'
     end
 
 
     # Dimension mismatches
     @test_throws DimensionMismatch C \ rand(d + 1)
     @test_throws DimensionMismatch C \ rand(d + 1, n)
-    return if check_rdiv
-        @test_throws DimensionMismatch rand(1, d + 1) / C
-        @test_throws DimensionMismatch rand(n, d + 1) / C
-    end
+    @test_throws DimensionMismatch rand(1, d + 1) / C
+    @test_throws DimensionMismatch rand(n, d + 1) / C
+    return nothing
 end
 
 

@@ -76,8 +76,9 @@ function \(a::PDSparseMat, x::AbstractVecOrMat{<:Real})
 end
 function /(x::AbstractVecOrMat{<:Real}, a::PDSparseMat)
     @check_argdims a.dim == size(x, 2)
-    T = promote_type(eltype(a), eltype(x))
-    return convert(Array{T}, convert(Array{Float64}, x) / a.chol)
+    # CHOLMOD does not support `/`, but `a` is symmetric: `x / a == (a \ xᵀ)ᵀ`.
+    z = a \ transpose(x)
+    return x isa AbstractVector ? vec(z) : permutedims(z)
 end
 
 ### Algebra
