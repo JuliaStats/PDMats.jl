@@ -12,30 +12,30 @@ for f in (:X_A_Xt, :Xt_A_X)
             @check_argdims A.dim == size(B, 1)
             return PDiagMat(abs2.(B.diag) .* A.value)
         end
-        function $(f)(A::PDMat, B::ScalMat)
+        function $(f)(A::PDMatCholesky, B::ScalMat)
             @check_argdims B.dim == size(A, 1)
             b2 = abs2(B.value)
             mat = b2 * A.mat
-            uplo = A.chol.uplo
+            chol = cholesky(A)
+            uplo = chol.uplo
             if uplo === 'U'
-                factors = A.chol.factors * B.value'
+                factors = chol.factors * B.value'
             else
-                factors = B.value * A.chol.factors
+                factors = B.value * chol.factors
             end
-            chol = Cholesky(factors, uplo, A.chol.info)
-            return PDMat(mat, chol)
+            return PDMat(mat, Cholesky(factors, uplo, chol.info))
         end
-        function $(f)(A::PDMat, B::PDiagMat)
+        function $(f)(A::PDMatCholesky, B::PDiagMat)
             b = B.diag
             mat = A.mat .* (b .* b')
-            uplo = A.chol.uplo
+            chol = cholesky(A)
+            uplo = chol.uplo
             if uplo === 'U'
-                factors = A.chol.factors .* b'
+                factors = chol.factors .* b'
             else
-                factors = b .* A.chol.factors
+                factors = b .* chol.factors
             end
-            chol = Cholesky(factors, uplo, A.chol.info)
-            return PDMat(mat, chol)
+            return PDMat(mat, Cholesky(factors, uplo, chol.info))
         end
     end
 end

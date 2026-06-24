@@ -4,12 +4,19 @@
 #       the implementation of a subtype of AbstractPDMat
 #
 
-using PDMats, SuiteSparse, Test, Random
+using PDMats, LinearAlgebra, SparseArrays, Test, Random
 
 Random.seed!(10)
 
-const HAVE_CHOLMOD = isdefined(SuiteSparse, :CHOLMOD)
-const PDMatType = HAVE_CHOLMOD ? Union{PDMat, PDSparseMat, PDiagMat} : Union{PDMat, PDiagMat}
+const HAVE_CHOLMOD = isdefined(SparseArrays, :CHOLMOD)
+const PDMatCholesky{T <: Real, S <: AbstractMatrix, C <: Cholesky} = PDMat{T, S, C}
+if HAVE_CHOLMOD
+    const CHOLMOD = SparseArrays.CHOLMOD
+    const PDSparseMat{T <: Real, S <: AbstractSparseMatrix, C <: CHOLMOD.Factor} = PDMat{T, S, C}
+    const PDMatType = Union{PDMatCholesky, PDSparseMat, PDiagMat, ScalMat}
+else
+    const PDMatType = Union{PDMatCholesky, PDiagMat, ScalMat}
+end
 
 ## driver function
 function test_pdmat(
@@ -128,7 +135,7 @@ function pdtest_diag(C, Cmat::Matrix, cmat_eq::Bool, verbose::Int)
     end
 end
 
-function pdtest_cholesky(C::Union{PDMat, PDiagMat, ScalMat}, Cmat::Matrix, cmat_eq::Bool, verbose::Int)
+function pdtest_cholesky(C::PDMatType, Cmat::Matrix, cmat_eq::Bool, verbose::Int)
     _pdt(verbose, "cholesky")
     if cmat_eq
         @test cholesky(C).U == cholesky(Cmat).U
@@ -147,11 +154,11 @@ end
 if HAVE_CHOLMOD
     function pdtest_cholesky(C::PDSparseMat, Cmat::Matrix, cmat_eq::Bool, verbose::Int)
         _pdt(verbose, "cholesky")
-        # We special case PDSparseMat because we can't perform equality checks on
-        # `SuiteSparse.CHOLMOD.Factor`s and `SuiteSparse.CHOLMOD.FactorComponent`s
-        return @test diag(cholesky(C)) ≈ diag(cholesky(Cmat).U)
+        # We handle this case specially because we can't perform equality checks on
+        # `SparseArrays.CHOLMOD.Factor`s and `SparseArrays.CHOLMOD.FactorComponent`s.
         # NOTE: `==` also doesn't work because `diag(cholesky(C))` will return `Vector{Float64}`
         # even if the inputs are `Float32`s.
+        return @test diag(cholesky(C)) ≈ diag(cholesky(Cmat).U)
     end
 end
 
@@ -183,7 +190,7 @@ function pdtest_det(C, Cmat::Matrix, verbose::Int)
     @test det(C) ≈ det(Cmat)
 
     # generic fallback in LinearAlgebra performs LU decomposition
-    return if C isa Union{PDMat, PDiagMat, ScalMat}
+    return if C isa Union{PDMatCholesky, PDiagMat, ScalMat}
         @test iszero(@allocated det(C))
     end
 end
@@ -193,7 +200,7 @@ function pdtest_logdet(C, Cmat::Matrix, verbose::Int)
     @test logdet(C) ≈ logdet(Cmat)
 
     # generic fallback in LinearAlgebra performs LU decomposition
-    return if C isa Union{PDMat, PDiagMat, ScalMat}
+    return if C isa Union{PDMatCholesky, PDiagMat, ScalMat}
         @test iszero(@allocated logdet(C))
     end
 end
@@ -246,8 +253,8 @@ function pdtest_div(C, Imat::Matrix, X::Matrix, verbose::Int)
     @assert size(Imat) == size(C)
     @test C \ X ≈ Imat * X
     # CHOLMOD throws error since no method is found for
-    # `rdiv!(::Matrix{Float64}, ::SuiteSparse.CHOLMOD.Factor{Float64})`
-    check_rdiv = !(C isa PDSparseMat && HAVE_CHOLMOD)
+    # `rdiv!(::Matrix{Float64}, ::SparseArrays.CHOLMOD.Factor{Float64})`
+    check_rdiv = !(HAVE_CHOLMOD && C isa PDSparseMat)
     check_rdiv && @test Matrix(X') / C ≈ (C \ X)'
 
     for i in 1:n
@@ -421,7 +428,9 @@ end
 _randPDMat(T, n) = (X = randn(T, n, n); PDMat(X * X' + LinearAlgebra.I))
 _randPDiagMat(T, n) = PDiagMat(rand(T, n))
 _randScalMat(T, n) = ScalMat(n, rand(T))
-_randPDSparseMat(T, n) = (X = T.(sprand(n, 1, 0.5)); PDSparseMat(X * X' + LinearAlgebra.I))
+if HAVE_CHOLMOD
+    _randPDSparseMat(T, n) = (X = sprand(T, n, 1, 0.5); PDMat(X * X' + LinearAlgebra.I))
+end
 
 function _rand(::Type{PDMat}, T, n, uplo::Char)
     X = _randPDMat(T, n)

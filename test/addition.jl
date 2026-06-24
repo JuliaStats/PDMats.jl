@@ -25,7 +25,7 @@ Base.getindex(a::ScalMat3D, i::Int, j::Int) = i == j ? a.value : zero(a.value)
         pm2 = PDiagMat(V)
         pm3 = PDiagMat(sparse(V))
         pm4 = ScalMat(3, X)
-        pm5 = PDSparseMat(sparse(M))
+        pm5 = PDMat(sparse(M))
         pm6 = ScalMat3D(X)
 
         pmats = Any[pm1, pm2, pm3, pm4, pm5, pm6]

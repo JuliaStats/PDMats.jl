@@ -7,27 +7,27 @@ macro check_argdims(cond)
     end
 end
 
-function _addscal!(r::Matrix, a::Matrix, b::Union{Matrix, SparseMatrixCSC}, c::Real)
-    if c == one(c)
-        for i in eachindex(a)
+function _addscal!(r::AbstractMatrix, a::AbstractMatrix, b::AbstractMatrix, c::Real)
+    if isone(c)
+        for i in eachindex(r, a, b)
             @inbounds r[i] = a[i] + b[i]
         end
     else
-        for i in eachindex(a)
-            @inbounds r[i] = a[i] + b[i] * c
+        for i in eachindex(r, a, b)
+            @inbounds r[i] = muladd(b[i], c, a[i])
         end
     end
     return r
 end
 
-function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::Real)
+function _adddiag!(a::AbstractMatrix, v::Real)
     for i in diagind(a)
         @inbounds a[i] += v
     end
     return a
 end
 
-function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector, c::Real)
+function _adddiag!(a::AbstractMatrix, v::AbstractVector, c::Real)
     @check_argdims eachindex(v) == axes(a, 1) == axes(a, 2)
     if c == one(c)
         for i in eachindex(v)
@@ -41,9 +41,9 @@ function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector, c::Real
     return a
 end
 
-_adddiag(a::Union{Matrix, SparseMatrixCSC}, v::Real) = _adddiag!(copy(a), v)
-_adddiag(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector, c::Real) = _adddiag!(copy(a), v, c)
-_adddiag(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector{T}) where {T <: Real} = _adddiag!(copy(a), v, one(T))
+_adddiag(a::AbstractMatrix, v::Real) = _adddiag!(copy(a), v)
+_adddiag(a::AbstractMatrix, v::AbstractVector, c::Real) = _adddiag!(copy(a), v, c)
+_adddiag(a::AbstractMatrix, v::AbstractVector{T}) where {T <: Real} = _adddiag!(copy(a), v, one(T))
 
 
 function wsumsq(w::AbstractVector, a::AbstractVector)

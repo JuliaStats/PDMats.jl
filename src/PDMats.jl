@@ -1,6 +1,6 @@
 module PDMats
 
-using LinearAlgebra, SparseArrays, SuiteSparse
+using LinearAlgebra
 
 import Base: +, *, \, /, ==, convert, inv, Matrix, kron
 
@@ -8,7 +8,6 @@ export
     # Types
     AbstractPDMat,
     PDMat,
-    PDSparseMat,
     PDiagMat,
     ScalMat,
 
@@ -39,19 +38,12 @@ The base type for positive definite matrices.
 """
 abstract type AbstractPDMat{T <: Real} <: AbstractMatrix{T} end
 
-const HAVE_CHOLMOD = isdefined(SuiteSparse, :CHOLMOD)
-
 # source files
 
 include("utils.jl")
 include("chol.jl")
 
 include("pdmat.jl")
-
-if HAVE_CHOLMOD
-    include("pdsparsemat.jl")
-end
-
 include("pdiagmat.jl")
 include("scalmat.jl")
 

@@ -17,14 +17,6 @@ chol_lower(a::Matrix) = cholesky(Symmetric(a, :L)).L
 # type-restricted to be Real, so they are equivalent.
 chol_upper(a::Matrix) = cholesky(Symmetric(a, :U)).U
 
-if HAVE_CHOLMOD
-    CholTypeSparse{T} = SuiteSparse.CHOLMOD.Factor{T}
-
-    # Take into account pivoting!
-    chol_lower(cf::CholTypeSparse) = cf.PtL
-    chol_upper(cf::CholTypeSparse) = cf.UP
-end
-
 # Interface for `Cholesky`
 
 dim(A::Cholesky) = LinearAlgebra.checksquare(A)
