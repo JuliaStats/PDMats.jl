@@ -25,3 +25,25 @@ using Test
         @test ForwardDiff.jacobian(apply_f!, a) ≈ J
     end
 end
+
+# issue #99: `invquad`/`quad` must differentiate correctly and allocate only
+# O(n·#partials) — not O(n²·#partials), as when the factor was promoted to `Dual`.
+@testset "PDMat: quad/invquad with ForwardDiff (issue #99)" begin
+    n = 100
+    M = randn(n, n)
+    A = PDMat(Symmetric(M * M' + n * I))
+    x = randn(n)
+
+    # ∇ invquad(A, x) = 2 A⁻¹x, ∇ quad(A, x) = 2 A x
+    for (f, grad) in ((invquad, 2 * (A \ x)), (quad, 2 * (A * x)))
+        @test ForwardDiff.gradient(Base.Fix1(f, A), x) ≈ grad
+    end
+
+    # only a single result vector the size of `xd` is allocated, not an O(n²) matrix
+    xd = [ForwardDiff.Dual(xi, Tuple(randn(4))) for xi in x]
+    for f in (invquad, quad)
+        g = Base.Fix1(f, A)
+        g(xd)  # warm up
+        @test (@allocated g(xd)) ≤ 3 * sizeof(xd)
+    end
+end
