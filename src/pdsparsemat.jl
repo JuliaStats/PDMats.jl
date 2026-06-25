@@ -68,8 +68,18 @@ end
 *(a::PDSparseMat, c::Real) = PDSparseMat(a.mat * c)
 *(a::PDSparseMat, x::AbstractMatrix) = a.mat * x  # defining these seperately to avoid
 *(a::PDSparseMat, x::AbstractVector) = a.mat * x  # ambiguity errors
-\(a::PDSparseMat{T}, x::AbstractVecOrMat{T}) where {T <: Real} = convert(Array{T}, a.chol \ convert(Array{Float64}, x)) #to avoid limitations in sparse factorization library CHOLMOD, see e.g., julia issue #14076
-/(x::AbstractVecOrMat{T}, a::PDSparseMat{T}) where {T <: Real} = convert(Array{T}, convert(Array{Float64}, x) / a.chol)
+# `x` is converted to `Float64` to work around CHOLMOD limitations (julia issue #14076).
+function \(a::PDSparseMat, x::AbstractVecOrMat{<:Real})
+    @check_argdims a.dim == size(x, 1)
+    T = promote_type(eltype(a), eltype(x))
+    return convert(Array{T}, a.chol \ convert(Array{Float64}, x))
+end
+function /(x::AbstractVecOrMat{<:Real}, a::PDSparseMat)
+    @check_argdims a.dim == size(x, 2)
+    # CHOLMOD does not support `/`, but `a` is symmetric: `x / a == (a \ xᵀ)ᵀ`.
+    z = a \ transpose(x)
+    return x isa AbstractVector ? vec(z) : permutedims(z)
+end
 
 ### Algebra
 

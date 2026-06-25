@@ -21,7 +21,6 @@ pdadd(a::Matrix{T}, b::AbstractPDMat{S}) where {T <: Real, S <: Real} = pdadd!(s
 +(a::Matrix, b::AbstractPDMat) = pdadd(a, b)
 +(a::AbstractPDMat, b::Matrix) = pdadd(b, a)
 
-*(a::AbstractPDMat, c::T) where {T <: Real} = a * c
 *(c::T, a::AbstractPDMat) where {T <: Real} = a * c
 /(a::AbstractPDMat, c::T) where {T <: Real} = a * inv(c)
 Base.kron(A::AbstractPDMat, B::AbstractPDMat) = PDMat(kron(Matrix(A), Matrix(B)))

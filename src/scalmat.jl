@@ -14,7 +14,7 @@ Base.convert(::Type{AbstractPDMat{T}}, a::ScalMat) where {T <: Real} = convert(S
 ### Basics
 
 Base.size(a::ScalMat) = (a.dim, a.dim)
-Base.Matrix(a::ScalMat) = Matrix(Diagonal(fill(a.value, a.dim)))
+Base.Matrix{T}(a::ScalMat) where {T} = Matrix{T}(T(a.value) * I, a.dim, a.dim)
 LinearAlgebra.diag(a::ScalMat) = fill(a.value, a.dim)
 LinearAlgebra.cholesky(a::ScalMat) = Cholesky(Diagonal(fill(sqrt(a.value), a.dim)), 'U', 0)
 
