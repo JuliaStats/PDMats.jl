@@ -41,9 +41,32 @@ function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector, c::Real
     return a
 end
 
-_adddiag(a::Union{Matrix, SparseMatrixCSC}, v::Real) = _adddiag!(copy(a), v)
-_adddiag(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector, c::Real) = _adddiag!(copy(a), v, c)
-_adddiag(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector{T}) where {T <: Real} = _adddiag!(copy(a), v, one(T))
+# Non-mutating diagonal addition: `a + diagonal` (optionally scaled by `c`). These
+# work for dense, sparse, and immutable (e.g. static) matrices, and for dense
+# matrices cost a single allocation just like the in-place path above (which is kept
+# only for the truly in-place `pdadd!`).
+_adddiag(a::AbstractMatrix, v::Real) = a + v * I
+
+function _adddiag(a::AbstractMatrix, v::AbstractVector)
+    @check_argdims eachindex(v) == axes(a, 1) == axes(a, 2)
+    return a + Diagonal(v)
+end
+
+function _adddiag(a::AbstractMatrix, v::AbstractVector, c::Real)
+    @check_argdims eachindex(v) == axes(a, 1) == axes(a, 2)
+    return a .+ c .* Diagonal(v)
+end
+
+# As above, but the coefficient scales the matrix: `c * a + diagonal`. The scalar
+# variant keeps an in-place fast path for mutable storage, since there is no clean
+# single-allocation broadcast for adding a scalar to the diagonal only; other matrix
+# types fall back to `muladd`, allowing fused implementations where available.
+function _scaleadddiag(a::AbstractMatrix, c::Real, v::AbstractVector)
+    @check_argdims eachindex(v) == axes(a, 1) == axes(a, 2)
+    return c .* a .+ Diagonal(v)
+end
+_scaleadddiag(a::AbstractMatrix, c::Real, v::Real) = muladd(c, a, v * I)
+_scaleadddiag(a::Union{Matrix, SparseMatrixCSC}, c::Real, v::Real) = _adddiag!(a * c, v)
 
 
 function wsumsq(w::AbstractVector, a::AbstractVector)
