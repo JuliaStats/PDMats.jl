@@ -108,6 +108,21 @@ using StaticArrays
             @test A - E ≈ Matrix(A) - Matrix(E)
             @test E - A ≈ Matrix(E) - Matrix(A)
         end
+
+        # Addition (issue #167)
+        for A in (PDS, D, E), B in (PDS, D, E)
+            @test A + B ≈ Matrix(A) + Matrix(B)
+            @test pdadd(A, B, 2.0) ≈ Matrix(A) + 2.0 * Matrix(B)
+        end
+        @test (PDS + D) isa PDMat{Float64, <:SMatrix{4, 4, Float64}}
+        @test (D + PDS) isa PDMat{Float64, <:SMatrix{4, 4, Float64}}
+        @test (PDS + E) isa PDMat{Float64, <:SMatrix{4, 4, Float64}}
+        @test (E + PDS) isa PDMat{Float64, <:SMatrix{4, 4, Float64}}
+        @test (D + D) isa PDiagMat{Float64, SVector{4, Float64}}
+        @test (D + E) isa PDiagMat{Float64, SVector{4, Float64}}
+        @test pdadd(PDS, D, 2.0) isa PDMat{Float64, <:SMatrix{4, 4, Float64}}
+        @test pdadd(D, PDS, 2.0) isa PDMat{Float64, <:SMatrix{4, 4, Float64}}
+        @test pdadd(E, PDS, 2.0) isa PDMat{Float64, <:SMatrix{4, 4, Float64}}
     end
 
     @testset "BandedMatrices" begin
