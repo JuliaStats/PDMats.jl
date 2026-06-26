@@ -37,6 +37,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: ${{ matrix.package.user }}/${{ matrix.package.repo }}
+          ref: 'dmw/aliases'
           path: downstream
       - name: Load this and run the downstream tests
         shell: julia --color=yes --project=downstream {0}
