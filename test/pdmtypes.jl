@@ -1,4 +1,5 @@
 using LinearAlgebra, PDMats, SparseArrays, SuiteSparse
+using FillArrays
 using Test
 
 @testset "pd matrix types" begin
@@ -178,6 +179,37 @@ using Test
         M = PDMat(cholesky(A))
         @test M isa PDMat{Float64, typeof(A)}
         @test Matrix(M) ≈ A
+    end
+
+    @testset "mat and Cholesky factors of different array types (#237)" begin
+        # E.g. SparseConnectivityTracer returns a `Cholesky` with `Fill` factors.
+        for Tm in (Float32, Float64), Tc in (Float32, Float64)
+            mat = Tm[4 2; 2 3]
+            chol = Cholesky(Fill(one(Tc), 2, 2), 'U', 0)
+            Tp = promote_type(Tm, Tc)
+
+            # `PDMat(mat, chol)`: element types are promoted, array structures kept
+            p = @inferred(PDMat(mat, chol))
+            @test p isa PDMat{Tp, Matrix{Tp}}
+            @test p.chol.factors isa Fill{Tp}
+            @test p.mat == mat
+            @test (p.mat === mat) === (Tm === Tp)
+            @test (p.chol === chol) === (Tc === Tp)
+            @test Matrix(p) == mat
+
+            # `PDMat{T}` / `PDMat{T, S}`: element type is the requested `T`
+            for T in (Float32, Float64)
+                q1 = @inferred(PDMat{T}(mat, chol))
+                q2 = @inferred(PDMat{T, Matrix{T}}(mat, chol))
+                for q in (q1, q2)
+                    @test q isa PDMat{T, Matrix{T}}
+                    @test q.mat isa Matrix{T}
+                    @test q.mat == mat
+                    @test q.chol.factors isa Fill{T}
+                    @test Matrix(q) == mat
+                end
+            end
+        end
     end
 
     @testset "AbstractPDMat constructors (#136)" begin

@@ -53,7 +53,7 @@ julia> X = vcat(ones(4)', (1:4)')
  1.0  2.0  3.0  4.0
 
 julia> a = PDMat(X * X')
-PDMat{Float64,Array{Float64,2}}(2, [4.0 10.0; 10.0 30.0], Cholesky{Float64,Array{Float64,2}}([2.0 5.0; 10.0 2.23607], 'U', 0))
+PDMat{Float64, Matrix{Float64}, Cholesky{Float64, Matrix{Float64}}}([4.0 10.0; 10.0 30.0], Cholesky{Float64, Matrix{Float64}}([2.0 5.0; 10.0 2.23607], 'U', 0))
 
 julia> W = whiten(a, X)
 2×4 Array{Float64,2}:

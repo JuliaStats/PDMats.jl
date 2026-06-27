@@ -1,28 +1,43 @@
 """
 Full positive definite matrix together with a Cholesky factorization object.
 """
-struct PDMat{T <: Real, S <: AbstractMatrix{T}} <: AbstractPDMat{T}
+struct PDMat{T <: Real, S <: AbstractMatrix{T}, C <: Cholesky{T}} <: AbstractPDMat{T}
     mat::S
-    chol::Cholesky{T, S}
+    chol::C
 
-    function PDMat{T, S}(m::AbstractMatrix, c::Cholesky) where {T <: Real, S <: AbstractMatrix{T}}
+    function PDMat{T, S, C}(m::AbstractMatrix, c::Cholesky) where {T <: Real, S <: AbstractMatrix{T}, C <: Cholesky{T}}
         d = LinearAlgebra.checksquare(m)
         if size(c, 1) != d
             throw(DimensionMismatch("Dimensions of mat and chol are inconsistent."))
         end
         # in principle we might want to check that `c` is a Cholesky factorization of `m`,
         # but that's slow
-        return new{T, S}(m, c)
+        return new{T, S, C}(m, c)
     end
 end
-function PDMat{T}(m::AbstractMatrix, c::Cholesky) where {T <: Real}
+function PDMat{T, S}(m::AbstractMatrix, c::Cholesky) where {T <: Real, S <: AbstractMatrix{T}}
     c = convert(Cholesky{T}, c)
-    return PDMat{T, typeof(c.factors)}(m, c)
+    return PDMat{T, S, typeof(c)}(m, c)
 end
-PDMat(mat::AbstractMatrix, chol::Cholesky{T, S}) where {T <: Real, S <: AbstractMatrix{T}} = PDMat{T, S}(mat, chol)
+function PDMat{T}(m::AbstractMatrix, c::Cholesky) where {T <: Real}
+    m = convert(AbstractMatrix{T}, m)
+    c = convert(Cholesky{T}, c)
+    return PDMat{T, typeof(m), typeof(c)}(m, c)
+end
+# `mat` and `chol` may use different array types (xref #237). Keep both as-is if
+# the element types match, otherwise promote them.
+function PDMat(mat::AbstractMatrix{T}, chol::Cholesky{T}) where {T <: Real}
+    return PDMat{T, typeof(mat), typeof(chol)}(mat, chol)
+end
+function PDMat(mat::AbstractMatrix, chol::Cholesky)
+    T = promote_type(eltype(mat), eltype(chol))
+    return PDMat(convert(AbstractMatrix{T}, mat), convert(Cholesky{T}, chol))
+end
 
 # Construction from another PDMat
-PDMat{T, S}(pdm::PDMat{T, S}) where {T <: Real, S <: AbstractMatrix{T}} = pdm  # since PDMat doesn't support `setindex!` it's not mutable (xref https://docs.julialang.org/en/v1/manual/conversion-and-promotion/#Mutable-collections)
+PDMat{T, S, C}(pdm::PDMat{T, S, C}) where {T <: Real, S <: AbstractMatrix{T}, C <: Cholesky{T}} = pdm  # since PDMat doesn't support `setindex!` it's not mutable (xref https://docs.julialang.org/en/v1/manual/conversion-and-promotion/#Mutable-collections)
+PDMat{T, S, C}(pdm::PDMat) where {T <: Real, S <: AbstractMatrix{T}, C <: Cholesky{T}} = PDMat{T, S, C}(pdm.mat, pdm.chol)
+PDMat{T, S}(pdm::PDMat{T, S}) where {T <: Real, S <: AbstractMatrix{T}} = pdm
 PDMat{T, S}(pdm::PDMat) where {T <: Real, S <: AbstractMatrix{T}} = PDMat{T, S}(pdm.mat, pdm.chol)
 PDMat{T}(pdm::PDMat{T}) where {T <: Real} = pdm
 PDMat{T}(pdm::PDMat) where {T <: Real} = PDMat{T}(pdm.mat, pdm.chol)
@@ -65,6 +80,7 @@ AbstractPDMat(A::Cholesky) = PDMat(A)
 # Base.convert(::Type{PDMat{T}}, a::PDMat{T}) where {T<:Real} = a
 Base.convert(::Type{PDMat{T}}, a::PDMat) where {T <: Real} = PDMat{T}(a)
 Base.convert(::Type{PDMat{T, S}}, a::PDMat) where {T <: Real, S <: AbstractMatrix{T}} = PDMat{T, S}(a)
+Base.convert(::Type{PDMat{T, S, C}}, a::PDMat) where {T <: Real, S <: AbstractMatrix{T}, C <: Cholesky{T}} = PDMat{T, S, C}(a)
 
 Base.convert(::Type{AbstractPDMat{T}}, a::PDMat) where {T <: Real} = convert(PDMat{T}, a)
 
@@ -80,7 +96,7 @@ Base.broadcastable(a::PDMat) = Base.broadcastable(a.mat)
 
 ### Inheriting from AbstractMatrix
 
-Base.IndexStyle(::Type{PDMat{T, S}}) where {T, S} = Base.IndexStyle(S)
+Base.IndexStyle(::Type{<:PDMat{T, S}}) where {T, S} = Base.IndexStyle(S)
 # Linear Indexing
 Base.@propagate_inbounds Base.getindex(a::PDMat, i::Int) = getindex(a.mat, i)
 # Cartesian Indexing
