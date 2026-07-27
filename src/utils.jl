@@ -7,15 +7,11 @@ macro check_argdims(cond)
     end
 end
 
-function _addscal!(r::Matrix, a::Matrix, b::Union{Matrix, SparseMatrixCSC}, c::Real)
-    if c == one(c)
-        for i in eachindex(a)
-            @inbounds r[i] = a[i] + b[i]
-        end
+function _addscal!(r::Matrix, a::Matrix, b::AbstractMatrix, c::Real)
+    if isone(c)
+        @. r = a + b
     else
-        for i in eachindex(a)
-            @inbounds r[i] = a[i] + b[i] * c
-        end
+        @. r = muladd(c, b, a)
     end
     return r
 end

@@ -41,6 +41,10 @@ using Test
                 end
                 @test_throws TypeError PDMat{Float32, Matrix{Float64}}(pdM)
             end
+            @testset "PDMat from Symmetric" begin
+                test_pdmat(PDMat(Symmetric(M)), M, cmat_eq = true, verbose = 1)
+                test_pdmat(PDMat(Symmetric(M, :L)), M, cmat_eq = true, verbose = 1)
+            end
             @testset "PDMat from Cholesky" begin
                 cholL = Cholesky(Matrix(transpose(cholesky(M).factors)), 'L', 0)
                 cholLf64 = Cholesky(Matrix(transpose(cholesky(f64M).factors)), 'L', 0)
