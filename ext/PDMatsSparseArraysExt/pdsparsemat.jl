@@ -25,8 +25,21 @@ end
 
 ### Arithmetics
 
-Base.:\(a::PDSparseMat{T}, x::AbstractVecOrMat{T}) where {T <: Real} = convert(Array{T}, a.fact \ convert(Array{Float64}, x)) #to avoid limitations in sparse factorization library CHOLMOD, see e.g., julia issue #14076
-Base.:/(x::AbstractVecOrMat{T}, a::PDSparseMat{T}) where {T <: Real} = convert(Array{T}, convert(Array{Float64}, x) / a.fact)
+# `x` is converted to `Float64` to work around CHOLMOD limitations (julia issue #14076).
+function Base.:\(a::PDSparseMat, x::AbstractVecOrMat{<:Real})
+    PDMats.@check_argdims a.dim == size(x, 1)
+    T = promote_type(eltype(a), eltype(x))
+    return convert(Array{T}, a.fact \ convert(Array{Float64}, x))
+end
+function Base.:/(x::AbstractVecOrMat{<:Real}, a::PDSparseMat)
+    PDMats.@check_argdims a.dim == size(x, 2)
+    # CHOLMOD does not support `/`, but `a` is symmetric: `x / a == (a \ xᵀ)ᵀ`.
+    z = a \ transpose(x)
+    return x isa AbstractVector ? vec(z) : permutedims(z)
+end
+
+# `_scaleadddiag`'s single-allocation fast path for mutable storage (xref #239)
+PDMats._scaleadddiag(a::SparseMatrixCSC, c::Real, v::Real) = PDMats._adddiag!(a * c, v)
 
 ### Algebra
 

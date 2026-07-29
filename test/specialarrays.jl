@@ -108,12 +108,28 @@ using StaticArrays
             @test A - E ≈ Matrix(A) - Matrix(E)
             @test E - A ≈ Matrix(E) - Matrix(A)
         end
+
+        # Addition (issue #167)
+        for A in (PDS, D, E), B in (PDS, D, E)
+            @test A + B ≈ Matrix(A) + Matrix(B)
+            @test pdadd(A, B, 2.0) ≈ Matrix(A) + 2.0 * Matrix(B)
+        end
+        @test (PDS + D) isa PDMat{Float64, <:SMatrix{4, 4, Float64}}
+        @test (D + PDS) isa PDMat{Float64, <:SMatrix{4, 4, Float64}}
+        @test (PDS + E) isa PDMat{Float64, <:SMatrix{4, 4, Float64}}
+        @test (E + PDS) isa PDMat{Float64, <:SMatrix{4, 4, Float64}}
+        @test (D + D) isa PDiagMat{Float64, SVector{4, Float64}}
+        @test (D + E) isa PDiagMat{Float64, SVector{4, Float64}}
+        @test pdadd(PDS, D, 2.0) isa PDMat{Float64, <:SMatrix{4, 4, Float64}}
+        @test pdadd(D, PDS, 2.0) isa PDMat{Float64, <:SMatrix{4, 4, Float64}}
+        @test pdadd(E, PDS, 2.0) isa PDMat{Float64, <:SMatrix{4, 4, Float64}}
     end
 
     @testset "BandedMatrices" begin
         # Full matrix
         A = Symmetric(BandedMatrix(Eye(5), (1, 1)))
         P = PDMat(A)
+        # `PDMat` keeps the matrix's own type
         @test P isa PDMat{Float64, <:Symmetric{Float64, <:BandedMatrix{Float64}}}
 
         x = rand(5)
@@ -128,5 +144,11 @@ using StaticArrays
         @test X_invA_Xt(P, X) ≈ X * X'
         @test Xt_A_X(P, Y) ≈ Y' * Y
         @test Xt_invA_X(P, Y) ≈ Y' * Y
+
+        # Addition (issue #243)
+        Z = rand(5, 5)
+        @test P + Z ≈ Matrix(P) + Z
+        @test Z + P ≈ Z + Matrix(P)
+        @test pdadd(Z, P, 2) ≈ Z + 2 * Matrix(P)
     end
 end

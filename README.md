@@ -46,6 +46,10 @@ PDMat(chol)         # with the Cholesky factorization
                     # construction.
 ```
 
+  `PDMat` also covers sparse covariance matrices: if `SparseArrays` is loaded, `mat` may be a
+  sparse matrix and `fact` the corresponding sparse (CHOLMOD) Cholesky factorization. In earlier
+  releases these were represented by a separate `PDSparseMat` type.
+
 
 * `PDiagMat`: diagonal matrix, defined as
 

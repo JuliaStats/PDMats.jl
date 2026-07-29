@@ -5,32 +5,41 @@ struct PDMat{T <: Real, S <: AbstractMatrix{T}, F <: Factorization} <: AbstractP
     mat::S
     fact::F
 
-    function PDMat{T, S, F}(mat::S, fact::F) where {T, S <: AbstractMatrix{T}, F <: Factorization}
-        d = LinearAlgebra.checksquare(mat)
-        if size(fact) != (d, d)
+    function PDMat{T, S, F}(m::AbstractMatrix, f::Factorization) where {T <: Real, S <: AbstractMatrix{T}, F <: Factorization}
+        d = LinearAlgebra.checksquare(m)
+        if size(f, 1) != d
             throw(DimensionMismatch("Dimensions of the matrix and the factorization are inconsistent."))
         end
-        # in principle we might want to check that `fact` is a factorization of `mat`,
+        # in principle we might want to check that `f` is a factorization of `m`,
         # but that's slow
-        return new{T, S, F}(mat, fact)
+        return new{T, S, F}(m, f)
     end
 end
 
 # Construction from a matrix and a Cholesky factorization
 function PDMat{T, S}(m::AbstractMatrix, c::Cholesky) where {T <: Real, S <: AbstractMatrix{T}}
-    c = convert(Cholesky{T, S}, c)
-    return PDMat{T, S, typeof(c)}(convert(S, m), c)
+    c = convert(Cholesky{T}, c)
+    return PDMat{T, S, typeof(c)}(m, c)
 end
 function PDMat{T}(m::AbstractMatrix, c::Cholesky) where {T <: Real}
+    m = convert(AbstractMatrix{T}, m)
     c = convert(Cholesky{T}, c)
-    return PDMat{T, typeof(c.factors)}(m, c)
+    return PDMat{T, typeof(m), typeof(c)}(m, c)
 end
-# The element type `T` is derived from the matrix so that e.g. `PDMat(::SymTridiagonal{Int}, ::Cholesky)`
-# keeps an integer-valued `mat` (xref the `PDMat from SymTridiagonal` test)
-PDMat(mat::AbstractMatrix{T}, chol::Cholesky) where {T <: Real} = PDMat{T, typeof(mat), typeof(chol)}(mat, chol)
+# `mat` and `fact` may use different array types (xref #237). Keep both as-is if
+# the element types match, otherwise promote them.
+function PDMat(mat::AbstractMatrix{T}, chol::Cholesky{T}) where {T <: Real}
+    return PDMat{T, typeof(mat), typeof(chol)}(mat, chol)
+end
+function PDMat(mat::AbstractMatrix, chol::Cholesky)
+    T = promote_type(eltype(mat), eltype(chol))
+    return PDMat(convert(AbstractMatrix{T}, mat), convert(Cholesky{T}, chol))
+end
 
 # Construction from another PDMat
-PDMat{T, S}(pdm::PDMat{T, S}) where {T <: Real, S <: AbstractMatrix{T}} = pdm  # since PDMat doesn't support `setindex!` it's not mutable (xref https://docs.julialang.org/en/v1/manual/conversion-and-promotion/#Mutable-collections)
+PDMat{T, S, F}(pdm::PDMat{T, S, F}) where {T <: Real, S <: AbstractMatrix{T}, F <: Factorization} = pdm  # since PDMat doesn't support `setindex!` it's not mutable (xref https://docs.julialang.org/en/v1/manual/conversion-and-promotion/#Mutable-collections)
+PDMat{T, S, F}(pdm::PDMat) where {T <: Real, S <: AbstractMatrix{T}, F <: Factorization} = PDMat{T, S, F}(pdm.mat, pdm.fact)
+PDMat{T, S}(pdm::PDMat{T, S}) where {T <: Real, S <: AbstractMatrix{T}} = pdm
 PDMat{T, S}(pdm::PDMat) where {T <: Real, S <: AbstractMatrix{T}} = PDMat{T, S}(pdm.mat, pdm.fact)
 PDMat{T}(pdm::PDMat{T}) where {T <: Real} = pdm
 PDMat{T}(pdm::PDMat) where {T <: Real} = PDMat{T}(pdm.mat, pdm.fact)
@@ -68,9 +77,10 @@ Base.propertynames(::PDMat) = (:mat, :fact, :dim)
 
 AbstractPDMat(A::Cholesky) = PDMat(A)
 
-### Type alias for `PDMat`s backed by a (dense) `Cholesky` factorization, used to define
-### `cholesky` (which must return a `Cholesky`). Sparse `PDMat`s (backed by a `CHOLMOD.Factor`)
-### define their own `cholesky` method in the SparseArrays extension.
+### Type alias for `PDMat`s backed by a (dense) `Cholesky` factorization. It is used by the
+### operations that inspect or rebuild the factorization itself (e.g. `kron` and the congruent
+### transforms), which are not applicable to sparse `PDMat`s backed by a `CHOLMOD.Factor`.
+### Those define their own methods in the SparseArrays extension.
 const PDMatCholesky{T <: Real, S <: AbstractMatrix{T}} = PDMat{T, S, <:Cholesky}
 
 ### Conversion
@@ -78,9 +88,7 @@ const PDMatCholesky{T <: Real, S <: AbstractMatrix{T}} = PDMat{T, S, <:Cholesky}
 # Base.convert(::Type{PDMat{T}}, a::PDMat{T}) where {T<:Real} = a
 Base.convert(::Type{PDMat{T}}, a::PDMat) where {T <: Real} = PDMat{T}(a)
 Base.convert(::Type{PDMat{T, S}}, a::PDMat) where {T <: Real, S <: AbstractMatrix{T}} = PDMat{T, S}(a)
-function Base.convert(::Type{PDMat{T, S, F}}, a::PDMat) where {T <: Real, S <: AbstractMatrix{T}, F <: Factorization}
-    return convert(PDMat{T, S}, a)
-end
+Base.convert(::Type{PDMat{T, S, F}}, a::PDMat) where {T <: Real, S <: AbstractMatrix{T}, F <: Factorization} = PDMat{T, S, F}(a)
 
 Base.convert(::Type{AbstractPDMat{T}}, a::PDMat) where {T <: Real} = convert(PDMat{T}, a)
 
@@ -129,7 +137,7 @@ LinearAlgebra.det(a::PDMat) = det(a.fact)
 LinearAlgebra.logdet(a::PDMat) = logdet(a.fact)
 LinearAlgebra.eigmax(a::PDMat) = eigmax(Symmetric(a.mat))
 LinearAlgebra.eigmin(a::PDMat) = eigmin(Symmetric(a.mat))
-function Base.kron(A::PDMat, B::PDMat)
+function Base.kron(A::PDMatCholesky, B::PDMatCholesky)
     M = kron(A.mat, B.mat)
     C = Cholesky(UpperTriangular(kron(chol_upper(cholesky(A)), chol_upper(cholesky(B)))))
     return PDMat(M, C)
@@ -267,14 +275,14 @@ end
 
 ### Specializations for `Array` arguments with reduced allocations
 
-function quad(a::PDMat{T, Matrix{T}}, x::Matrix) where {T <: Real}
+function quad(a::PDMat{<:Real, <:Matrix}, x::Matrix)
     @check_argdims a.dim == size(x, 1)
-    S = typeof(zero(T) * abs2(zero(eltype(x))))
-    return quad!(Vector{S}(undef, size(x, 2)), a, x)
+    T = typeof(zero(eltype(a)) * abs2(zero(eltype(x))))
+    return quad!(Vector{T}(undef, size(x, 2)), a, x)
 end
 
-function invquad(a::PDMat{T, Matrix{T}}, x::Matrix) where {T <: Real}
+function invquad(a::PDMat{<:Real, <:Matrix}, x::Matrix)
     @check_argdims a.dim == size(x, 1)
-    S = typeof(abs2(zero(eltype(x))) / zero(T))
-    return invquad!(Vector{S}(undef, size(x, 2)), a, x)
+    T = typeof(abs2(zero(eltype(x))) / zero(eltype(a)))
+    return invquad!(Vector{T}(undef, size(x, 2)), a, x)
 end

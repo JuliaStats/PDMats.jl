@@ -1,4 +1,5 @@
 using LinearAlgebra, PDMats, SparseArrays
+using FillArrays
 using Test
 
 @testset "pd matrix types" begin
@@ -41,6 +42,10 @@ using Test
                     @test isa(convert(typeof(pdf64M), pdM), typeof(pdf64M))
                 end
                 @test_throws TypeError PDMat{Float32, Matrix{Float64}}(pdM)
+            end
+            @testset "PDMat from Symmetric" begin
+                test_pdmat(PDMat(Symmetric(M)), M, cmat_eq = true, verbose = 1)
+                test_pdmat(PDMat(Symmetric(M, :L)), M, cmat_eq = true, verbose = 1)
             end
             @testset "PDMat from Cholesky" begin
                 cholL = Cholesky(Matrix(transpose(cholesky(M).factors)), 'L', 0)
@@ -167,10 +172,8 @@ using Test
         @test size(z) == size(y)
         @test z ≈ y
 
-        # right division not defined for CHOLMOD:
-        # `rdiv!(::Matrix{Float64}, ::SparseArrays.CHOLMOD.Factor{Float64})` not defined
-        if !HAVE_CHOLMOD
-            z = x / PDMat(sparse(first(A), 1, 1))
+        if HAVE_CHOLMOD
+            z = x / PDMat(sparse(A))
             @test typeof(z) === typeof(y)
             @test size(z) == size(y)
             @test z ≈ y
@@ -184,6 +187,37 @@ using Test
         M = PDMat(cholesky(A))
         @test M isa PDMat{Float64, typeof(A)}
         @test Matrix(M) ≈ A
+    end
+
+    @testset "mat and Cholesky factors of different array types (#237)" begin
+        # E.g. SparseConnectivityTracer returns a `Cholesky` with `Fill` factors.
+        for Tm in (Float32, Float64), Tc in (Float32, Float64)
+            mat = Tm[4 2; 2 3]
+            chol = Cholesky(Fill(one(Tc), 2, 2), 'U', 0)
+            Tp = promote_type(Tm, Tc)
+
+            # `PDMat(mat, chol)`: element types are promoted, array structures kept
+            p = @inferred(PDMat(mat, chol))
+            @test p isa PDMat{Tp, Matrix{Tp}}
+            @test p.fact.factors isa Fill{Tp}
+            @test p.mat == mat
+            @test (p.mat === mat) === (Tm === Tp)
+            @test (p.fact === chol) === (Tc === Tp)
+            @test Matrix(p) == mat
+
+            # `PDMat{T}` / `PDMat{T, S}`: element type is the requested `T`
+            for T in (Float32, Float64)
+                q1 = @inferred(PDMat{T}(mat, chol))
+                q2 = @inferred(PDMat{T, Matrix{T}}(mat, chol))
+                for q in (q1, q2)
+                    @test q isa PDMat{T, Matrix{T}}
+                    @test q.mat isa Matrix{T}
+                    @test q.mat == mat
+                    @test q.fact.factors isa Fill{T}
+                    @test Matrix(q) == mat
+                end
+            end
+        end
     end
 
     @testset "AbstractPDMat constructors (#136)" begin
@@ -319,13 +353,12 @@ using Test
     end
 
     # Ref https://github.com/JuliaStats/PDMats.jl/pull/207
-    # Note: `cholesky(::SymTridiagonal)` requires https://github.com/JuliaLang/julia/pull/44076
-    if VERSION >= v"1.8.0-DEV.1526"
-        @testset "PDMat from SymTridiagonal" begin
-            S = SymTridiagonal(fill(4, 4), fill(1, 3))
-            M = @inferred(PDMat(S))
-            @test M isa PDMat{Int, <:SymTridiagonal, <:Cholesky}
-            @test M == S
-        end
+    @testset "PDMat from SymTridiagonal" begin
+        S = SymTridiagonal(fill(4, 4), fill(1, 3))
+        # `cholesky(::SymTridiagonal{Int})` returns a `Cholesky{Float64}`, so both the matrix and
+        # the factorization are promoted to `Float64` (xref #237)
+        M = @inferred(PDMat(S))
+        @test M isa PDMat{Float64, <:SymTridiagonal{Float64}, <:Cholesky{Float64}}
+        @test M == S
     end
 end

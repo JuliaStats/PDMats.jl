@@ -29,10 +29,10 @@ pdadd(a::PDMat, b::PDMat, c::Real) = PDMat(a.mat + b.mat * c)
 pdadd(a::PDMat, b::PDiagMat, c::Real) = PDMat(_adddiag(a.mat, b.diag, c))
 pdadd(a::PDMat, b::ScalMat, c::Real) = PDMat(_adddiag(a.mat, b.value * c))
 
-pdadd(a::PDiagMat, b::PDMat, c::Real) = PDMat(_adddiag!(b.mat * c, a.diag, one(c)))
+pdadd(a::PDiagMat, b::PDMat, c::Real) = PDMat(_scaleadddiag(b.mat, c, a.diag))
 pdadd(a::PDiagMat, b::PDiagMat, c::Real) = PDiagMat(a.diag + b.diag * c)
 pdadd(a::PDiagMat, b::ScalMat, c::Real) = PDiagMat(a.diag .+ b.value * c)
 
-pdadd(a::ScalMat, b::PDMat, c::Real) = PDMat(_adddiag!(b.mat * c, a.value))
+pdadd(a::ScalMat, b::PDMat, c::Real) = PDMat(_scaleadddiag(b.mat, c, a.value))
 pdadd(a::ScalMat, b::PDiagMat, c::Real) = PDiagMat(a.value .+ b.diag * c)
 pdadd(a::ScalMat, b::ScalMat, c::Real) = ScalMat(a.dim, a.value + b.value * c)
