@@ -1,5 +1,14 @@
 # Congruent transforms X_A_Xt, Xt_A_X, X_invA_Xt, Xt_invA_X for guaranteed PD return values
 
+# `B * A * transpose(B)` for a diagonal `B`, computed by rescaling `A.mat` and factorizing the
+# result. This works for every `PDMat` regardless of the type of its factorization; the
+# `PDMatCholesky` methods below are cheaper since they can rescale the Cholesky factor instead.
+function _congruence(A::PDMat, B::ScalMat)
+    @check_argdims B.dim == size(A, 1)
+    return PDMat(abs2(B.value) * A.mat)
+end
+_congruence(A::PDMat, B::PDiagMat) = PDMat(A.mat .* (B.diag .* B.diag'))
+
 for f in (:X_A_Xt, :Xt_A_X)
     @eval begin
         function $(f)(A::ScalMat, B::ScalMat)
@@ -12,6 +21,8 @@ for f in (:X_A_Xt, :Xt_A_X)
             @check_argdims A.dim == size(B, 1)
             return PDiagMat(abs2.(B.diag) .* A.value)
         end
+        $(f)(A::PDMat, B::ScalMat) = _congruence(A, B)
+        $(f)(A::PDMat, B::PDiagMat) = _congruence(A, B)
         function $(f)(A::PDMatCholesky, B::ScalMat)
             @check_argdims B.dim == size(A, 1)
             b2 = abs2(B.value)

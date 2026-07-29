@@ -43,7 +43,6 @@ PDMats._scaleadddiag(a::SparseMatrixCSC, c::Real, v::Real) = PDMats._adddiag!(a 
 
 ### Algebra
 
-Base.inv(a::PDSparseMat) = PDMat(inv(a.mat))
 LinearAlgebra.cholesky(a::PDSparseMat) = a.fact
 Base.sqrt(A::PDSparseMat) = PDMat(sqrt(Hermitian(Matrix(A))))
 
@@ -168,3 +167,10 @@ function PDMats.Xt_invA_X(a::PDSparseMat, x::AbstractMatrix{<:Real})
     z = cholesky(a) \ x
     return Symmetric(transpose(x) * z)
 end
+
+# Resolve the ambiguity between the generic `PDMat` methods in `src/congruence.jl`, which are more
+# specific in the second argument, and the methods above, which are more specific in the first one
+PDMats.X_A_Xt(a::PDSparseMat, x::ScalMat) = PDMats._congruence(a, x)
+PDMats.X_A_Xt(a::PDSparseMat, x::PDiagMat) = PDMats._congruence(a, x)
+PDMats.Xt_A_X(a::PDSparseMat, x::ScalMat) = PDMats._congruence(a, x)
+PDMats.Xt_A_X(a::PDSparseMat, x::PDiagMat) = PDMats._congruence(a, x)

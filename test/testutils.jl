@@ -8,15 +8,10 @@ using PDMats, LinearAlgebra, SparseArrays, Test, Random
 
 Random.seed!(10)
 
-const HAVE_CHOLMOD = isdefined(SparseArrays, :CHOLMOD)
+const CHOLMOD = SparseArrays.CHOLMOD
 const PDMatCholesky{T <: Real, S <: AbstractMatrix, C <: Cholesky} = PDMat{T, S, C}
-if HAVE_CHOLMOD
-    const CHOLMOD = SparseArrays.CHOLMOD
-    const PDSparseMat{T <: Real, S <: AbstractSparseMatrix, C <: CHOLMOD.Factor} = PDMat{T, S, C}
-    const PDMatType = Union{PDMatCholesky, PDSparseMat, PDiagMat, ScalMat}
-else
-    const PDMatType = Union{PDMatCholesky, PDiagMat, ScalMat}
-end
+const PDSparseMat{T <: Real, S <: AbstractSparseMatrix, C <: CHOLMOD.Factor} = PDMat{T, S, C}
+const PDMatType = Union{PDMatCholesky, PDSparseMat, PDiagMat, ScalMat}
 
 ## driver function
 function test_pdmat(
@@ -151,15 +146,13 @@ function pdtest_cholesky(C::PDMatType, Cmat::Matrix, cmat_eq::Bool, verbose::Int
     end
 end
 
-if HAVE_CHOLMOD
-    function pdtest_cholesky(C::PDSparseMat, Cmat::Matrix, cmat_eq::Bool, verbose::Int)
-        _pdt(verbose, "cholesky")
-        # We handle this case specially because we can't perform equality checks on
-        # `SparseArrays.CHOLMOD.Factor`s and `SparseArrays.CHOLMOD.FactorComponent`s.
-        # NOTE: `==` also doesn't work because `diag(cholesky(C))` will return `Vector{Float64}`
-        # even if the inputs are `Float32`s.
-        return @test diag(cholesky(C)) ≈ diag(cholesky(Cmat).U)
-    end
+function pdtest_cholesky(C::PDSparseMat, Cmat::Matrix, cmat_eq::Bool, verbose::Int)
+    _pdt(verbose, "cholesky")
+    # We handle this case specially because we can't perform equality checks on
+    # `SparseArrays.CHOLMOD.Factor`s and `SparseArrays.CHOLMOD.FactorComponent`s.
+    # NOTE: `==` also doesn't work because `diag(cholesky(C))` will return `Vector{Float64}`
+    # even if the inputs are `Float32`s.
+    return @test diag(cholesky(C)) ≈ diag(cholesky(Cmat).U)
 end
 
 function pdtest_scale(C, Cmat::Matrix, verbose::Int)
@@ -424,9 +417,7 @@ end
 _randPDMat(T, n) = (X = randn(T, n, n); PDMat(X * X' + LinearAlgebra.I))
 _randPDiagMat(T, n) = PDiagMat(rand(T, n))
 _randScalMat(T, n) = ScalMat(n, rand(T))
-if HAVE_CHOLMOD
-    _randPDSparseMat(T, n) = (X = sprand(T, n, 1, 0.5); PDMat(X * X' + LinearAlgebra.I))
-end
+_randPDSparseMat(T, n) = (X = sprand(T, n, 1, 0.5); PDMat(X * X' + LinearAlgebra.I))
 
 function _rand(::Type{PDMat}, T, n, uplo::Char)
     X = _randPDMat(T, n)

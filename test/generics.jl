@@ -41,3 +41,13 @@ end
         @test isapprox(A * X, B)
     end
 end
+
+@testset "inv(A)" begin
+    for A in (PDMat([4.0 2.0; 2.0 3.0]), PDiagMat([4.0, 3.0]), ScalMat(2, 4.0) #=PDMat(sparse([4.0 2.0; 2.0 3.0]))=#) # CHOLMOD.Factor is not supported by inv
+        B = inv(A)
+        @test B isa AbstractPDMat{Float64}
+        @test size(B) == size(A)
+        @test Matrix(B) ≈ inv(Matrix(A))
+        @test A * Matrix(B) ≈ I
+    end
+end
