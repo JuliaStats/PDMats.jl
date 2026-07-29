@@ -144,5 +144,11 @@ using StaticArrays
         @test X_invA_Xt(P, X) ≈ X * X'
         @test Xt_A_X(P, Y) ≈ Y' * Y
         @test Xt_invA_X(P, Y) ≈ Y' * Y
+
+        # Addition (issue #243)
+        Z = rand(5, 5)
+        @test P + Z ≈ Matrix(P) + Z
+        @test Z + P ≈ Z + Matrix(P)
+        @test pdadd(Z, P, 2) ≈ Z + 2 * Matrix(P)
     end
 end
