@@ -65,7 +65,7 @@ function pdadd!(r::Matrix, a::Matrix, b::PDSparseMat, c)
     return _addscal!(r, a, b.mat, c)
 end
 
-*(a::PDSparseMat, c::Real) = PDSparseMat(a.mat * c)
+*(a::PDSparseMat, c::Real) = a.mat * c
 *(a::PDSparseMat, x::AbstractMatrix) = a.mat * x  # defining these seperately to avoid
 *(a::PDSparseMat, x::AbstractVector) = a.mat * x  # ambiguity errors
 # `x` is converted to `Float64` to work around CHOLMOD limitations (julia issue #14076).

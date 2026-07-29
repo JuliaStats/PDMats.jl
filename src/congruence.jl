@@ -42,7 +42,10 @@ end
 
 for f in (:X_invA_Xt, :Xt_invA_X)
     @eval begin
-        $(f)(A::ScalMat, B::ScalMat) = B * (A \ B)
+        function $(f)(A::ScalMat, B::ScalMat)
+            @check_argdims A.dim == B.dim
+            return ScalMat(A.dim, B.value * (A.value \ B.value))
+        end
         $(f)(A::PDiagMat, B::PDiagMat) = PDiagMat(B.diag .* (A.diag .\ B.diag))
         $(f)(A::PDiagMat, B::ScalMat) = PDiagMat(B.value .* (A.diag .\ B.value))
         function $(f)(A::ScalMat, B::PDiagMat)
