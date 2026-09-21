@@ -18,7 +18,7 @@ chol_lower(a::Matrix) = cholesky(Symmetric(a, :L)).L
 chol_upper(a::Matrix) = cholesky(Symmetric(a, :U)).U
 
 if HAVE_CHOLMOD
-    CholTypeSparse{T} = SuiteSparse.CHOLMOD.Factor{T}
+    CholTypeSparse{T} = SparseArrays.CHOLMOD.Factor{T}
 
     # Take into account pivoting!
     chol_lower(cf::CholTypeSparse) = cf.PtL
