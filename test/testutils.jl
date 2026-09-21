@@ -4,11 +4,11 @@
 #       the implementation of a subtype of AbstractPDMat
 #
 
-using PDMats, SuiteSparse, Test, Random
+using PDMats, SparseArrays, Test, Random
 
 Random.seed!(10)
 
-const HAVE_CHOLMOD = isdefined(SuiteSparse, :CHOLMOD)
+const HAVE_CHOLMOD = isdefined(SparseArrays, :CHOLMOD)
 const PDMatType = HAVE_CHOLMOD ? Union{PDMat, PDSparseMat, PDiagMat} : Union{PDMat, PDiagMat}
 
 ## driver function
@@ -148,7 +148,7 @@ if HAVE_CHOLMOD
     function pdtest_cholesky(C::PDSparseMat, Cmat::Matrix, cmat_eq::Bool, verbose::Int)
         _pdt(verbose, "cholesky")
         # We special case PDSparseMat because we can't perform equality checks on
-        # `SuiteSparse.CHOLMOD.Factor`s and `SuiteSparse.CHOLMOD.FactorComponent`s
+        # `SparseArrays.CHOLMOD.Factor`s and `SparseArrays.CHOLMOD.FactorComponent`s
         return @test diag(cholesky(C)) ≈ diag(cholesky(Cmat).U)
         # NOTE: `==` also doesn't work because `diag(cholesky(C))` will return `Vector{Float64}`
         # even if the inputs are `Float32`s.

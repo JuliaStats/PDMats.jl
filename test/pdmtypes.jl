@@ -1,4 +1,4 @@
-using LinearAlgebra, PDMats, SparseArrays, SuiteSparse
+using LinearAlgebra, PDMats, SparseArrays
 using FillArrays
 using Test
 
