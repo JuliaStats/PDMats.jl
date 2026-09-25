@@ -28,16 +28,16 @@ Elemenent types are in princple all Real types, but in practice this is limited 
 * `PDMat`: full covariance matrix, defined as
 
 ```julia
-struct PDMat{T<:Real,S<:AbstractMatrix{T},C<:Cholesky{T}} <: AbstractPDMat{T}
+struct PDMat{T<:Real,S<:AbstractMatrix{T},F<:Factorization} <: AbstractPDMat{T}
     mat::S                      # input matrix
-    chol::C                     # Cholesky factorization of mat
+    fact::F                     # factorization of mat
 end
 
 # Constructors
 
 PDMat(mat, chol)    # with both the input matrix and a Cholesky factorization
 
-PDMat(mat)          # with the input matrix, of type Matrix or Symmetric
+PDMat(mat)          # with the input matrix
                     # Remarks: the Cholesky factorization will be computed
                     # upon construction.
 
@@ -45,6 +45,10 @@ PDMat(chol)         # with the Cholesky factorization
                     # Remarks: the full matrix will be computed upon
                     # construction.
 ```
+
+  `PDMat` also covers sparse covariance matrices: if `SparseArrays` is loaded, `mat` may be a
+  sparse matrix and `fact` the corresponding sparse (CHOLMOD) Cholesky factorization. In earlier
+  releases these were represented by a separate `PDSparseMat` type.
 
 
 * `PDiagMat`: diagonal matrix, defined as
@@ -73,29 +77,6 @@ end
 
 ScalMat(d, v)        # with dimension d and diagonal value v
 ```
-
-
-* `PDSparseMat`: sparse covariance matrix, defined as
-
-```julia
-struct PDSparseMat{T<:Real,S<:AbstractSparseMatrix} <: AbstractPDMat{T}
-    mat::SparseMatrixCSC           # input matrix
-    chol::CholTypeSparse           # Cholesky factorization of mat
-end
-
-# Constructors
-
-PDSparseMat(mat, chol)    # with both the input matrix and a Cholesky factorization
-
-PDSparseMat(mat)          # with the sparse input matrix, of type SparseMatrixCSC
-                          # Remarks: the Cholesky factorization will be computed
-                          # upon construction.
-
-PDSparseMat(chol)         # with the Cholesky factorization
-                          # Remarks: the sparse matrix 'mat' will be computed upon
-                          # construction.
-```
-
 
 ## Common interface
 

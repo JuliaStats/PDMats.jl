@@ -52,11 +52,9 @@ using PDMats: chol_lower, chol_upper
             @test sum(abs2, PDMats.chol_upper(ch_dense)' \ x) ≈ b
 
             # sparse version
-            if PDMats.HAVE_CHOLMOD
-                ch_sparse = cholesky(Symmetric(sparse(A), uplo))
-                @test sum(abs2, PDMats.chol_lower(ch_sparse) \ x) ≈ b
-                @test sum(abs2, PDMats.chol_upper(ch_sparse)' \ x) ≈ b
-            end
+            ch_sparse = cholesky(Symmetric(sparse(A), uplo))
+            @test sum(abs2, PDMats.chol_lower(ch_sparse) \ x) ≈ b
+            @test sum(abs2, PDMats.chol_upper(ch_sparse)' \ x) ≈ b
         end
     end
 end

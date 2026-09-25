@@ -50,8 +50,7 @@ Base.:*(a::MyPD, c::Real) = MyPD(a.value * c)
 
     @testset "division accepts mismatched operand element types" begin
         n = 4
-        mats = Any[_randPDMat(Float64, n), _randPDiagMat(Float64, n), _randScalMat(Float64, n)]
-        HAVE_CHOLMOD && push!(mats, _randPDSparseMat(Float64, n))
+        mats = (_randPDMat(Float64, n), _randPDiagMat(Float64, n), _randScalMat(Float64, n), _randPDSparseMat(Float64, n))
         operands = (rand(1:5, n), rand(1:5, n, 2), randn(Float32, n), randn(Float32, n, 2))
         for a in mats
             M = Matrix(a)

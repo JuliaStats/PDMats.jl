@@ -30,7 +30,7 @@ end
 
 @testset "ldiv!(A, b)" begin
     printstyled("Testing ldiv!(A, b)\n"; color = :blue)
-    for A in (PDMat([4.0 2.0; 2.0 3.0]), PDiagMat([4.0, 3.0]), ScalMat(2, 4.0) #=PDSparseMat(sparse([4.0 2.0; 2.0 3.0]))=#) # CHOLMOD.Factor is not supported by ldiv!
+    for A in (PDMat([4.0 2.0; 2.0 3.0]), PDiagMat([4.0, 3.0]), ScalMat(2, 4.0) #=PDMat(sparse([4.0 2.0; 2.0 3.0]))=#) # CHOLMOD.Factor is not supported by ldiv!
         b = [1.0, 2.0]
         x = copy(b)
         ldiv!(A, x)
@@ -40,4 +40,16 @@ end
         ldiv!(A, X)
         @test isapprox(A * X, B)
     end
+end
+
+@testset "inv(A)" begin
+    for A in (PDMat([4.0 2.0; 2.0 3.0]), PDiagMat([4.0, 3.0]), ScalMat(2, 4.0))
+        B = inv(A)
+        @test B isa AbstractPDMat{Float64}
+        @test size(B) == size(A)
+        @test Matrix(B) ≈ inv(Matrix(A))
+        @test A * Matrix(B) ≈ I
+    end
+    # CHOLMOD.Factor is not supported by inv
+    @test_throws MethodError inv(PDMat(sparse([4.0 2.0; 2.0 3.0])))
 end

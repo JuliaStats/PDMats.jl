@@ -29,4 +29,18 @@ using LinearAlgebra, PDMats, Test
             end
         end
     end
+
+    # A sparse `PDMat` cannot rescale its `CHOLMOD.Factor`, so it rescales the matrix and
+    # factorizes anew. The result must still be positive definite and stay sparse.
+    @testset "$f(::PDSparseMat, ::$TB)" for f in (X_A_Xt, Xt_A_X), TB in (ScalMat, PDiagMat)
+        @testset for T in (Float32, Float64), n in (3, 5)
+            A = _randPDSparseMat(T, n)
+            B = _rand(TB, T, n, nothing)
+            ret = f(A, B)
+            @test ret isa PDSparseMat{T}
+            @test issparse(ret.mat)
+            @test ret ≈ f(A, Matrix(B))
+            @test_throws DimensionMismatch f(A, _rand(TB, T, n + 1, nothing))
+        end
+    end
 end

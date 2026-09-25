@@ -16,14 +16,14 @@ function _addscal!(r::Matrix, a::Matrix, b::AbstractMatrix, c::Real)
     return r
 end
 
-function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::Real)
+function _adddiag!(a::AbstractMatrix, v::Real)
     for i in diagind(a)
         @inbounds a[i] += v
     end
     return a
 end
 
-function _adddiag!(a::Union{Matrix, SparseMatrixCSC}, v::AbstractVector, c::Real)
+function _adddiag!(a::AbstractMatrix, v::AbstractVector, c::Real)
     @check_argdims eachindex(v) == axes(a, 1) == axes(a, 2)
     if c == one(c)
         for i in eachindex(v)
@@ -62,7 +62,13 @@ function _scaleadddiag(a::AbstractMatrix, c::Real, v::AbstractVector)
     return c .* a .+ Diagonal(v)
 end
 _scaleadddiag(a::AbstractMatrix, c::Real, v::Real) = muladd(c, a, v * I)
-_scaleadddiag(a::Union{Matrix, SparseMatrixCSC}, c::Real, v::Real) = _adddiag!(a * c, v)
+_scaleadddiag(a::Matrix, c::Real, v::Real) = _adddiag!(a * c, v)
+
+# Entries `f(a[i, j], d[i] * d[j])`; exactly symmetric if `a` is. Requires `f(0, x) == 0`.
+function _rescale(f, a::AbstractMatrix, d::AbstractVector)
+    @check_argdims eachindex(d) == axes(a, 1) == axes(a, 2)
+    return f.(a, d .* transpose(d))
+end
 
 
 function wsumsq(w::AbstractVector, a::AbstractVector)
