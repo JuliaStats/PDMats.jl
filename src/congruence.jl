@@ -7,7 +7,7 @@ function _congruence(A::PDMat, B::ScalMat)
     @check_argdims B.dim == size(A, 1)
     return PDMat(abs2(B.value) * A.mat)
 end
-_congruence(A::PDMat, B::PDiagMat) = PDMat(A.mat .* (B.diag .* B.diag'))
+_congruence(A::PDMat, B::PDiagMat) = PDMat(_rescale(*, A.mat, B.diag))
 
 for f in (:X_A_Xt, :Xt_A_X)
     @eval begin
@@ -38,7 +38,7 @@ for f in (:X_A_Xt, :Xt_A_X)
         end
         function $(f)(A::PDMatCholesky, B::PDiagMat)
             b = B.diag
-            mat = A.mat .* (b .* b')
+            mat = _rescale(*, A.mat, b)
             chol = cholesky(A)
             uplo = chol.uplo
             if uplo === 'U'

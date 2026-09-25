@@ -38,7 +38,9 @@ using LinearAlgebra, PDMats, Test
             B = _rand(TB, T, n, nothing)
             ret = f(A, B)
             @test ret isa PDSparseMat{T}
+            @test issparse(ret.mat)
             @test ret ≈ f(A, Matrix(B))
+            @test_throws DimensionMismatch f(A, _rand(TB, T, n + 1, nothing))
         end
     end
 end

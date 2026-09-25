@@ -77,8 +77,6 @@ using Test
             @test @test_deprecated(PDMat{T, typeof(m)}(2, m, C)) == PDMat(m)
             d = ones(T, 2)
             @test @test_deprecated(PDiagMat(2, d)) == @test_deprecated(PDiagMat{T, Vector{T}}(2, d)) == PDiagMat(d)
-            s = SparseMatrixCSC{T}(I, 2, 2)
-            @test @test_deprecated(PDMat{T, typeof(s)}(2, s, cholesky(s))) == PDMat(s)
         end
     end
 
@@ -120,14 +118,13 @@ using Test
             end
 
             A = PDMat(SparseMatrixCSC{T}(I, 2, 2))
-            for R in (AbstractArray{S}, AbstractMatrix{S}, AbstractPDMat{S}, PDMat{S})
+            for R in (AbstractArray{S}, AbstractMatrix{S}, AbstractPDMat{S}, PDMat{S}, PDMat{S, SparseMatrixCSC{S, Int}})
                 B = @inferred(convert(R, A))
                 @test B isa PDMat{S}
                 @test B == A
                 @test (B === A) === (S === T)
                 @test (B.mat === A.mat) === (S === T)
-                # CholMOD only supports Float64 and ComplexF64 type parameters!
-                # Hence the Cholesky factorization is reused
+                # The CHOLMOD factorization is reused
                 @test B.fact === A.fact
             end
         end
@@ -263,6 +260,9 @@ using Test
         @test M isa PDMat
         @test cholesky(M) isa CHOLMOD.Factor
         @test Matrix(M) ≈ A
+
+        @test PDMat(Symmetric(sparse(A))) ≈ A
+        @test PDMat(A, cholesky(sparse(A))) ≈ A
     end
 
     @testset "properties and fields" begin

@@ -1,35 +1,28 @@
 """
 Sparse positive definite matrix together with a Cholesky factorization object.
 """
-const PDSparseMat{T <: Real, S <: AbstractSparseMatrix{T}, C <: CholTypeSparse} = PDMat{T, S, C}
+const PDSparseMat{T <: Real, S <: AbstractMatrix{T}} = PDMat{T, S, <:CholTypeSparse}
 
-function PDMats.PDMat(mat::AbstractSparseMatrix, chol::CholTypeSparse)
-    return PDMat{eltype(mat), typeof(mat), typeof(chol)}(mat, chol)
+# CHOLMOD supports only a few element types, so only `mat` is converted and `fact` is reused
+function PDMats.PDMat{T, S}(mat::AbstractMatrix, fact::CholTypeSparse) where {T <: Real, S <: AbstractMatrix{T}}
+    return PDMat{T, S, typeof(fact)}(mat, fact)
 end
-Base.@deprecate PDMat{T, S}(d::Int, m::AbstractSparseMatrix{T}, c::CholTypeSparse) where {T, S} PDSparseMat{T, S, typeof(c)}(m, c)
-
-PDMats.PDMat(mat::SparseMatrixCSC) = PDMat(mat, cholesky(mat))
-PDMats.PDMat(fac::CholTypeSparse) = PDMat(sparse(fac), fac)
+function PDMats.PDMat{T}(mat::AbstractMatrix, fact::CholTypeSparse) where {T <: Real}
+    mat = convert(AbstractMatrix{T}, mat)
+    return PDMat{T, typeof(mat), typeof(fact)}(mat, fact)
+end
+PDMats.PDMat(mat::AbstractMatrix, fact::CholTypeSparse) = PDMat{eltype(mat)}(mat, fact)
+PDMats.PDMat(fact::CholTypeSparse) = PDMat(convert(SparseMatrixCSC, sparse(fact)), fact)
 
 PDMats.AbstractPDMat(A::CholTypeSparse) = PDMat(A)
 
-### Conversion
-Base.convert(::Type{PDMat{T}}, a::PDSparseMat{T}) where {T <: Real} = a
-function Base.convert(::Type{PDMat{T}}, a::PDSparseMat) where {T <: Real}
-    # CholTypeSparse only supports Float64 and ComplexF64 type parameters!
-    # So there is no point in recomputing `cholesky(mat)` and we just reuse
-    # the existing Cholesky factorization
-    mat = convert(AbstractMatrix{T}, a.mat)
-    return PDMat{T, typeof(mat), typeof(a.fact)}(mat, a.fact)
-end
-
 ### Arithmetics
 
-# `x` is converted to `Float64` to work around CHOLMOD limitations (julia issue #14076).
+# CHOLMOD requires the right-hand side to have the element type of the factorization
 function Base.:\(a::PDSparseMat, x::AbstractVecOrMat{<:Real})
     PDMats.@check_argdims a.dim == size(x, 1)
     T = promote_type(eltype(a), eltype(x))
-    return convert(Array{T}, a.fact \ convert(Array{Float64}, x))
+    return convert(Array{T}, a.fact \ convert(Array{eltype(a.fact)}, x))
 end
 function Base.:/(x::AbstractVecOrMat{<:Real}, a::PDSparseMat)
     PDMats.@check_argdims a.dim == size(x, 2)
@@ -38,8 +31,19 @@ function Base.:/(x::AbstractVecOrMat{<:Real}, a::PDSparseMat)
     return x isa AbstractVector ? vec(z) : permutedims(z)
 end
 
-# `_scaleadddiag`'s single-allocation fast path for mutable storage (xref #239)
-PDMats._scaleadddiag(a::SparseMatrixCSC, c::Real, v::Real) = PDMats._adddiag!(a * c, v)
+# Only visit the stored entries
+function PDMats._rescale(f, a::SparseMatrixCSC, d::AbstractVector)
+    PDMats.@check_argdims eachindex(d) == axes(a, 1) == axes(a, 2)
+    zd = zero(eltype(d))
+    b = similar(a, typeof(f(zero(eltype(a)), zd * zd)))
+    rows = rowvals(a)
+    vals = nonzeros(a)
+    newvals = nonzeros(b)
+    for j in axes(a, 2), k in nzrange(a, j)
+        newvals[k] = f(vals[k], d[rows[k]] * d[j])
+    end
+    return b
+end
 
 ### Algebra
 
@@ -47,6 +51,8 @@ LinearAlgebra.cholesky(a::PDSparseMat) = a.fact
 Base.sqrt(A::PDSparseMat) = PDMat(sqrt(Hermitian(Matrix(A))))
 
 ### whiten and unwhiten
+
+_PtL(C::CholTypeSparse) = sparse(C.L)[C.p, :]
 
 function PDMats.whiten!(r::AbstractVecOrMat, a::PDSparseMat, x::AbstractVecOrMat)
     PDMats.@check_argdims axes(r) == axes(x)
@@ -57,21 +63,12 @@ end
 function PDMats.invwhiten!(r::AbstractVecOrMat, a::PDSparseMat, x::AbstractVecOrMat)
     PDMats.@check_argdims axes(r) == axes(x)
     PDMats.@check_argdims a.dim == size(x, 1)
-    # `*` and `mul!` are not defined for `UP` factor components,
-    # so we can't use `chol_upper(C) * x`;
-    # `sparse` is neither defined for `PtL` nor for `UP` nor for `U` factor components
-    C = cholesky(a)
-    PtL = sparse(C.L)[C.p, :]
-    return copyto!(r, PtL' * x)
+    return copyto!(r, _PtL(cholesky(a))' * x)
 end
 function PDMats.unwhiten!(r::AbstractVecOrMat, a::PDSparseMat, x::AbstractVecOrMat)
     PDMats.@check_argdims axes(r) == axes(x)
     PDMats.@check_argdims a.dim == size(x, 1)
-    # `*` is not defined for `PtL` factor components,
-    # so we can't use `chol_lower(C) * x`
-    C = cholesky(a)
-    PtL = sparse(C.L)[C.p, :]
-    return copyto!(r, PtL * x)
+    return copyto!(r, _PtL(cholesky(a)) * x)
 end
 function PDMats.invunwhiten!(r::AbstractVecOrMat, a::PDSparseMat, x::AbstractVecOrMat)
     PDMats.@check_argdims axes(r) == axes(x)
@@ -86,19 +83,11 @@ function PDMats.whiten(a::PDSparseMat, x::AbstractVecOrMat)
 end
 function PDMats.invwhiten(a::PDSparseMat, x::AbstractVecOrMat)
     PDMats.@check_argdims a.dim == size(x, 1)
-    # `*` is not defined for `UP` factor components,
-    # so we can't use `chol_upper(C) * x`
-    C = cholesky(a)
-    PtL = sparse(C.L)[C.p, :]
-    return PtL' * x
+    return _PtL(cholesky(a))' * x
 end
 function PDMats.unwhiten(a::PDSparseMat, x::AbstractVecOrMat)
     PDMats.@check_argdims a.dim == size(x, 1)
-    # `*` is not defined for `PtL` factor components,
-    # so we can't use `chol_lower(C) * x`
-    C = cholesky(a)
-    PtL = sparse(C.L)[C.p, :]
-    return PtL * x
+    return _PtL(cholesky(a)) * x
 end
 function PDMats.invunwhiten(a::PDSparseMat, x::AbstractVecOrMat)
     PDMats.@check_argdims a.dim == size(x, 1)
@@ -168,9 +157,11 @@ function PDMats.Xt_invA_X(a::PDSparseMat, x::AbstractMatrix{<:Real})
     return Symmetric(transpose(x) * z)
 end
 
-# Resolve the ambiguity between the generic `PDMat` methods in `src/congruence.jl`, which are more
-# specific in the second argument, and the methods above, which are more specific in the first one
+# Resolve ambiguities with `PDMat` methods that are more specific in the second argument
 PDMats.X_A_Xt(a::PDSparseMat, x::ScalMat) = PDMats._congruence(a, x)
 PDMats.X_A_Xt(a::PDSparseMat, x::PDiagMat) = PDMats._congruence(a, x)
 PDMats.Xt_A_X(a::PDSparseMat, x::ScalMat) = PDMats._congruence(a, x)
 PDMats.Xt_A_X(a::PDSparseMat, x::PDiagMat) = PDMats._congruence(a, x)
+for f in (:quad, :invquad)
+    @eval PDMats.$f(a::PDSparseMat, x::Matrix) = invoke($f, Tuple{PDMat, Matrix}, a, x)
+end

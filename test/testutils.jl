@@ -9,8 +9,8 @@ using PDMats, LinearAlgebra, SparseArrays, Test, Random
 Random.seed!(10)
 
 const CHOLMOD = SparseArrays.CHOLMOD
-const PDMatCholesky{T <: Real, S <: AbstractMatrix, C <: Cholesky} = PDMat{T, S, C}
-const PDSparseMat{T <: Real, S <: AbstractSparseMatrix, C <: CHOLMOD.Factor} = PDMat{T, S, C}
+const PDMatCholesky = PDMats.PDMatCholesky
+const PDSparseMat = Base.get_extension(PDMats, :PDMatsSparseArraysExt).PDSparseMat
 const PDMatType = Union{PDMatCholesky, PDSparseMat, PDiagMat, ScalMat}
 
 ## driver function

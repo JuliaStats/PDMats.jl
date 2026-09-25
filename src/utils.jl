@@ -64,6 +64,12 @@ end
 _scaleadddiag(a::AbstractMatrix, c::Real, v::Real) = muladd(c, a, v * I)
 _scaleadddiag(a::Matrix, c::Real, v::Real) = _adddiag!(a * c, v)
 
+# Entries `f(a[i, j], d[i] * d[j])`; exactly symmetric if `a` is. Requires `f(0, x) == 0`.
+function _rescale(f, a::AbstractMatrix, d::AbstractVector)
+    @check_argdims eachindex(d) == axes(a, 1) == axes(a, 2)
+    return f.(a, d .* transpose(d))
+end
+
 
 function wsumsq(w::AbstractVector, a::AbstractVector)
     @check_argdims(eachindex(a) == eachindex(w))
