@@ -28,7 +28,7 @@ Elemenent types are in princple all Real types, but in practice this is limited 
 * `PDMat`: full covariance matrix, defined as
 
 ```julia
-struct PDMat{T<:Real,S<:AbstractMatrix{T},C<:Cholesky{T}} <: AbstractPDMat{T}
+struct PDMat{T <: Real, S <: AbstractMatrix{T}, C <: Cholesky{T}} <: AbstractPDMat{T}
     mat::S                      # input matrix
     chol::C                     # Cholesky factorization of mat
 end
@@ -38,19 +38,17 @@ end
 PDMat(mat, chol)    # with both the input matrix and a Cholesky factorization
 
 PDMat(mat)          # with the input matrix, of type Matrix or Symmetric
-                    # Remarks: the Cholesky factorization will be computed
-                    # upon construction.
+# Remarks: the Cholesky factorization will be computed upon construction.
 
 PDMat(chol)         # with the Cholesky factorization
-                    # Remarks: the full matrix will be computed upon
-                    # construction.
+# Remarks: the full matrix will be computed upon construction.
 ```
 
 
 * `PDiagMat`: diagonal matrix, defined as
 
 ```julia
-struct PDiagMat{T<:Real,V<:AbstractVector{T}} <: AbstractPDMat{T}
+struct PDiagMat{T <: Real, V <: AbstractVector{T}} <: AbstractPDMat{T}
     diag::V                     # the vector of diagonal elements
 end
 
@@ -63,7 +61,7 @@ PDiagMat(v)         # with the vector of diagonal elements
 * `ScalMat`: uniform scaling matrix, as `v * eye(d)`, defined as
 
 ```julia
-struct ScalMat{T<:Real} <: AbstractPDMat{T}
+struct ScalMat{T <: Real} <: AbstractPDMat{T}
     dim::Int         # matrix dimension
     value::T         # diagonal value (shared by all diagonal elements)
 end
@@ -78,7 +76,7 @@ ScalMat(d, v)        # with dimension d and diagonal value v
 * `PDSparseMat`: sparse covariance matrix, defined as
 
 ```julia
-struct PDSparseMat{T<:Real,S<:AbstractSparseMatrix} <: AbstractPDMat{T}
+struct PDSparseMat{T <: Real, S <: AbstractSparseMatrix} <: AbstractPDMat{T}
     mat::SparseMatrixCSC           # input matrix
     chol::CholTypeSparse           # Cholesky factorization of mat
 end
@@ -88,12 +86,10 @@ end
 PDSparseMat(mat, chol)    # with both the input matrix and a Cholesky factorization
 
 PDSparseMat(mat)          # with the sparse input matrix, of type SparseMatrixCSC
-                          # Remarks: the Cholesky factorization will be computed
-                          # upon construction.
+# Remarks: the Cholesky factorization will be computed upon construction.
 
 PDSparseMat(chol)         # with the Cholesky factorization
-                          # Remarks: the sparse matrix 'mat' will be computed upon
-                          # construction.
+# Remarks: the sparse matrix 'mat' will be computed upon construction.
 ```
 
 
@@ -115,10 +111,10 @@ Matrix(a)   # return a copy of the matrix in full form.
 diag(a)     # return a vector of diagonal elements.
 
 inv(a)      # inverse of `a`, of a proper subtype of `AbstractPDMat`.
-            # Note: when `a` is an instance of either `PDMat`, `PDiagMat`,
-            # and `ScalMat`, `inv(a)` is of the same type of `a`.
-            # This needs not be required for customized subtypes -- the
-            # inverse does not always has the same pattern as `a`.
+# Note: when `a` is an instance of either `PDMat`, `PDiagMat`,
+# and `ScalMat`, `inv(a)` is of the same type of `a`.
+# This needs not be required for customized subtypes -- the
+# inverse does not always has the same pattern as `a`.
 
 eigmax(a)   # maximum eigenvalue of `a`.
 
@@ -129,18 +125,16 @@ logdet(a)   # log-determinant of `a`, computed in a numerically stable way.
 a * x       # multiple `a` with `x` (forward transform)
 
 a \ x       # multiply `inv(a)` with `x` (backward transform).
-            # The internal implementation may not explicitly instantiate
-            # the inverse of `a`.
+# The internal implementation may not explicitly instantiate the inverse of `a`.
 
 a * c       # scale `a` by a positive scale `c`.
-            # The result is in general of the same type of `a`.
+# The result is in general of the same type of `a`.
 
 c * a       # equivalent to a * c.
 
 a + b       # add two positive definite matrices
 
-pdadd(a, b, c)      # add `a` with `b * c`, where both `a` and `b` are
-                    # instances of `AbstractPDMat`.
+pdadd(a, b, c)      # add `a` with `b * c`, where both `a` and `b` are instances of `AbstractPDMat`.
 
 pdadd(m, a)         # add `a` to a dense matrix `m` of the same size.
 
@@ -148,29 +142,24 @@ pdadd(m, a, c)      # add `a * c` to a dense matrix `m` of the same size.
 
 pdadd!(m, a)        # add `a` to a dense matrix `m` of the same size inplace.
 
-pdadd!(m, a, c)     # add `a * c` to a dense matrix `m` of the same size,
-                    # inplace.
+pdadd!(m, a, c)     # add `a * c` to a dense matrix `m` of the same size, inplace.
 
-pdadd!(r, m, a)     # add `a` to a dense matrix `m` of the same size, and write
-                    # the result to `r`.
+pdadd!(r, m, a)     # add `a` to a dense matrix `m` of the same size, and write the result to `r`.
 
-pdadd!(r, m, a, c)  # add `a * c` to a dense matrix `m` of the same size, and
-                    # write the result to `r`.
+pdadd!(r, m, a, c)  # add `a * c` to a dense matrix `m` of the same size, and write the result to `r`.
 
 quad(a, x)          # compute x' * a * x when `x` is a vector.
-                    # perform such computation in a column-wise fashion, when
-                    # `x` is a matrix, and return a vector of length `n`,
-                    # where `n` is the number of columns in `x`.
+# perform such computation in a column-wise fashion, when
+# `x` is a matrix, and return a vector of length `n`,
+# where `n` is the number of columns in `x`.
 
-quad!(r, a, x)      # compute x' * a * x in a column-wise fashion, and write
-                    # the results to `r`.
+quad!(r, a, x)      # compute x' * a * x in a column-wise fashion, and write the results to `r`.
 
 invquad(a, x)       # compute x' * inv(a) * x when `x` is a vector.
-                    # perform such computation in a column-wise fashion, when
-                    # `x` is a matrix, and return a vector of length `n`.
+# perform such computation in a column-wise fashion, when
+# `x` is a matrix, and return a vector of length `n`.
 
-invquad!(r, a, x)   # compute x' * inv(a) * x in a column-wise fashion, and
-                    # write the results to `r`.
+invquad!(r, a, x)   # compute x' * inv(a) * x in a column-wise fashion, and write the results to `r`.
 
 X_A_Xt(a, x)        # compute `x * a * x'` for a matrix `x`.
 
@@ -181,43 +170,43 @@ X_invA_Xt(a, x)     # compute `x * inv(a) * x'` for a matrix `x`.
 Xt_invA_X(a, x)     # compute `x' * inv(a) * x` for a matrix `x`.
 
 whiten(a, x)        # whitening transform defined by `a`. `x` can be a vector or a matrix.
-                    #
-                    # Note: If the covariance of `x` is `a`, then the
-                    # covariance of the transformed result is an identity
-                    # matrix.
+#
+# Note: If the covariance of `x` is `a`, then the
+# covariance of the transformed result is an identity
+# matrix.
 
 whiten!(a, x)       # whitening transform inplace, directly updating `x`.
 
 whiten!(r, a, x)    # write the transformed result to `r`.
 
 invwhiten(a, x)     # whitening transform defined by `inv(a)`. `x` can be a vector or a matrix.
-                    #
-                    # Note: If the precision of `x` is `a`, then the
-                    # covariance of the transformed result is an identity matrix.
+#
+# Note: If the precision of `x` is `a`, then the
+# covariance of the transformed result is an identity matrix.
 
 invwhiten!(a, x)    # whitening transform inplace, directly updating `x`.
 
 invwhiten!(r, a, x) # write the transformed result to `r`.
 
 unwhiten(a, x)      # inverse of whitening transform with `a`.
-                    # `x` can be a vector or a matrix.
-                    #
-                    # Note: If the covariance of `x` is an identity matrix,
-                    # then the covariance of the transformed result is `a`.
-                    # Note: the un-whitening transform is useful for
-                    # generating Gaussian samples.
+# `x` can be a vector or a matrix.
+#
+# Note: If the covariance of `x` is an identity matrix,
+# then the covariance of the transformed result is `a`.
+# Note: the un-whitening transform is useful for
+# generating Gaussian samples.
 
 unwhiten!(a, x)     # un-whitening transform inplace, updating `x`.
 
 unwhiten!(r, a, x)  # write the transformed result to `r`.
 
 invunwhiten(a, x)     # inverse of whitening transform defined by `inv(a)`.
-                      # `x` can be a vector or a matrix.
-                      #
-                      # Note: If the covariance of `x` is an identity matrix,
-                      # then the precision of the transformed result is `a`.
-                      # Note: the un-whitening transform is useful for
-                      # generating Gaussian samples.
+# `x` can be a vector or a matrix.
+#
+# Note: If the covariance of `x` is an identity matrix,
+# then the precision of the transformed result is `a`.
+# Note: the un-whitening transform is useful for
+# generating Gaussian samples.
 
 invunwhiten!(a, x)    # un-whitening transform inplace, updating `x`.
 
