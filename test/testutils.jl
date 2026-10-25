@@ -157,8 +157,20 @@ end
 
 function pdtest_scale(C, Cmat::Matrix, verbose::Int)
     _pdt(verbose, "scale")
-    @test Matrix(C * convert(eltype(C), 2)) ≈ Cmat * convert(eltype(C), 2)
-    return @test Matrix(convert(eltype(C), 2) * C) ≈ convert(eltype(C), 2) * Cmat
+    for c in (2, -2, 2.0f0, -2.0f0, 2.0, -2.0)
+        T = promote_type(eltype(C), typeof(c))
+
+        M = @inferred(c * C)
+        @test M isa AbstractMatrix{T}
+        @test !(M isa AbstractPDMat)
+        @test M ≈ c * Cmat
+
+        M = @inferred(C * c)
+        @test M isa AbstractMatrix{T}
+        @test !(M isa AbstractPDMat)
+        @test M ≈ Cmat * c
+    end
+    return nothing
 end
 
 

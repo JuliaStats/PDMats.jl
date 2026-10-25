@@ -38,8 +38,8 @@ function pdadd!(r::Matrix, a::Matrix, b::ScalMat, c)
     return r
 end
 
-*(a::ScalMat, c::Real) = ScalMat(a.dim, a.value * c)
-/(a::ScalMat, c::Real) = ScalMat(a.dim, a.value / c)
+*(a::ScalMat, c::Real) = Diagonal(fill(a.value * c, a.dim))
+/(a::ScalMat, c::Real) = Diagonal(fill(a.value / c, a.dim))
 function *(a::ScalMat, x::AbstractVector)
     @check_argdims a.dim == length(x)
     return a.value * x
