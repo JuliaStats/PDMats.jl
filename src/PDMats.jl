@@ -37,7 +37,7 @@ export
 """
 The base type for positive definite matrices.
 """
-abstract type AbstractPDMat{T <: Real} <: AbstractMatrix{T} end
+abstract type AbstractPDMat{T <: Number} <: AbstractMatrix{T} end
 
 const HAVE_CHOLMOD = isdefined(SparseArrays, :CHOLMOD)
 

@@ -5,18 +5,20 @@ AbstractPDMat(A::AbstractPDMat) = A
 AbstractPDMat(A::AbstractMatrix) = PDMat(A)
 
 ## convert
+# Keep the existing real-target conversion route. Complex abstract-array targets
+# use Base's array conversion, including for real diagonal/scalar/sparse storage.
 Base.convert(::Type{AbstractMatrix{T}}, a::AbstractPDMat) where {T <: Real} = convert(AbstractPDMat{T}, a)
 Base.convert(::Type{AbstractArray{T}}, a::AbstractPDMat) where {T <: Real} = convert(AbstractMatrix{T}, a)
 
 ## arithmetics
 
-pdadd!(r::Matrix, a::Matrix, b::AbstractPDMat{T}) where {T <: Real} = pdadd!(r, a, b, one(T))
+pdadd!(r::Matrix, a::Matrix, b::AbstractPDMat{T}) where {T <: Number} = pdadd!(r, a, b, one(real(zero(T))))
 
 pdadd!(a::Matrix, b::AbstractPDMat, c) = pdadd!(a, a, b, c)
-pdadd!(a::Matrix, b::AbstractPDMat{T}) where {T <: Real} = pdadd!(a, a, b, one(T))
+pdadd!(a::Matrix, b::AbstractPDMat{T}) where {T <: Number} = pdadd!(a, a, b, one(real(zero(T))))
 
-pdadd(a::Matrix{T}, b::AbstractPDMat{S}, c::R) where {T <: Real, S <: Real, R <: Real} = pdadd!(similar(a, promote_type(T, S, R)), a, b, c)
-pdadd(a::Matrix{T}, b::AbstractPDMat{S}) where {T <: Real, S <: Real} = pdadd!(similar(a, promote_type(T, S)), a, b, one(T))
+pdadd(a::Matrix{T}, b::AbstractPDMat{S}, c::R) where {T <: Number, S <: Number, R <: Real} = pdadd!(similar(a, promote_type(T, S, R)), a, b, c)
+pdadd(a::Matrix{T}, b::AbstractPDMat{S}) where {T <: Number, S <: Number} = pdadd!(similar(a, promote_type(T, S)), a, b, one(real(zero(T))))
 
 +(a::Matrix, b::AbstractPDMat) = pdadd(a, b)
 +(a::AbstractPDMat, b::Matrix) = pdadd(b, a)
@@ -70,7 +72,7 @@ julia> W * W'
 
 See also [`invwhiten`](@ref) and [`invunwhiten`](ref)
 """
-whiten(a::AbstractMatrix{<:Real}, x::AbstractVecOrMat) = whiten(AbstractPDMat(a), x)
+whiten(a::AbstractMatrix{<:Number}, x::AbstractVecOrMat) = whiten(AbstractPDMat(a), x)
 
 """
     invwhiten(a::AbstractMatrix, x::AbstractVecOrMat)
@@ -87,7 +89,7 @@ variable to "white noise".
 
 See also [`whiten`](@ref) and [`unwhiten`](@ref)
 """
-invwhiten(a::AbstractMatrix{<:Real}, x::AbstractVecOrMat) = invwhiten(AbstractPDMat(a), x)
+invwhiten(a::AbstractMatrix{<:Number}, x::AbstractVecOrMat) = invwhiten(AbstractPDMat(a), x)
 
 """
     unwhiten(a::AbstractMatrix, x::AbstractVecOrMat)
@@ -104,7 +106,7 @@ into a signal with the given covariance.
 
 See also [`invwhiten`](@ref) and [`invunwhiten`](@ref)
 """
-unwhiten(a::AbstractMatrix{<:Real}, x::AbstractVecOrMat) = unwhiten(AbstractPDMat(a), x)
+unwhiten(a::AbstractMatrix{<:Number}, x::AbstractVecOrMat) = unwhiten(AbstractPDMat(a), x)
 
 """
     invunwhiten(a::AbstractMatrix, x::AbstractVecOrMat)
@@ -121,23 +123,23 @@ into a signal with the given covariance.
 
 See also [`whiten`](@ref) and [`unwhiten`](@ref)
 """
-invunwhiten(a::AbstractMatrix{<:Real}, x::AbstractVecOrMat) = invunwhiten(AbstractPDMat(a), x)
+invunwhiten(a::AbstractMatrix{<:Number}, x::AbstractVecOrMat) = invunwhiten(AbstractPDMat(a), x)
 
-whiten!(a::AbstractMatrix{<:Real}, x::AbstractVecOrMat) = whiten!(x, a, x)
-invwhiten!(a::AbstractMatrix{<:Real}, x::AbstractVecOrMat) = invwhiten!(x, a, x)
-unwhiten!(a::AbstractMatrix{<:Real}, x::AbstractVecOrMat) = unwhiten!(x, a, x)
-invunwhiten!(a::AbstractMatrix{<:Real}, x::AbstractVecOrMat) = invunwhiten!(x, a, x)
+whiten!(a::AbstractMatrix{<:Number}, x::AbstractVecOrMat) = whiten!(x, a, x)
+invwhiten!(a::AbstractMatrix{<:Number}, x::AbstractVecOrMat) = invwhiten!(x, a, x)
+unwhiten!(a::AbstractMatrix{<:Number}, x::AbstractVecOrMat) = unwhiten!(x, a, x)
+invunwhiten!(a::AbstractMatrix{<:Number}, x::AbstractVecOrMat) = invunwhiten!(x, a, x)
 
-function whiten!(r::AbstractVecOrMat, a::AbstractMatrix{<:Real}, x::AbstractVecOrMat)
+function whiten!(r::AbstractVecOrMat, a::AbstractMatrix{<:Number}, x::AbstractVecOrMat)
     return whiten!(r, AbstractPDMat(a), x)
 end
-function invwhiten!(r::AbstractVecOrMat, a::AbstractMatrix{<:Real}, x::AbstractVecOrMat)
+function invwhiten!(r::AbstractVecOrMat, a::AbstractMatrix{<:Number}, x::AbstractVecOrMat)
     return invwhiten!(r, AbstractPDMat(a), x)
 end
-function unwhiten!(r::AbstractVecOrMat, a::AbstractMatrix{<:Real}, x::AbstractVecOrMat)
+function unwhiten!(r::AbstractVecOrMat, a::AbstractMatrix{<:Number}, x::AbstractVecOrMat)
     return unwhiten!(r, AbstractPDMat(a), x)
 end
-function invunwhiten!(r::AbstractVecOrMat, a::AbstractMatrix{<:Real}, x::AbstractVecOrMat)
+function invunwhiten!(r::AbstractVecOrMat, a::AbstractMatrix{<:Number}, x::AbstractVecOrMat)
     return invunwhiten!(r, AbstractPDMat(a), x)
 end
 
@@ -151,7 +153,7 @@ Return the value of the quadratic form defined by `a` applied to `x`.
 If `x` is a vector the quadratic form is `x' * a * x`.  If `x` is a matrix
 the quadratic form is applied column-wise.
 """
-function quad(a::AbstractMatrix{<:Real}, x::AbstractVecOrMat)
+function quad(a::AbstractMatrix{<:Number}, x::AbstractVecOrMat)
     return quad(AbstractPDMat(a), x)
 end
 
@@ -160,7 +162,7 @@ end
 
 Overwrite `r` with the value of the quadratic form defined by `a` applied columnwise to `x`.
 """
-function quad!(r::AbstractArray, a::AbstractMatrix{<:Real}, x::AbstractMatrix)
+function quad!(r::AbstractArray, a::AbstractMatrix{<:Number}, x::AbstractMatrix)
     return quad!(r, AbstractPDMat(a), x)
 end
 
@@ -174,7 +176,7 @@ For most `PDMat` types this is done in a way that does not require evaluation of
 If `x` is a vector the quadratic form is `x' * a * x`.  If `x` is a matrix
 the quadratic form is applied column-wise.
 """
-function invquad(a::AbstractMatrix{<:Real}, x::AbstractVecOrMat)
+function invquad(a::AbstractMatrix{<:Number}, x::AbstractVecOrMat)
     return invquad(AbstractPDMat(a), x)
 end
 
@@ -183,6 +185,6 @@ end
 
 Overwrite `r` with the value of the quadratic form defined by `inv(a)` applied columnwise to `x`
 """
-function invquad!(r::AbstractArray, a::AbstractMatrix{<:Real}, x::AbstractMatrix)
+function invquad!(r::AbstractArray, a::AbstractMatrix{<:Number}, x::AbstractMatrix)
     return invquad!(r, AbstractPDMat(a), x)
 end

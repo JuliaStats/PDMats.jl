@@ -13,9 +13,13 @@ end
 # For a dense Matrix, the following allows us to avoid the Adjoint wrapper:
 chol_lower(a::Matrix) = cholesky(Symmetric(a, :L)).L
 # NOTE: Formally, the line above should use Hermitian() instead of Symmetric(),
-# but this currently has an AutoDiff issue in Zygote.jl, and PDMat is
-# type-restricted to be Real, so they are equivalent.
+# but this currently has an AutoDiff issue in Zygote.jl. For real inputs the
+# two wrappers are equivalent.
 chol_upper(a::Matrix) = cholesky(Symmetric(a, :U)).U
+
+# Keep the real Symmetric path above for its established AD behavior.
+chol_lower(a::Matrix{<:Complex}) = cholesky(Hermitian(a, :L)).L
+chol_upper(a::Matrix{<:Complex}) = cholesky(Hermitian(a, :U)).U
 
 if HAVE_CHOLMOD
     CholTypeSparse{T} = SparseArrays.CHOLMOD.Factor{T}
@@ -65,7 +69,7 @@ function quad!(r::AbstractArray, A::Cholesky, X::AbstractMatrix)
     @check_argdims eachindex(r) == axes(X, 2)
     @check_argdims size(A, 1) == size(X, 1)
     aU = chol_upper(A)
-    z = similar(r, size(A, 1)) # buffer to save allocations
+    z = _quad_buffer(r, A, X, size(A, 1)) # preserve complex intermediates
     @inbounds for i in axes(X, 2)
         mul!(z, aU, view(X, :, i))
         r[i] = sum(abs2, z)
@@ -87,7 +91,7 @@ function invquad!(r::AbstractArray, A::Cholesky, X::AbstractMatrix)
     @check_argdims eachindex(r) == axes(X, 2)
     @check_argdims size(A, 1) == size(X, 1)
     aL = chol_lower(A)
-    z = similar(r, size(A, 1)) # buffer to save allocations
+    z = _quad_buffer(r, A, X, size(A, 1)) # preserve complex intermediates
     @inbounds for i in axes(X, 2)
         copyto!(z, view(X, :, i))
         ldiv!(aL, z)
@@ -98,26 +102,26 @@ end
 
 # tri products
 
-function X_A_Xt(A::Cholesky, X::AbstractMatrix{<:Real})
+function X_A_Xt(A::Cholesky, X::AbstractMatrix)
     @check_argdims size(A, 1) == size(X, 2)
     Z = X * chol_lower(A)
-    return Symmetric(Z * transpose(Z))
+    return _selfadjoint(Z * adjoint(Z))
 end
 
-function Xt_A_X(A::Cholesky, X::AbstractMatrix{<:Real})
+function Xt_A_X(A::Cholesky, X::AbstractMatrix)
     @check_argdims size(A, 1) == size(X, 1)
     Z = chol_upper(A) * X
-    return Symmetric(transpose(Z) * Z)
+    return _selfadjoint(adjoint(Z) * Z)
 end
 
-function X_invA_Xt(A::Cholesky, X::AbstractMatrix{<:Real})
+function X_invA_Xt(A::Cholesky, X::AbstractMatrix)
     @check_argdims size(A, 1) == size(X, 2)
     Z = X / chol_upper(A)
-    return Symmetric(Z * transpose(Z))
+    return _selfadjoint(Z * adjoint(Z))
 end
 
-function Xt_invA_X(A::Cholesky, X::AbstractMatrix{<:Real})
+function Xt_invA_X(A::Cholesky, X::AbstractMatrix)
     @check_argdims size(A, 1) == size(X, 1)
     Z = chol_lower(A) \ X
-    return Symmetric(transpose(Z) * Z)
+    return _selfadjoint(adjoint(Z) * Z)
 end

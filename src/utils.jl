@@ -119,3 +119,14 @@ function colwise_sumsqinv!(r::AbstractArray, a::AbstractMatrix, c::Real)
     end
     return r
 end
+
+# Preserve the established all-real workspace type; complex factors or inputs
+# require a complex workspace even when the quadratic-form output is real.
+function _quad_buffer(r, a, x, n)
+    T = eltype(a) <: Complex || eltype(x) <: Complex ?
+        promote_type(eltype(r), eltype(a), eltype(x)) : eltype(r)
+    return similar(r, T, n)
+end
+
+_selfadjoint(a::AbstractMatrix{<:Real}) = Symmetric(a)
+_selfadjoint(a::AbstractMatrix{<:Complex}) = Hermitian(a)

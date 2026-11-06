@@ -17,18 +17,33 @@ Positive definite matrices are widely used in machine learning and probabilistic
 
 ## Positive definite matrix types
 
-This package defines an abstract type `AbstractPDMat{T<:Real}` as the base type for positive definite matrices with different internal representations.
+This package defines an abstract type `AbstractPDMat{T<:Number}` as the base type for positive definite matrices with different internal representations.
 
-Elemenent types are in princple all Real types, but in practice this is limited by the support for floating point types in Base.LinAlg.Cholesky.
+Supported element types depend on the representation and on `LinearAlgebra.Cholesky`.
   - `Float64`     Fully supported from Julia 0.3.
   - `Float32`     Fully supported from Julia 0.4.2. Full, diagonal and scale matrix types are supported in Julia 0.3 or higher.
   - `Float16`     Promoted to `Float32` for full, diagonal and scale matrix. Currently unsupported for sparse matrix.
   - `BigFloat`    Supported in Julia 0.4 for full, diagonal and scale matrix. Currently unsupported for sparse matrix.
+  - `ComplexF32`, `ComplexF64` Supported for dense Hermitian positive-definite `PDMat` matrices. Diagonal and scale storage remain real; complex sparse storage is outside this interface.
+
+For complex dense matrices, `quad` and `invquad` use conjugate quadratic forms and
+return real values. The congruence operations use adjoints and return `Hermitian`
+matrices when their intermediates are complex; all-real results remain `Symmetric`.
+For example:
+
+```julia
+using PDMats, LinearAlgebra
+A = Hermitian(ComplexF64[3 1 + im; 1 - im 4])
+p = PDMat(A)
+x = ComplexF64[1 + im, 2 - im]
+quad(p, x)                  # real(x' * A * x)
+Xt_A_X(p, reshape(x, :, 1)) # Hermitian 1-by-1 congruence result
+```
 
 * `PDMat`: full covariance matrix, defined as
 
 ```julia
-struct PDMat{T <: Real, S <: AbstractMatrix{T}, C <: Cholesky{T}} <: AbstractPDMat{T}
+struct PDMat{T <: Number, S <: AbstractMatrix{T}, C <: Cholesky{T}} <: AbstractPDMat{T}
     mat::S                      # input matrix
     chol::C                     # Cholesky factorization of mat
 end
@@ -37,7 +52,7 @@ end
 
 PDMat(mat, chol)    # with both the input matrix and a Cholesky factorization
 
-PDMat(mat)          # with the input matrix, of type Matrix or Symmetric
+PDMat(mat)          # with the input matrix, e.g. Matrix, Symmetric or Hermitian
 # Remarks: the Cholesky factorization will be computed upon construction.
 
 PDMat(chol)         # with the Cholesky factorization

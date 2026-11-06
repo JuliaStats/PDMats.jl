@@ -1,11 +1,12 @@
 """
-Full positive definite matrix together with a Cholesky factorization object.
+Full real symmetric or complex Hermitian positive definite matrix together
+with a Cholesky factorization object.
 """
-struct PDMat{T <: Real, S <: AbstractMatrix{T}, C <: Cholesky{T}} <: AbstractPDMat{T}
+struct PDMat{T <: Number, S <: AbstractMatrix{T}, C <: Cholesky{T}} <: AbstractPDMat{T}
     mat::S
     chol::C
 
-    function PDMat{T, S, C}(m::AbstractMatrix, c::Cholesky) where {T <: Real, S <: AbstractMatrix{T}, C <: Cholesky{T}}
+    function PDMat{T, S, C}(m::AbstractMatrix, c::Cholesky) where {T <: Number, S <: AbstractMatrix{T}, C <: Cholesky{T}}
         d = LinearAlgebra.checksquare(m)
         if size(c, 1) != d
             throw(DimensionMismatch("Dimensions of mat and chol are inconsistent."))
@@ -15,18 +16,18 @@ struct PDMat{T <: Real, S <: AbstractMatrix{T}, C <: Cholesky{T}} <: AbstractPDM
         return new{T, S, C}(m, c)
     end
 end
-function PDMat{T, S}(m::AbstractMatrix, c::Cholesky) where {T <: Real, S <: AbstractMatrix{T}}
+function PDMat{T, S}(m::AbstractMatrix, c::Cholesky) where {T <: Number, S <: AbstractMatrix{T}}
     c = convert(Cholesky{T}, c)
     return PDMat{T, S, typeof(c)}(m, c)
 end
-function PDMat{T}(m::AbstractMatrix, c::Cholesky) where {T <: Real}
+function PDMat{T}(m::AbstractMatrix, c::Cholesky) where {T <: Number}
     m = convert(AbstractMatrix{T}, m)
     c = convert(Cholesky{T}, c)
     return PDMat{T, typeof(m), typeof(c)}(m, c)
 end
 # `mat` and `chol` may use different array types (xref #237). Keep both as-is if
 # the element types match, otherwise promote them.
-function PDMat(mat::AbstractMatrix{T}, chol::Cholesky{T}) where {T <: Real}
+function PDMat(mat::AbstractMatrix{T}, chol::Cholesky{T}) where {T <: Number}
     return PDMat{T, typeof(mat), typeof(chol)}(mat, chol)
 end
 function PDMat(mat::AbstractMatrix, chol::Cholesky)
@@ -35,31 +36,31 @@ function PDMat(mat::AbstractMatrix, chol::Cholesky)
 end
 
 # Construction from another PDMat
-PDMat{T, S, C}(pdm::PDMat{T, S, C}) where {T <: Real, S <: AbstractMatrix{T}, C <: Cholesky{T}} = pdm  # since PDMat doesn't support `setindex!` it's not mutable (xref https://docs.julialang.org/en/v1/manual/conversion-and-promotion/#Mutable-collections)
-PDMat{T, S, C}(pdm::PDMat) where {T <: Real, S <: AbstractMatrix{T}, C <: Cholesky{T}} = PDMat{T, S, C}(pdm.mat, pdm.chol)
-PDMat{T, S}(pdm::PDMat{T, S}) where {T <: Real, S <: AbstractMatrix{T}} = pdm
-PDMat{T, S}(pdm::PDMat) where {T <: Real, S <: AbstractMatrix{T}} = PDMat{T, S}(pdm.mat, pdm.chol)
-PDMat{T}(pdm::PDMat{T}) where {T <: Real} = pdm
-PDMat{T}(pdm::PDMat) where {T <: Real} = PDMat{T}(pdm.mat, pdm.chol)
+PDMat{T, S, C}(pdm::PDMat{T, S, C}) where {T <: Number, S <: AbstractMatrix{T}, C <: Cholesky{T}} = pdm  # since PDMat doesn't support `setindex!` it's not mutable (xref https://docs.julialang.org/en/v1/manual/conversion-and-promotion/#Mutable-collections)
+PDMat{T, S, C}(pdm::PDMat) where {T <: Number, S <: AbstractMatrix{T}, C <: Cholesky{T}} = PDMat{T, S, C}(pdm.mat, pdm.chol)
+PDMat{T, S}(pdm::PDMat{T, S}) where {T <: Number, S <: AbstractMatrix{T}} = pdm
+PDMat{T, S}(pdm::PDMat) where {T <: Number, S <: AbstractMatrix{T}} = PDMat{T, S}(pdm.mat, pdm.chol)
+PDMat{T}(pdm::PDMat{T}) where {T <: Number} = pdm
+PDMat{T}(pdm::PDMat) where {T <: Number} = PDMat{T}(pdm.mat, pdm.chol)
 PDMat(pdm::PDMat) = pdm
 
 # Construction from an AbstractMatrix
-function PDMat{T, S}(mat::AbstractMatrix) where {T <: Real, S <: AbstractMatrix{T}}
+function PDMat{T, S}(mat::AbstractMatrix) where {T <: Number, S <: AbstractMatrix{T}}
     mat = convert(S, mat)
     return PDMat{T, S}(mat, cholesky(mat))
 end
-function PDMat{T}(mat::AbstractMatrix) where {T <: Real}
+function PDMat{T}(mat::AbstractMatrix) where {T <: Number}
     mat = convert(AbstractMatrix{T}, mat)
     return PDMat{T}(mat, cholesky(mat))
 end
 PDMat(mat::AbstractMatrix) = PDMat(mat, cholesky(mat))
 
 # Construction from a Cholesky factorization
-function PDMat{T, S}(c::Cholesky) where {T <: Real, S <: AbstractMatrix{T}}
+function PDMat{T, S}(c::Cholesky) where {T <: Number, S <: AbstractMatrix{T}}
     c = convert(Cholesky{T, S}, c)
     return PDMat{T, S}(AbstractMatrix(c), c)
 end
-function PDMat{T}(c::Cholesky) where {T <: Real}
+function PDMat{T}(c::Cholesky) where {T <: Number}
     c = convert(Cholesky{T}, c)
     return PDMat{T}(AbstractMatrix(c), c)
 end
@@ -77,12 +78,12 @@ AbstractPDMat(A::Cholesky) = PDMat(A)
 
 ### Conversion
 # This next method isn't needed because PDMat{T}(a) returns `a` directly
-# Base.convert(::Type{PDMat{T}}, a::PDMat{T}) where {T<:Real} = a
-Base.convert(::Type{PDMat{T}}, a::PDMat) where {T <: Real} = PDMat{T}(a)
-Base.convert(::Type{PDMat{T, S}}, a::PDMat) where {T <: Real, S <: AbstractMatrix{T}} = PDMat{T, S}(a)
-Base.convert(::Type{PDMat{T, S, C}}, a::PDMat) where {T <: Real, S <: AbstractMatrix{T}, C <: Cholesky{T}} = PDMat{T, S, C}(a)
+# Base.convert(::Type{PDMat{T}}, a::PDMat{T}) where {T<:Number} = a
+Base.convert(::Type{PDMat{T}}, a::PDMat) where {T <: Number} = PDMat{T}(a)
+Base.convert(::Type{PDMat{T, S}}, a::PDMat) where {T <: Number, S <: AbstractMatrix{T}} = PDMat{T, S}(a)
+Base.convert(::Type{PDMat{T, S, C}}, a::PDMat) where {T <: Number, S <: AbstractMatrix{T}, C <: Cholesky{T}} = PDMat{T, S, C}(a)
 
-Base.convert(::Type{AbstractPDMat{T}}, a::PDMat) where {T <: Real} = convert(PDMat{T}, a)
+Base.convert(::Type{AbstractPDMat{T}}, a::PDMat) where {T <: Number} = convert(PDMat{T}, a)
 
 ### Basics
 
@@ -121,6 +122,9 @@ function /(x::AbstractVecOrMat, a::PDMat)
         return x / a.chol
     end
 end
+# Resolve row-vector intersections for the new complex dense storage.
+/(x::Adjoint{<:Any, <:AbstractVector}, a::PDMat{<:Complex}) = x / a.chol
+/(x::Transpose{<:Any, <:AbstractVector}, a::PDMat{<:Complex}) = x / a.chol
 
 ### Algebra
 
@@ -129,6 +133,8 @@ LinearAlgebra.det(a::PDMat) = det(a.chol)
 LinearAlgebra.logdet(a::PDMat) = logdet(a.chol)
 LinearAlgebra.eigmax(a::PDMat) = eigmax(Symmetric(a.mat))
 LinearAlgebra.eigmin(a::PDMat) = eigmin(Symmetric(a.mat))
+LinearAlgebra.eigmax(a::PDMat{<:Complex}) = eigmax(Hermitian(a.mat))
+LinearAlgebra.eigmin(a::PDMat{<:Complex}) = eigmin(Hermitian(a.mat))
 function Base.kron(A::PDMat, B::PDMat)
     M = kron(A.mat, B.mat)
     C = Cholesky(UpperTriangular(kron(chol_upper(A.chol), chol_upper(B.chol))))
@@ -208,7 +214,7 @@ function quad!(r::AbstractArray, a::PDMat, x::AbstractMatrix)
     @check_argdims eachindex(r) == axes(x, 2)
     @check_argdims a.dim == size(x, 1)
     aU = chol_upper(cholesky(a))
-    z = similar(r, a.dim) # buffer to save allocations
+    z = _quad_buffer(r, a, x, a.dim) # complex work need not share the real result type
     @inbounds for i in axes(x, 2)
         mul!(z, aU, view(x, :, i))
         r[i] = sum(abs2, z)
@@ -230,7 +236,7 @@ function invquad!(r::AbstractArray, a::PDMat, x::AbstractMatrix)
     @check_argdims eachindex(r) == axes(x, 2)
     @check_argdims a.dim == size(x, 1)
     aL = chol_lower(cholesky(a))
-    z = similar(r, a.dim) # buffer to save allocations
+    z = _quad_buffer(r, a, x, a.dim) # complex work need not share the real result type
     @inbounds for i in axes(x, 2)
         copyto!(z, view(x, :, i))
         ldiv!(aL, z)
@@ -241,28 +247,28 @@ end
 
 ### tri products
 
-function X_A_Xt(a::PDMat, x::AbstractMatrix{<:Real})
+function X_A_Xt(a::PDMat, x::AbstractMatrix)
     @check_argdims a.dim == size(x, 2)
     z = x * chol_lower(a.chol)
-    return Symmetric(z * transpose(z))
+    return _selfadjoint(z * adjoint(z))
 end
 
-function Xt_A_X(a::PDMat, x::AbstractMatrix{<:Real})
+function Xt_A_X(a::PDMat, x::AbstractMatrix)
     @check_argdims a.dim == size(x, 1)
     z = chol_upper(a.chol) * x
-    return Symmetric(transpose(z) * z)
+    return _selfadjoint(adjoint(z) * z)
 end
 
-function X_invA_Xt(a::PDMat, x::AbstractMatrix{<:Real})
+function X_invA_Xt(a::PDMat, x::AbstractMatrix)
     @check_argdims a.dim == size(x, 2)
     z = x / chol_upper(a.chol)
-    return Symmetric(z * transpose(z))
+    return _selfadjoint(z * adjoint(z))
 end
 
-function Xt_invA_X(a::PDMat, x::AbstractMatrix{<:Real})
+function Xt_invA_X(a::PDMat, x::AbstractMatrix)
     @check_argdims a.dim == size(x, 1)
     z = chol_lower(a.chol) \ x
-    return Symmetric(transpose(z) * z)
+    return _selfadjoint(adjoint(z) * z)
 end
 
 ### Specializations for `Array` arguments with reduced allocations
@@ -276,5 +282,18 @@ end
 function invquad(a::PDMat{<:Real, <:Matrix}, x::Matrix)
     @check_argdims a.dim == size(x, 1)
     T = typeof(abs2(zero(eltype(x))) / zero(eltype(a)))
+    return invquad!(Vector{T}(undef, size(x, 2)), a, x)
+end
+
+# Hermitian quadratic forms are real even when their factors/intermediates are complex.
+function quad(a::PDMat{<:Complex, <:Matrix}, x::Matrix)
+    @check_argdims a.dim == size(x, 1)
+    T = typeof(abs2(zero(eltype(a)) * zero(eltype(x))))
+    return quad!(Vector{T}(undef, size(x, 2)), a, x)
+end
+
+function invquad(a::PDMat{<:Complex, <:Matrix}, x::Matrix)
+    @check_argdims a.dim == size(x, 1)
+    T = typeof(abs2(zero(eltype(x)) / one(eltype(a))))
     return invquad!(Vector{T}(undef, size(x, 2)), a, x)
 end
