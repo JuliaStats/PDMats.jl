@@ -25,6 +25,54 @@ pdadd(a::Matrix{T}, b::AbstractPDMat{S}) where {T <: Real, S <: Real} = pdadd!(s
 /(a::AbstractPDMat, c::T) where {T <: Real} = a * inv(c)
 Base.kron(A::AbstractPDMat, B::AbstractPDMat) = PDMat(kron(Matrix(A), Matrix(B)))
 
+# Avoid the intermediate only for same-precision finite floating-point vectors.
+# Multiply the weight first, as in the original matrix-vector product: squaring
+# first can overflow or underflow. Other inputs retain the original promotion.
+function *(
+        x::Union{Adjoint{<:Any, <:AbstractVector{<:Real}}, Transpose{<:Any, <:AbstractVector{<:Real}}},
+        a::Union{PDiagMat, ScalMat}, y::AbstractVector{<:Real}
+    )
+    T = eltype(y)
+    if parent(x) === y && T === eltype(a) && (T === Float32 || T === Float64) &&
+            axes(y, 1) == Base.OneTo(length(y)) &&
+            (a isa ScalMat || axes(a.diag, 1) == Base.OneTo(a.dim)) && all(isfinite, y)
+        result = _ordered_quadratic(a, y)
+        result === nothing || return result
+    end
+    return (x * a) * y
+end
+
+function _ordered_quadratic(a::Union{PDiagMat{T}, ScalMat{T}}, x::AbstractVector{T}) where {T <: Union{Float32, Float64}}
+    Base.require_one_based_indexing(x)
+    a isa PDiagMat && Base.require_one_based_indexing(a.diag)
+    @check_argdims a.dim == length(x)
+    # Keep the first product in the original operand precision. Widen Float32's
+    # final product and compensate the sum so small contributions are retained.
+    total = 0.0
+    correction = 0.0
+    for i in eachindex(x)
+        weight = a isa PDiagMat ? a.diag[i] : a.value
+        scaled = weight * x[i]
+        term = Float64(scaled) * Float64(x[i])
+        # Preserve the original BLAS path at exceptional/underflow boundaries.
+        if !isfinite(term) || issubnormal(term) ||
+                (iszero(term) && !iszero(scaled) && !iszero(x[i]))
+            return nothing
+        end
+        next = total + term
+        isfinite(next) || return nothing
+        correction += abs(total) >= abs(term) ? (total - next) + term : (term - next) + total
+        isfinite(correction) || return nothing
+        total = next
+    end
+    combined = total + correction
+    result = T(combined)
+    if !isfinite(result) || issubnormal(result) || (iszero(result) && !iszero(combined))
+        return nothing
+    end
+    return result
+end
+
 # LinearAlgebra
 LinearAlgebra.isposdef(::AbstractPDMat) = true
 LinearAlgebra.ishermitian(::AbstractPDMat) = true
